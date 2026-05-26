@@ -5,11 +5,13 @@ Single source of truth za pripremu natječajnog rješenja na međunarodni arhite
 ## Brza navigacija
 
 - **[`SOT.md`](SOT.md)** — master sažetak, ključni rokovi, strateška sinteza, kontrolne brojke, rizici, cross-check ažuriranja
+- **[`ROADMAP.md`](ROADMAP.md)** — strategijski roadmap od danas do predaje (mermaid Gantt, tok zavisnosti, swimlanes, kritični rizici)
+- **[`TODO.md`](TODO.md)** — granularni operativni checklist po fazama (otkucavati petkom)
 - **[`sources/`](sources/)** — službeni izvori (Uvjeti, Program, extracted MD-ovi, manifest)
 - **[`research/`](research/)** — 5 dubinskih istraživanja (sud, reference, lokacija, tehnika, mediji)
 - **[`research/cross-check/`](research/cross-check/)** — 3 nezavisne Claude Desktop Research verifikacije + sinteza-diff
 
-Repo je **Single Source of Truth spreman za početak rada na natječajnoj prijavi** — sadrži sve potrebno za informirano odlučivanje o konceptu i tehničkoj usklađenosti rješenja.
+Repo je **Single Source of Truth + projektni plan spreman za rad na natječajnoj prijavi** — od koncepta do predaje 17.–28.7.2026.
 
 ## Ključne datoteke u 30 sekundi
 

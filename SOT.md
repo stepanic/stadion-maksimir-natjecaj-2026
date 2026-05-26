@@ -43,6 +43,8 @@
 
 ---
 
+> **Operativno:** strategijski roadmap u [`ROADMAP.md`](ROADMAP.md) (mermaid Gantt, tok zavisnosti, swimlanes); granularni checklist u [`TODO.md`](TODO.md).
+
 ## 2. Sadržaj repozitorija (navigacija)
 
 ### Originalni izvori — `sources/`
