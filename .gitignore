@@ -1,0 +1,8 @@
+.DS_Store
+*.log
+
+# Heavy mirror — referenced from /Users/ms/Downloads/files-stadion/stadion-maksimir-arhiv/site/
+site/
+
+# Original archive
+*.zip
