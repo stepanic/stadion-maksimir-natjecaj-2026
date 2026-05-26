@@ -4,9 +4,12 @@ Single source of truth za pripremu natječajnog rješenja na međunarodni arhite
 
 ## Brza navigacija
 
-- **[`SOT.md`](SOT.md)** — master sažetak, ključni rokovi, strateška sinteza, kontrolne brojke, rizici
+- **[`SOT.md`](SOT.md)** — master sažetak, ključni rokovi, strateška sinteza, kontrolne brojke, rizici, cross-check ažuriranja
 - **[`sources/`](sources/)** — službeni izvori (Uvjeti, Program, extracted MD-ovi, manifest)
 - **[`research/`](research/)** — 5 dubinskih istraživanja (sud, reference, lokacija, tehnika, mediji)
+- **[`research/cross-check/`](research/cross-check/)** — 3 nezavisne Claude Desktop Research verifikacije + sinteza-diff
+
+Repo je **Single Source of Truth spreman za početak rada na natječajnoj prijavi** — sadrži sve potrebno za informirano odlučivanje o konceptu i tehničkoj usklađenosti rješenja.
 
 ## Ključne datoteke u 30 sekundi
 

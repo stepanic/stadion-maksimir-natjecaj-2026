@@ -1,9 +1,9 @@
 # SOT — Stadion Maksimir & SRC Svetice (Natječaj 2026.)
 
 > **Single Source of Truth** za pripremu natječajnog rješenja.
-> Sažetak činjenica, ključni rokovi, navigacija po istraživanju i konsolidirane strateške direktive.
+> Sažetak činjenica, ključni rokovi, navigacija po istraživanju, konsolidirane strateške direktive i ažuriranja iz nezavisne cross-check verifikacije.
 >
-> *Posljednje ažuriranje: 2026-05-26. Sadržaj se temelji na službenoj natječajnoj dokumentaciji (Uvjeti, Program, mirror `stadion-maksimir.zagreb.hr`) i 5 paralelnih deep-research izvještaja.*
+> *Posljednje ažuriranje: 2026-05-26 (v2 — nakon cross-checka). Sadržaj se temelji na službenoj natječajnoj dokumentaciji (Uvjeti, Program, mirror `stadion-maksimir.zagreb.hr`), 5 paralelnih deep-research izvještaja i 3 nezavisne Claude Desktop Research verifikacije (vidi `research/cross-check/SYNTHESIS.md`).*
 
 ---
 
@@ -64,6 +64,12 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 4. [`04-tehnicki-okvir.md`](research/04-tehnicki-okvir.md) — **UEFA Cat 4, FIFA, HR propisi, održivost** (5.214 riječi, sa kontrolnom listom)
 5. [`05-mediji-politika.md`](research/05-mediji-politika.md) — **Javni narativ, kontroverze, konkurencija** (3.775 riječi)
 
+### Cross-check (Claude Desktop Research) — `research/cross-check/`
+- [`SYNTHESIS.md`](research/cross-check/SYNTHESIS.md) — **Diff cross-checka protiv `01-05`** (28/42 podudaranja, 8 substantivnih tehničkih ispravaka, 4 konzervatorska ispravka, 18 novih strateških uvida)
+- [`A-tehnicki-brojke-REPORT.md`](research/cross-check/A-tehnicki-brojke-REPORT.md) — verifikacija 42 tehničkih tvrdnji (otkriva UEFA SIR 2025 zamjenu, FIFA Guidelines 2022, sanitarije 75:25)
+- [`B-plejic-perovic-REPORT.md`](research/cross-check/B-plejic-perovic-REPORT.md) — dublji profil predsjednika i dopredsjednika (otkriva Plejić = predsjednik UHA-e, Mies 2009 Perović-Plejić poveznicu, mono-volume citat)
+- [`C-konzervatorski-REPORT.md`](research/cross-check/C-konzervatorski-REPORT.md) — operativni okvir (otkriva da je preventivna zaštita stadiona istekla, Z-1528 = 278,93 ha, manifest sjevernog ruba)
+
 ---
 
 ## 3. Ocjenjivački sud (sažetak)
@@ -112,29 +118,46 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 
 ## 5. Tvrde brojke koje crtež mora zadovoljiti
 
-> Kompletna kontrolna lista: [`research/04-tehnicki-okvir.md` § Tehnička kontrolna lista](research/04-tehnicki-okvir.md#tehnička-kontrolna-lista-za-rješenje)
+> **Referentni okvir (ažuriran):** **UEFA Stadium Infrastructure Regulations Edition 2025** (na snazi 1.6.2025., zamjenjuje 2018) + **FIFA Stadium Guidelines 2022** (digitalno, zamjenjuje 5th ed. 2011) + UEFA Stadium Lighting Guide 2023.
+>
+> Kompletna kontrolna lista u [`research/04-tehnicki-okvir.md` § Tehnička kontrolna lista](research/04-tehnicki-okvir.md#tehnička-kontrolna-lista-za-rješenje); ispravci iz cross-checka detaljno u [`research/cross-check/SYNTHESIS.md`](research/cross-check/SYNTHESIS.md) § A.
 
 **Teren i geometrija (UEFA Cat 4 / FIFA):**
 - Teren **105 × 68 m** točno; run-off ≥ 5 m; ukupni gabarit ≈ 125 × 85 m
-- Slobodna visina ≥ **21 m** iznad terena
+- Slobodna visina ≥ **21 m** iznad terena (Art. 5.06)
 - Orijentacija osi ≈ N–S, max ±15° prema zapadu
 - Sightline C-value ≥ 90 mm (optimum 120 mm); max viewing distance < 190 m
 
 **Kapacitet i sjedala:**
 - 35.000 individualnih sjedala, naslon ≥ 30 cm
-- **5% (1.750) gostujući sektor** s vlastitim ulazom
-- **1% (350) pristupačnih mjesta** (NN 12/23)
+- **5% (1.750) gostujući sektor** s vlastitim ulazom (Art. 17.02)
+- **350 pristupačnih mjesta** (1% NN 12/23) — od kojih ~175 za invalidska kolica domaćih (0,5% UEFA Art. 24.03 preporučeno; min 0,1%) + 15 za gostujuće (UEFA tablica za 30.001–40.000)
 - Širina sjedala ≥ 47 cm; red-to-red ≥ 85 cm
 
-**Rasvjeta:** 1.400 lux Eh / 1.000 lux Ev (Cat 4); za finala Elite A >2.000/1.500 lux; backup vraća 900 lux u ≤15 min.
+**Svlačionice (UEFA SIR 2025 Cat. 3/4 — ažurirano):**
+- Svlačionica momčadi: **6 tuševa, 3 odvojena WC-a**, 55 m² za 23 igrača **+ zasebna prostorija stručnog stožera 20 m² za 7 osoba**, **3 masažna stola** (15 m²), spremište 5 m² (Art. 11.01)
+- Svlačionica sudaca: ≥ 20 m², 2 tuša, 1 WC, **4 mjesta** (Art. 11.02), opcionalno dodatna mala za mješoviti sudački tim
 
-**Mediji:** TV compound 1.000 m²; 10 komentatorskih, 60 media seats, 2 TV studija (5×5×2,5 m), glavna kamera 6×2 m.
+**Rasvjeta:** 1.400 lux Eh / 1.000 lux Ev (Cat 4, Art. 16.01); za finala Elite A >2.000/1.500 lux (UEFA Lighting Guide 2023); backup vraća 900 lux u ≤15 min (Art. 16.03).
 
-**Sigurnost:** 1 turnstile / 660 sjedala ≈ 53; ≥ 4 evakuacijska pravca; REI-M 90; evakuacija ~8 min (Green Guide).
+**Sanitarije (UEFA SIR 2025 — ažurirano):** min **25% za žene** (efektivno 75:25); 1 sjedeći WC + umivaonik / 250 m; 1 pisoar / 125 m; **1 sjedeći WC / 120 žena u domaćem sektoru; 1 / 80 žena u gostujućem sektoru** (Art. 19.01–02). *Hrvatska atletska praksa 70:30 — projektirati prema strožem od dva (~70:30 zadovoljava obje norme).*
 
-**Seizmika:** **agR = 0,251 g** (475 god., ULS prema HRN EN 1998-3) iz Geotehničkog elaborata. Zagreb 2020. potres mjerodavan. Duboko temeljenje (piloti) za masivne konstrukcije.
+**Mediji:** TV compound 1.000 m², pristup **vozilima > 40 t** (ne 43 t); 10 komentatorskih, 60 media seats, 2 TV studija (5×5×2,5 m), glavna kamera 6×2 m, press konferencija 50 mjesta + 8 kamera.
 
-**Kontradikcija koju treba riješiti:** UEFA traži 80:20 m:ž omjer sanitarija, hrvatska praksa u Programu koristi 70:30 — projekt mora kombinirati strože.
+**Sigurnost:** 1 turnstile / 660 sjedala ≈ 53 (Art. 21.06); ≥ 4 evakuacijska pravca (NN 29/13 čl. 31); REI-M 90 (čl. 8); evakuacija ~8 min (Green Guide).
+
+**Seizmika:** **agR = 0,251 g** (475 god., ULS prema HRN EN 1998-1) iz Geotehničkog elaborata. **Vrijednost je unutar očekivanog raspona (0,22–0,28 g) ali tri decimale treba potvrditi izravno** u seizkarta.gfz.hr ili tiskanom HZN Dodatku B/C prije predaje. Zagreb 2020. potres mjerodavan. Duboko temeljenje (piloti) za masivne konstrukcije.
+
+**⚠ Standardi u prijelazu — paziti pred predaju:**
+- **HRN EN 1998-1:2011/NA:2011/A2** je u javnoj raspravi do **20.6.2026.** — ako stupi na snagu prije 17.7.2026. (rok predaje), koristiti nove seizmičke parametre.
+- **Tehnički propis o pristupačnosti NN 12/23** stupio na snagu **28.6.2025.** (zamjenjuje NN 78/13).
+- **NN 71/25 Tehnički propis o akustici u zgradarstvu** — novi propis 2025., relevantan za multifunkcionalnost stadiona.
+
+**Energetske reference (potvrđeno):**
+- Johan Cruijff ArenA: **4.200 PV ploča, ~930 MWh/god, 8,6 MWh baterija** (kolovoz 2024.)
+- RAMS Park (Galatasaray): **10.404 ploča, 4,2 MWp** (ne 4,3) — Guinness World Records, 22.3.2022.
+- Tottenham grow-lights: 864 jedinice, 7.525 m²
+- Brentford Community Stadium: −50% armiranog betona, −33% primarnog čelika, BREEAM Very Good
 
 ---
 
@@ -159,6 +182,12 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 - Parlamentarni izbori 2027./2028.; promjena državne vlasti.
 - Konzervatorska struka (HRZ, Ministarstvo kulture) dosad medijski šuti — javit će se tek nakon natječaja, što može izmijeniti pobjedničko rješenje.
 - Ekološke udruge (Zelena akcija, Sindikat biciklista) za sada šute — rizik tihog mobiliziranja.
+
+### Pragovi koji mijenjaju strategiju (iz cross-checka)
+- **Ako MKM proglasi trajnu zaštitu stadiona Maksimir** tijekom 2026./2027. (po uzoru na Poljud Z-6644 iz 2015.) → rušenje pravno blokirano, vratiti se modelu konzervatorske rekonstrukcije zapadne tribine Turina.
+- **Ako Z-1530 (Železnička kolonija) dobije širu kontaktnu zonu** → južna fasada se mora reducirati (preporuka: P+2 max).
+- **Ako JU "Maksimir — Priroda Grada Zagreba" izda negativno mišljenje o utjecaju na SPA** → koncesijsko odobrenje neće biti dano i postupak će biti obustavljen.
+- **Ako HRN EN 1998-1/NA/A2 stupi na snagu prije 17.7.2026.** → koristiti nove seizmičke parametre, ne aktualne karte 2011.
 
 ### Operativni rizici
 - **Gdje Dinamo i reprezentacija igraju 2027.–2029.?** Otvoreno — Kranjčevićeva (rekonstrukcija u tijeku), Rujevica, Opus Arena, Aldo Drosina.
@@ -190,4 +219,64 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 
 Persistentne bilješke ovog projekta nalaze se u
 `~/.claude/projects/-Users-ms-git-stadion-maksimir-stadion-maksimir-natjecaj-2026/memory/`
-(projekt, jezik, lokalni arhiv). Pri sljedećoj sesiji automatski se učitavaju u kontekst.
+(projekt, jezik, lokalni arhiv, ključni ispravci iz cross-checka). Pri sljedećoj sesiji automatski se učitavaju u kontekst.
+
+---
+
+## 10. Cross-check ažuriranja (nakon Desktop Research, svibanj 2026.)
+
+> Tri nezavisne Claude Desktop Research verifikacije proizvele su ispravke i nove uvide koji ovdje konsolidirano stoje. Puni diff: [`research/cross-check/SYNTHESIS.md`](research/cross-check/SYNTHESIS.md).
+
+### 10.1 Tri citatne kotve za tekst obrazloženja
+
+Eksplicitno (preformulirano vlastitim riječima, ne kao prepisivanje) iskoristiti u opisu rješenja:
+
+1. **Mono-volumen** — Toma Plejić u *Journal of Architectural Education* 75/1, 2021.: *„We made a mistake, a productive mistake, by combining the gymnasium and sport hall into one mono-volume."* Direktan poziv da se stadion + trenažni + servisni programi tretiraju kao jedan koherentan dijagram.
+2. **Conditionalism** — Vasa Perović u *El Croquis* 160, 2012.: *„All we find are conditions."* Projekt kao odgovor na uvjete (park, propisi, klima, seizmika, ekonomija), ne kao stilska gesta.
+3. **Dublji slojevi preko vizualnog efekta** — Plejić-Pelivan u najavi Oris predavanja "ZONAR / STELLAR" (13.4.2026.) + Perović u "Much Ado About Nothing" (aut. Innsbruck, 25.1.2024.): anti-spektakularna programska kotva.
+
+**Dodatna težina kompasa para Plejić-Perović:** Mies van der Rohe Award 2009. — Perović je bio u žiriju koji je dao **Studio UP-u Specijalno priznanje** za Gimnaziju u Koprivnici. Dokumentirana profesionalna naklonost, i to *upravo za sportsku tipologiju*. **Toma Plejić je i trenutni predsjednik UHA-e** — institucionalni potpisnik cijelog DAZ/UHA ciklusa.
+
+### 10.2 Manifest sjevernog ruba (7+1 konkretnih ograničenja)
+
+Iz cross-check C (operativni konzervatorski okvir). Implementirati eksplicitno kao formalni dio idejnog rješenja (presjeci s kotama, vizurni koridori, opis u knjižici):
+
+1. **Visina sjeverne fasade ≤ prosjek krošnje stoljetnih hrastova lužnjaka** na južnom rubu Z-1528 (mjereno na liniji Maksimirske ceste). Sadašnja sjeverna tribina Filipović/Kincl krši taj kriterij — rušenje i niža, porozna nova tribina je minimalna konzervatorska gesta.
+2. **Servisni sadržaji i parking ukopani ili pokriveni ozelenjenim padom prema parku** (Stožice "stadion-krater" model).
+3. **Sjeverna fasada porozna**, omjer prozirno : zatvoreno ≥ **60 %**; isključiti reflektirajuće ostakljenje prema parku zbog avifaune Z-1528 (113 zabilježenih vrsta, 55 se gnijezdi — Janev Hutinec, JU Maksimir).
+4. **Regulacijska linija prema Maksimirskoj cesti** — povući od one iz 1998. (koja je tribinu postavila praktički na nogostup); minimalni odmak za drvored / linearni park.
+5. **Materijalnost**: dominacija beton/drvo/zelenilo; isključiti kompozitne aluminijske obloge sjajne boje; krov u prirodnim tonovima neisticavim u panoramskoj vizuri sa Sljemena.
+6. **Obvezna dendrološka studija** prije rušenja; korijenske zone stabala u pojasu 10 m od fasade ne smiju biti pogođene iskopima (Plan upravljanja SPA Maksimir 2022./2024.).
+7. **Bacač diska + Sokolska svečana loža Dryaka (1934.)** ostaju in situ na mikrolokaciji; zaseban konzervatorski elaborat za parterno uređenje uz križanje Maksimirske i Svetica (čl. 44. ZZOKD).
+8. **Vizurni koridor istok–zapad** preko stadiona prema istočnim dijelovima grada — pobjedničko rješenje treba eksplicitno otvoriti "velika vrata" na osi glavnog ulaza u park.
+
+### 10.3 Imenovani konzervatorski akteri (potencijalni javni komentatori)
+
+| Tko | Pozicija | Kontakt / adresa |
+|---|---|---|
+| **Eva Radolović** | Pročelnica KO Zagreb (MKM) — *operativno najvažnija osoba* (izdaje posebne uvjete za Z-1528, Z-1530, Z-6940) | Runjaninova 2; tel. 01 4866 609; ured.zagreb.grad@min-kulture.hr |
+| **Mr. sc. Lana Križaj** | Pročelnica Gradskog ureda za kulturnu baštinu i prirodu (imenovana 2022. od Tomaševića) | Kuševićeva 2/II |
+| **Krešimir Galović** | Povjesničar arhitekture; autor kanonskog teksta "Stadion nad Zagrebom" (Vijenac 176, 2000.) | Matica hrvatska |
+| **Krešimir Ivaniš** | Sportski arhitekt (Rijeka); kritičar mjerila i materijalnosti (Kantrida 2023.) | — |
+| **Igor Maraković / HRZ** | Služba za baštinu 20. stoljeća — adresat za pitanja konzerviranja Turininih fragmenata | Hrvatski restauratorski zavod |
+
+Sekundarno u javnoj raspravi: **Maroje Mrduljaš** (Oris/ČIP), **Saša Begović** (3LHD/DAZ), **dr. Biljana Janev Hutinec** (JU Maksimir, ornitologinja).
+
+### 10.4 Hitne akcije (svibanj–lipanj 2026.)
+
+1. **Tri paralelna zahtjeva za pristup informacijama** prema Zakonu o pravu na pristup informacijama:
+   - (a) **MKM / KO Zagreb** (Runjaninova 2) — preslika rješenja Z-1528, Z-1530, Z-6940 + status preventivne zaštite stadiona iz 1985./1988. (potvrditi je li dosje zatvoren).
+   - (b) **Gradski ured za kulturnu baštinu i prirodu** (Kuševićeva 2/II) — mapa kontaktnih zona Z-1528 i Z-1530.
+   - (c) **JU "Maksimir — Priroda Grada Zagreba"** (Maksimirski perivoj 1) — stav o intervenciji na južnom rubu SPA + Plan upravljanja 2024. (cijeli) + dendrološka studija stoljetnih hrastova.
+2. **Ažurirati referentni okvir** u tekstu — UEFA SIR Edition 2025, FIFA Stadium Guidelines 2022, UEFA Stadium Lighting Guide 2023.
+3. **Korigirati 8 substantivnih brojki** iz cross-check A (sanitarije 75:25 + 1/120 + 1/80, svlačionica momčadi 6 tuševa + 20 m² stručni stožer, sudac 4 mjesta, TV vozila > 40 t, RAMS Park 4,2 MWp / 10.404 ploča, atribucija osunčanja agronomskoj konvenciji, pristupačnost s eksplicitnim UEFA Art. 24.03 postocima).
+4. **Citiranje "pragmatic dreamers"** — koristiti oprezno, atribuirati novinarskom portretu (Klobučar Srbić, dblog.hr), ne kao direktnu izjavu Plejić-Pelivan.
+5. **Autorstvo Sportskog centra NZS Brdo** — provjeriti podjelu Bevk Perović vs. ARK Arhitektura Krušec prije citiranja kao Perovićev presedan.
+
+### 10.5 Otvorena pitanja (ostaju nakon cross-checka)
+
+- **UEFA Stadium Lighting Guide 2023** — točne brojke za Elite Level A (Eh/Ev) iza JS-aplikacije documents.uefa.com; pribaviti preko HNS-a.
+- **Izravno očitanje agR** u aplikaciji seizkarta.gfz.hr — pristup nije moguć preko teksta; treba interaktivna sesija ili tiskani Dodatak B/C HZN-a.
+- **Z-6940 (Bacač diska)** — registracijski broj nije neovisno potvrđen u javnim NN izvodima; tražiti pisanu potvrdu KO Zagreb.
+- **Sokolska svečana loža (1934.)** — nije pronađena kao samostalan upis u Registru; pisana potvrda KO Zagreb.
+- **HRN EN 1998-1/NA/A2** — pratiti ishod javne rasprave do 20.6.2026.
