@@ -6,3 +6,6 @@ site/
 
 # Original archive
 *.zip
+
+# Wrangler local state
+.wrangler/

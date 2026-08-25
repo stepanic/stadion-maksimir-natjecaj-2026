@@ -3,7 +3,21 @@
 > **Single Source of Truth** za pripremu natječajnog rješenja.
 > Sažetak činjenica, ključni rokovi, navigacija po istraživanju, konsolidirane strateške direktive i ažuriranja iz nezavisne cross-check verifikacije.
 >
-> *Posljednje ažuriranje: 2026-05-26 (v2 — nakon cross-checka). Sadržaj se temelji na službenoj natječajnoj dokumentaciji (Uvjeti, Program, mirror `stadion-maksimir.zagreb.hr`), 5 paralelnih deep-research izvještaja i 3 nezavisne Claude Desktop Research verifikacije (vidi `research/cross-check/SYNTHESIS.md`).*
+> *Posljednje ažuriranje: **2026-08-25 (v3 — status nakon isteka rokova predaje)**. Sadržaj se temelji na službenoj natječajnoj dokumentaciji (Uvjeti, Program, mirror `stadion-maksimir.zagreb.hr`), 5 paralelnih deep-research izvještaja, 3 nezavisne Claude Desktop Research verifikacije (vidi `research/cross-check/SYNTHESIS.md`) i provjeri stanja natječaja od 2026-08-25 (vidi `research/06-status-natjecaja.md`).*
+
+---
+
+> ## ⚠️ STATUS NA DAN 2026-08-25
+>
+> **Natječaj je ZATVOREN. Rokovi predaje su prošli** — elektronička predaja 17.7.2026. u 18:00, makete 28.7.2026. u 18:00.
+> **Ocjenjivački sud je u postupku ocjenjivanja. Rezultati NISU objavljeni.**
+>
+> Na dan 2026-08-25 nigdje nije objavljen ni **konačan broj pristiglih radova**, ni **nagrađeni radovi**, ni **imena autora / arhitektonskih ureda**. Natječaj je **anoniman**, pa se identiteti natjecatelja otvaraju tek uz objavu rezultata.
+> Javno predstavljanje i izložba natječajnih radova planirani su **ne prije 15.9.2026.**
+>
+> **→ Detaljan status, provjereni izvori i popis za praćenje: [`research/06-status-natjecaja.md`](research/06-status-natjecaja.md).**
+> **→ Kronologija svih novih objava od 27.5. do 25.8.2026.: [`research/07-kronologija-objava.md`](research/07-kronologija-objava.md).**
+> Sve niže u ovom dokumentu (§ 4–8, ROADMAP, TODO) odnosi se na **pripremnu fazu koja je završena** i sada služi kao arhiva metodologije i kontrolnih brojki — ne kao aktivni plan.
 
 ---
 
@@ -22,17 +36,18 @@
 
 ### Ključni datumi
 
-| Datum | Događaj |
-|---|---|
-| **2026-03-20** | ✅ Početak natječaja (službena objava) |
-| **2026-04-21** | Rok za stručna pitanja |
-| **2026-07-17** | Rok predaje radova kroz EOJN |
-| **2026-07-28** | Rok predaje **makete** izvan EOJN |
-| **kraj 2026-07** | Odluka Ocjenjivačkog suda |
-| **≥ 2026-09-15** | Javno predstavljanje i izložba |
-| **2027.** (planirano) | Početak rušenja postojećeg stadiona |
-| **2029.** (planirano) | Dovršetak novogradnje |
-| **EURO 2032.** | Kandidatura HR + IT (UEFA odluka 2026./2027.) — vanjski rok-pritisak |
+| Datum | Događaj | Status (2026-08-25) |
+|---|---|---|
+| **2026-03-20** | Početak natječaja (službena objava) | ✅ prošlo |
+| **2026-04-21** | Rok za stručna pitanja (~300 zaprimljenih upita) | ✅ prošlo |
+| **2026-05-13** | Objavljeni odgovori na stručna pitanja na EOJN-u; **rok predaje pomaknut** s 24.6. na 17.7. | ✅ prošlo |
+| **2026-07-17, 18:00** | Rok predaje radova kroz EOJN | ✅ **zatvoreno** |
+| **2026-07-28, 18:00** | Rok predaje **makete** izvan EOJN (Av. Dubrovnik 15, soba 115) | ✅ **zatvoreno** |
+| **kraj 2026-07 →** | Odluka Ocjenjivačkog suda | 🔄 **u tijeku, još nije objavljena** |
+| **≥ 2026-09-15** | Javno predstavljanje rezultata i izložba natječajnih radova | 📅 čeka se |
+| **2027.** (planirano) | Početak rušenja postojećeg stadiona (projekt uklanjanja: EURCO d.d. + RESPECT-ING d.o.o.) | 📅 |
+| **2029.** (planirano) | Dovršetak novogradnje (Boban javno procjenjuje kraj 2030.) | 📅 |
+| **EURO 2032.** | Kandidatura HR + IT (UEFA odluka 2026./2027.) — vanjski rok-pritisak | 📅 |
 
 ### Kriteriji ocjenjivanja (Uvjeti t. 2.3)
 
@@ -65,6 +80,8 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 3. [`03-lokacija-povijest.md`](research/03-lokacija-povijest.md) — **Lokacija, povijest, konzervatorski okvir** (2.870 riječi)
 4. [`04-tehnicki-okvir.md`](research/04-tehnicki-okvir.md) — **UEFA Cat 4, FIFA, HR propisi, održivost** (5.214 riječi, sa kontrolnom listom)
 5. [`05-mediji-politika.md`](research/05-mediji-politika.md) — **Javni narativ, kontroverze, konkurencija** (3.775 riječi)
+6. **[`06-status-natjecaja.md`](research/06-status-natjecaja.md)** — **Živi log stanja nakon isteka rokova** (kronologija ožujak→kolovoz 2026., što je provjereno i gdje, popis za praćenje objave rezultata)
+7. **[`07-kronologija-objava.md`](research/07-kronologija-objava.md)** — **Sve nove javne objave nakon zadnjeg commita** (27.5.→25.8.2026.), uklj. **HKIG-ov dopis gradonačelniku**
 
 ### Cross-check (Claude Desktop Research) — `research/cross-check/`
 - [`SYNTHESIS.md`](research/cross-check/SYNTHESIS.md) — **Diff cross-checka protiv `01-05`** (28/42 podudaranja, 8 substantivnih tehničkih ispravaka, 4 konzervatorska ispravka, 18 novih strateških uvida)
@@ -179,6 +196,12 @@ Cijeli mirror stranice (HTML + PDF-ovi + slike, 193 MB) nalazi se izvan repoa:
 
 ## 7. Glavni rizici i otvorena pitanja
 
+### Postupovni rizik — HKIG (novo, 17.7.2026.)
+
+**Hrvatska komora inženjera građevinarstva uputila je dopis gradonačelniku Tomaševiću** tvrdeći da za ovako složenu građevinu **„nije bilo uporišta u važećim propisima" za raspisivanje arhitektonsko-urbanističkog (umjesto projektnog) natječaja**, te da sastav OS-a „u kojem su pretežito zastupljeni arhitekti" ne jamči valorizaciju sigurnosti i nosive konstrukcije. Upozorava da izostanak konstruktivne analize u idejnoj fazi može **„ugroziti legalnost natječajnog rješenja"** i bitno povećati troškove.
+
+Presedan: nakon istog tipa upozorenja Grad Zagreb je za **Jarunski most** proveo **projektni** natječaj. Do 2026-08-25 nema javnog odgovora Grada, DAZ-a ni UHA-e. Detalji i izvori: [`research/07-kronologija-objava.md` § 3](research/07-kronologija-objava.md).
+
 ### Politički rizici
 - Lokalni izbori u Zagrebu (proljeće 2026./2029.); promjena gradske vlasti.
 - Parlamentarni izbori 2027./2028.; promjena državne vlasti.
@@ -282,3 +305,52 @@ Sekundarno u javnoj raspravi: **Maroje Mrduljaš** (Oris/ČIP), **Saša Begović
 - **Z-6940 (Bacač diska)** — registracijski broj nije neovisno potvrđen u javnim NN izvodima; tražiti pisanu potvrdu KO Zagreb.
 - **Sokolska svečana loža (1934.)** — nije pronađena kao samostalan upis u Registru; pisana potvrda KO Zagreb.
 - **HRN EN 1998-1/NA/A2** — pratiti ishod javne rasprave do 20.6.2026.
+
+---
+
+## 11. Status nakon predaje (ažurirano 2026-08-25)
+
+> Puni log s izvorima i checklistom za praćenje: [`research/06-status-natjecaja.md`](research/06-status-natjecaja.md).
+
+### 11.1 Gdje je natječaj sada
+
+Natječaj je **završen i zatvoren**. Elektronička predaja kroz EOJN RH zatvorena je **17.7.2026. u 18:00**, predaja maketa **28.7.2026. u 18:00**. Ocjenjivački sud je nakon toga započeo pregled i ocjenjivanje pristiglih prijedloga.
+
+**Rezultati nisu objavljeni.** Provjereno 2026-08-25 na svim relevantnim kanalima:
+
+| Kanal | Nalaz |
+|---|---|
+| Službena stranica — vijesti | Zadnja objava i dalje *„Obavijest natjecateljima – upute za predaju kroz EOJN RH"*. Nema rezultata. |
+| Službena stranica — tijek događanja | Jedini upisani događaj i dalje **20.03.2026. Objava natječaja**. |
+| DAZ — vijesti | Zadnja objava 27.7.2026.; zadnja o Maksimiru je podsjetnik na rok od 6.7.2026. |
+| DAZ — arhiva rezultata natječaja | **Maksimir se ne pojavljuje.** |
+| EOJN 76778 / TED | Postoji samo izvorna obavijest o natječaju (TED 4093-2026). Nema obavijesti o ishodu. |
+| Mediji (HR + EN) | Najsvježije: construction.hr — *„Završen međunarodni natječaj… slijedi ocjenjivanje pristiglih radova"*, uz izričitu napomenu da **ni konačan broj zaprimljenih radova još nije objavljen**. |
+
+### 11.2 Zašto se ne zna tko je predao
+
+Natječaj je **međunarodni, otvoreni, anoniman i jednostupanjski**. Radovi se predaju pod šifrom, a izjava o autorstvu se u EOJN-u otvara tek nakon rangiranja. **Popis natjecatelja i njihovih ureda po definiciji ne postoji javno prije objave rezultata** — to nije informacija koja se „negdje propustila", nego je zaključana pravilima postupka. Isto vrijedi i za ukupan broj radova: construction.hr izrijekom navodi da se objavljuje nakon administrativne provjere svih prijava.
+
+### 11.3 Što postaje javno u trenutku objave
+
+- ukupan broj pristiglih radova,
+- rangiranje i **5 nagrađenih** (390.400 / 244.000 / 146.400 / 117.120 / 78.080 € bruto),
+- **imena autora i arhitektonskih ureda**,
+- **Zapisnik o radu ocjenjivačkog suda** s obrazloženjima po radu — dokument s najvećom analitičkom vrijednošću (pokazuje kako su kriteriji A–D stvarno primijenjeni),
+- izložba natječajnih radova (**≥ 15.9.2026.**) — jedina prilika da se vide i nenagrađeni radovi.
+
+S autorom prvonagrađenog rada ugovara se izrada idejnog, glavnog i izvedbenog projekta.
+
+### 11.4 Prioritet praćenja (rujan 2026.)
+
+1. `stadion-maksimir.zagreb.hr/hr/vijesti-34/34` — prva instanca objave
+2. `d-a-z.hr/hr/natjecaji/rezultati/` — ovdje ide Zapisnik OS-a + vizuali nagrađenih
+3. `eojn.hr/tender-eo/76778` — formalna obavijest o ishodu
+4. `zagreb.hr` priopćenja — politička komunikacija rezultata
+5. Datum, mjesto i trajanje izložbe
+
+### 11.5 Kontekst koji se pomaknuo izvan natječaja
+
+- **Projekt uklanjanja stadiona** deblokiran nakon što je DKOM 2.2.2026. odbio žalbu tvrtke Smagra; posao potvrđen zajednici **EURCO d.d. + RESPECT-ING d.o.o.** (22.222,22 € pri procijenjenih 100.000 €). Rušenje i dalje najavljeno za **2027.**
+- **Kranjčevićeva** (privremeni dom Dinama) — rekonstrukcija u tijeku, dovršetak najavljen za **kraj 2026.**; preduvjet za rušenje Maksimira.
+- **Rok dovršetka** — službeno 2029., Boban javno procjenjuje **kraj 2030.**

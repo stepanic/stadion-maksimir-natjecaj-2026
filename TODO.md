@@ -7,11 +7,19 @@
 > - **kritični put** podebljano
 > - linkovi u zagradama vode u SoT ili istraživanje
 >
-> Posljednje ažuriranje: 2026-05-26.
+> Posljednje ažuriranje: **2026-08-25**.
 
 ---
 
-## Faza 0 — Setup i podloge (27.5. — 2.6.)
+## 🔒 STATUS 2026-08-25 — Faze 0–4 su izvan roka
+
+**Rokovi predaje su prošli** (EOJN 17.7.2026. 18:00, maketa 28.7.2026. 18:00). Checkliste Faza 0–4 ispod **više nisu aktivne** — ostaju kao arhiva i kao gotov predložak za sljedeći natječaj sličnog opsega (posebno kontrolna lista UEFA SIR 2025 i manifest sjevernog ruba, koji su vezani uz propise, ne uz ovaj rok).
+
+**Aktivna je samo [Faza 5 — Post](#faza-5--post-praćenje-rezultata--aktivno).** Rezultati natječaja **nisu objavljeni**; ocjenjivački sud je u postupku ocjenjivanja. Detalji: [`research/06-status-natjecaja.md`](research/06-status-natjecaja.md).
+
+---
+
+## Faza 0 — Setup i podloge (27.5. — 2.6.) *(arhiva)*
 
 ### Administrativno
 - [ ] **Registracija na EOJN RH** za tender 76778 (https://eojn.hr/tender-eo/76778); osigurati 2 kontakt osobe i 2 odvojena računa za backup
@@ -241,12 +249,36 @@
 
 ---
 
-## Faza 5 — Post (od 18.7.)
-- [ ] **Maketa finalizirana i predana do 28.7.2026.** izvan EOJN-a
-- [ ] Pripremiti odgovor na potencijalna pitanja žirija (interni Q&A)
-- [ ] Pratiti odluku OS-a — kraj 7/2026.
-- [ ] Ako pobjeda: pokrenuti konzervatorsku proceduru (posebni uvjeti čl. 43–44 ZZOKD, OPUO/PUO)
-- [ ] Pripremiti se za javno predstavljanje ≥ 15.9.2026.
+## Faza 5 — Post (praćenje rezultata) — **AKTIVNO**
+
+### Praćenje objave rezultata (tjedno, prioritetno u rujnu 2026.)
+- [ ] `stadion-maksimir.zagreb.hr/hr/vijesti-34/34` — vijesti (prva instanca objave)
+- [ ] `stadion-maksimir.zagreb.hr/hr/tijek-dogadjanja/68` — tijek događanja
+- [ ] **`d-a-z.hr/hr/natjecaji/rezultati/`** — ovdje ide **Zapisnik OS-a** + vizuali nagrađenih radova
+- [ ] `d-a-z.hr/hr/vijesti/` i `uha.hr` — DAZ / UHA objave
+- [ ] `eojn.hr/tender-eo/76778` — formalna **obavijest o ishodu natječaja**
+- [ ] TED — „design contest results" obavijest za isti predmet
+- [ ] `zagreb.hr` — priopćenja Grada (rezultati idu i kroz gradsku komunikaciju)
+- [ ] Utvrditi **datum, mjesto i trajanje izložbe** natječajnih radova (≥ 15.9.2026.)
+- [ ] **Odgovor Grada Zagreba na HKIG-ov dopis od 17.7.2026.** + reakcija DAZ-a / UHA-e / HKA-e ([`research/07`](research/07-kronologija-objava.md))
+- [ ] Je li HKIG-ov prigovor pokrenuo ikakav postupak (DKOM, upravni nadzor) nad natječajem
+- [ ] Rujanska „preciznija procjena" roka Kranjčevićeve (15.3.2027.) — pomiče li se rušenje Maksimira
+
+### Kad rezultati izađu — preuzeti i arhivirati u repo
+- [ ] **Zapisnik o radu ocjenjivačkog suda** (obrazloženja po radu — najvrjedniji dokument)
+- [ ] Ukupan **broj pristiglih radova**
+- [ ] Popis **svih nagrađenih i otkupljenih** radova s autorima i **arhitektonskim uredima**
+- [ ] Vizuali nagrađenih rješenja (plakati, renderi)
+- [ ] Zabilježiti kako je svaki nagrađeni rad riješio **sjeverni rub prema Z-1528** (usporediti s manifestom 7+1)
+
+### Izložba (≥ 15.9.2026.)
+- [ ] Otići uživo — jedina prilika da se vide i **nenagrađeni** radovi
+- [ ] Fotografirati postav; zabilježiti tipologije rješenja i ponavljajuće strategije
+
+### Analiza i zatvaranje ciklusa
+- [ ] Post-mortem protiv kriterija A–D iz Zapisnika — što je OS stvarno nagradio
+- [ ] Ažurirati `research/06-status-natjecaja.md` novim nalazima
+- [ ] Ako pobjeda: pokrenuti konzervatorsku proceduru (posebni uvjeti čl. 43–44 ZZOKD, OPUO/PUO) i ugovaranje idejnog + glavnog + izvedbenog projekta
 
 ---
 

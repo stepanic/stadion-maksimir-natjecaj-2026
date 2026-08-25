@@ -1,16 +1,24 @@
 # Roadmap — od SoT-a (26.5.2026.) do predaje (17.–28.7.2026.)
 
+> ## 🔒 ARHIVIRANO — rokovi su prošli (status 2026-08-25)
+>
+> **Ovaj roadmap je izvršen do kraja svog horizonta. Rokovi predaje su prošli: EOJN 17.7.2026. u 18:00, maketa 28.7.2026. u 18:00.**
+> Faze 0–4 nisu više aktivan plan; ostaju kao **arhiva metodologije** (raspored, kritični put, rizici) primjenjiva na sljedeći natječaj sličnog opsega.
+> **Aktivna je jedino Faza 5 — praćenje objave rezultata**, ispod ažurirana. Status i checklist praćenja: [`research/06-status-natjecaja.md`](research/06-status-natjecaja.md), sažetak u [`SOT.md` § 11](SOT.md#11-status-nakon-predaje-ažurirano-2026-08-25).
+
 > Strategijski pregled. Operativna checklist-verzija u [`TODO.md`](TODO.md). Sav sadržaj se naslanja na [`SOT.md`](SOT.md) i [`research/`](research/).
 
 ## Sažetak vremena
 
-| | |
-|---|---|
-| **Danas** | **2026-05-26** |
-| **Rok EOJN (grafika + tekst)** | 2026-07-17 → **52 dana** |
-| **Rok makete (izvan EOJN-a)** | 2026-07-28 → **63 dana** |
-| **Očekivana odluka OS-a** | kraj 7/2026 |
-| **Javno predstavljanje** | ≥ 2026-09-15 |
+*Tablica prikazuje stanje na dan pisanja roadmapa (2026-05-26); desni stupac je naknadni ishod.*
+
+| | | Ishod (2026-08-25) |
+|---|---|---|
+| **Danas (u trenutku pisanja)** | **2026-05-26** | — |
+| **Rok EOJN (grafika + tekst)** | 2026-07-17 → **52 dana** | ✅ prošlo, zatvoreno u 18:00 |
+| **Rok makete (izvan EOJN-a)** | 2026-07-28 → **63 dana** | ✅ prošlo, zatvoreno u 18:00 |
+| **Očekivana odluka OS-a** | kraj 7/2026 | 🔄 ocjenjivanje u tijeku, odluka **još nije objavljena** |
+| **Javno predstavljanje** | ≥ 2026-09-15 | 📅 čeka se |
 
 Tijesno ali izvedivo — SoT je gotov, sad je sve operativa. **Kritični put su plakati, knjižica, anonimnost i fizička maketa.**
 
@@ -243,8 +251,17 @@ flowchart LR
 **T-1 anonimnost:** sustavna provjera (filename, metadata, vidljivi tekst, file properties, vizure koje otkrivaju autora).
 **T-0 EOJN upload:** s rezervom od 24 sata.
 
-### Faza 5 — Post (2026-07-31 → 2026-09-15)
-Odluka OS-a kraj srpnja, javno predstavljanje od 15.9. Ako pobjeda — kreće konzervatorska procedura iz [`SOT.md` § 10.4](SOT.md#104-hitne-akcije-svibanj-lipanj-2026) (posebni uvjeti, OPUO/PUO).
+### Faza 5 — Post (2026-07-31 → objava rezultata) — **JEDINA AKTIVNA FAZA**
+
+**Stanje 2026-08-25:** predaja zatvorena, ocjenjivački sud u postupku ocjenjivanja, **rezultati neobjavljeni**. Ni konačan broj pristiglih radova ni imena natjecatelja nisu javni — natječaj je anoniman, pa se autorstva otvaraju tek uz objavu rezultata. Kolovoz je institucionalni zastoj (DAZ i službena stranica bez objava nakon 27.7.); realan prozor za objavu je **rujan 2026.**, uz izložbu vezanu uz **≥ 15.9.2026.**
+
+Aktivni zadaci:
+
+1. **Tjedno praćenje kanala objave** (redoslijedom vjerojatnosti prve objave): službena stranica → vijesti; `d-a-z.hr/hr/natjecaji/rezultati/`; EOJN 76778 (obavijest o ishodu); `zagreb.hr` priopćenja; UHA.
+2. **Kad rezultati izađu — preuzeti odmah:** Zapisnik o radu OS-a (obrazloženja po radu), popis svih nagrađenih i otkupljenih radova s autorima i uredima, ukupan broj pristiglih radova.
+3. **Izložba (≥ 15.9.)** — otići uživo; jedina prilika da se vide i nenagrađeni radovi. Fotografirati postav, zabilježiti tipologije rješenja sjevernog ruba.
+4. **Ako pobjeda** — kreće konzervatorska procedura iz [`SOT.md` § 10.4](SOT.md#104-hitne-akcije-svibanj-lipanj-2026) (posebni uvjeti čl. 43–44 ZZOKD, OPUO/PUO) i ugovaranje idejnog + glavnog + izvedbenog projekta.
+5. **Neovisno o ishodu** — napraviti post-mortem protiv kriterija A–D iz Zapisnika; to je najvrjedniji ulaz za sljedeći natječaj.
 
 ---
 
@@ -278,4 +295,6 @@ Tjedni ciljevi (T = tjedan):
 | T-2 | 1.7.–7.7. | Plakati draft 1; knjižica draft 1 |
 | T-1 | 8.7.–14.7. | Plakati draft 2; tehnička provjera; tekst |
 | T-0 | 15.7.–17.7. | Anonimnost + EOJN upload |
+| T+1 | 18.7.–28.7. | Maketa predana |
+| T+2 → | od 29.7. | **Praćenje objave rezultata** (aktivno) |
 | T+1 | 18.7.–28.7. | Maketa finalizacija + predaja |
