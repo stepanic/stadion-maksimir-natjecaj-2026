@@ -14,6 +14,7 @@ import research04 from "../../research/04-tehnicki-okvir.md?raw";
 import research05 from "../../research/05-mediji-politika.md?raw";
 import research06 from "../../research/06-status-natjecaja.md?raw";
 import research07 from "../../research/07-kronologija-objava.md?raw";
+import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -184,6 +185,20 @@ export const docs: DocSection[] = [
         repoPath: "research/cross-check/C-konzervatorski-REPORT.md",
         raw: ccC,
         section: "cross-check",
+      },
+    ],
+  },
+  {
+    id: "docs",
+    title: "Operativa",
+    items: [
+      {
+        slug: "ops-status-deploy",
+        title: "Provjera statusa i deploy",
+        subtitle: "Kanali provjere, docs.ts zamka, Cloudflare Pages (26.8.2026.)",
+        repoPath: "docs/2026-08-26-provjera-statusa-i-deploy.md",
+        raw: ops20260826,
+        section: "docs",
       },
     ],
   },

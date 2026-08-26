@@ -23,6 +23,7 @@ Single source of truth za pripremu natječajnog rješenja na međunarodni arhite
 - **[`sources/`](sources/)** — službeni izvori (Uvjeti, Program, extracted MD-ovi, manifest)
 - **[`research/`](research/)** — 5 dubinskih istraživanja (sud, reference, lokacija, tehnika, mediji) + **[`06-status-natjecaja.md`](research/06-status-natjecaja.md)** (živi log stanja) + **[`07-kronologija-objava.md`](research/07-kronologija-objava.md)** (kronologija objava)
 - **[`research/cross-check/`](research/cross-check/)** — 3 nezavisne Claude Desktop Research verifikacije + sinteza-diff
+- **[`docs/`](docs/)** — operativno znanje (kako provjeriti status natječaja, repo→stranica pipeline, deploy)
 
 Repo je **Single Source of Truth o natječaju + arhiva projektnog plana** za prijavu (koncept → predaja 17.–28.7.2026.). Nakon isteka rokova težište se prebacilo na **praćenje objave rezultata i analizu Zapisnika ocjenjivačkog suda**.
 
