@@ -229,6 +229,7 @@ stateDiagram-v2
 | Otključavanje passkeyjem | ✔ isti passkey, **isti commitment** kao pri izradi (`3790297512…`) |
 | Opaženo (drugi test) | više passkeyja istog imena „Maksimir TEST (localhost)” u Lozinkama; nije jasno koji je koji (K-05). **Popravljeno:** ime s otiskom, `user.id` iz ključa |
 | Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02). **Popravljeno:** gumb je neaktivan dok ključ postoji |
+| **Web tok na lancu** (26. 9. 2026., Brave, `localhost:5173`, Chiado) | ✔ novi ključ → 24 riječi → potvrda 3 riječi → passkey (Touch ID, Matija) → registracija → listić 50/30/20 na lancu ([tx](https://gnosis-chiado.blockscout.com/tx/0x295ec7a556acbec00e9ff323a38e9b946233578fe62f6bd894d7b1a3da5f3e28)); `ballotOf` = listić, omot u `maksimir_keystore` |
 
 ## Plan implementacije
 
