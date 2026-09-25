@@ -14,13 +14,7 @@ const SEMAPHORE_ABI = parseAbi([
 
 type SemaphoreLog = { blockNumber: bigint | null; logIndex: number | null; eventName: string; args: Record<string, unknown> };
 
-export async function fetchGroup(
-  client: PublicClient,
-  semaphore: Address,
-  groupId: bigint,
-  fromBlock: bigint,
-  step = 50_000n
-): Promise<Group> {
+async function fetchLogs(client: PublicClient, semaphore: Address, groupId: bigint, fromBlock: bigint, step: bigint): Promise<SemaphoreLog[]> {
   const latest = await client.getBlockNumber();
   const logs: SemaphoreLog[] = [];
   for (let from = fromBlock; from <= latest; from += step) {
@@ -33,7 +27,17 @@ export async function fetchGroup(
   }
   // redoslijed na lancu: blok, pa indeks događaja u bloku
   logs.sort((a, b) => Number(a.blockNumber! - b.blockNumber!) || a.logIndex! - b.logIndex!);
+  return logs;
+}
 
+export async function fetchGroup(
+  client: PublicClient,
+  semaphore: Address,
+  groupId: bigint,
+  fromBlock: bigint,
+  step = 50_000n
+): Promise<Group> {
+  const logs = await fetchLogs(client, semaphore, groupId, fromBlock, step);
   const g = new Group();
   for (const l of logs) {
     const a = l.args as Record<string, unknown>;
@@ -55,4 +59,13 @@ export async function fetchGroup(
   const root = await client.readContract({ address: semaphore, abi: SEMAPHORE_ABI, functionName: "getMerkleTreeRoot", args: [groupId] });
   if (g.size > 0 && g.root !== root) throw new Error("grupa iz događaja ne odgovara korijenu na lancu");
   return g;
+}
+
+/**
+ * Svi korijeni koje je grupa ikad imala (iz događaja). Dokaz izrađen nad starijom grupom i
+ * dalje je dokaz člana; tako preglednik posjetitelja provjerava dokaz vlasništva nullifiera.
+ */
+export async function groupRoots(client: PublicClient, semaphore: Address, groupId: bigint, fromBlock: bigint, step = 50_000n): Promise<Set<bigint>> {
+  const logs = await fetchLogs(client, semaphore, groupId, fromBlock, step);
+  return new Set(logs.map((l) => (l.args as { merkleTreeRoot: bigint }).merkleTreeRoot));
 }
