@@ -1,12 +1,14 @@
 # 06 — Status natječaja nakon isteka rokova (praćenje)
 
-> **Zadnja provjera: 2026-08-25.**
+> **Zadnja provjera: 2026-09-25 — REZULTATI OBJAVLJENI 24.9.2026.** Detalji u [`08-rezultati-natjecaja.md`](08-rezultati-natjecaja.md), a galerija nagrađenih radova je na [Rezultati natječaja](#/rezultati).
 > Kronološki zapisnik pojedinačnih objava je u [`07-kronologija-objava.md`](07-kronologija-objava.md) — uključujući **HKIG-ov dopis gradonačelniku od 17.7.2026.**
 > Ovaj dokument je *živi log stanja* natječaja nakon isteka rokova predaje. Za razliku od `01–05`, koji su dubinska istraživanja s fiksnim datumom, ovaj se dokument ažurira svaki put kad se pojavi nova službena informacija.
 
 ---
 
 ## 1. Zaključak u jednoj rečenici
+
+> **Ažurirano 2026-09-25:** Rezultati su objavljeni **24.9.2026.** Pristiglo je **88 radova** iz više od 20 zemalja i dodijeljeno 5 nagrada. **1. nagradu** je dobio **VG13 Architects Studio Associato** (Milano; Tommaso Fantini, Alberto Rossi). Sve u [08](08-rezultati-natjecaja.md). Tekst ispod je stanje od 25.8. i ostaje kao povijesni zapis.
 
 **Natječaj je zatvoren, radovi su predani, ocjenjivački sud je u postupku ocjenjivanja — ali rezultati NISU objavljeni.** Na dan 2026-08-25 nigdje (službena stranica, DAZ, UHA, EOJN, mediji) nije objavljen ni **konačan broj pristiglih radova**, ni **nagrađeni radovi**, ni **imena autora / arhitektonskih ureda**.
 
@@ -30,6 +32,8 @@ To nije propust u komunikaciji nego **posljedica pravila natječaja**: natječaj
 | kraj 7. / 8. 2026. | Ocjenjivački sud započinje pregled i ocjenjivanje pristiglih prijedloga | 🔄 u tijeku | construction.hr |
 | **2026-08-25** | **Rezultati i dalje neobjavljeni**; službeni organizatori nisu objavili ni konačan broj zaprimljenih radova | ⏳ čeka se | provjera 2026-08-25 |
 | ≥ 2026-09-15 | Planirano javno predstavljanje rezultata i izložba natječajnih radova | 📅 planirano | Uvjeti natječaja, tportal |
+| **2026-09-24, 13:30** | **Objava rezultata**: 88 radova, 5 nagrada, pobjednik VG13 (Milano). Predstavljanje u DAZ-u | ✅ | [službena objava](https://stadion-maksimir.zagreb.hr/hr/rezultati-natjecaja-128/128), [08](08-rezultati-natjecaja.md) |
+| ~ listopad 2026. | Izložba svih radova s maketama („za otprilike mjesec dana”) | 📅 najavljeno | construction.hr, net.hr |
 
 ---
 

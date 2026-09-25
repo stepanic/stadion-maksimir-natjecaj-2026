@@ -105,6 +105,17 @@ Provjereni kanali i nalazi u [`06-status-natjecaja.md` § 3](06-status-natjecaja
 
 ---
 
+## 9. 2026-09-24 — objava rezultata
+
+Na službenoj stranici je objavljena vijest *„Rezultati natječaja”* ([128](https://stadion-maksimir.zagreb.hr/hr/rezultati-natjecaja-128/128)), a izbornik je dobio stavku „Rezultati natječaja” ([130](https://stadion-maksimir.zagreb.hr/hr/rezultati-natjecaja-130/130)). Predstavljanje je bilo u DAZ-u.
+- **88 radova** iz više od 20 zemalja i **5 nagrada**. Uz svaki nagrađeni rad objavljen je PDF od 10 panela.
+- **1.** VG13 (Milano) · **2.** XDGA (Bruxelles) · **3.** Plan Común / Studio Muoto / DATA · **4.** njiric plus (Zagreb) · **5.** LAN / P2PA.
+- Isti dan su objavili HKA (vijest 6202), Grad Zagreb (FB, X, IG) i svi veći mediji. Idući dan su pokrenute peticija i inicijativa za opoziv.
+- Stranica `tijek-dogadjanja/68` ni sada nije ažurirana.
+- Sve pojedinosti su u [`08-rezultati-natjecaja.md`](08-rezultati-natjecaja.md).
+
+---
+
 ## Kontekst izvan natječaja koji se pomaknuo u istom razdoblju
 
 Ne tiče se natječajnog postupka, ali mijenja raspored realizacije:
