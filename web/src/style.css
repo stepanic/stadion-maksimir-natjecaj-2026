@@ -1031,3 +1031,6 @@ body.lb-open {
   width: min(1203px, 100%);
   cursor: zoom-out;
 }
+.self-published li {
+  margin: 6px 0;
+}

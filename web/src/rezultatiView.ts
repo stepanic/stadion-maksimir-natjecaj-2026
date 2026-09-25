@@ -64,8 +64,22 @@ export function renderResultsIndex(el: HTMLElement) {
   `;
 }
 
-// Popunjava se iz istraživanja dostupnosti nenagrađenih radova.
-const NON_AWARDED_HTML = `<p>Istraživanje u tijeku.</p>`;
+// Stanje 25.9.2026. — nenagrađeni radovi službeno nisu objavljeni; vidi research/08 §8.
+const NON_AWARDED_HTML = `
+  <p><strong>Službeno zasad nisu objavljeni.</strong> Na dan 25. 9. 2026. javni su samo podaci i PDF-ovi pet nagrađenih radova. Popisa ostalih 83 šifre i autora, galerije i završnog izvješća nema. Na EOJN-u je dostupan samo „Zapisnik o pregledu i ocjeni”, i to uz prijavu.</p>
+  <p><strong>Ali po propisima moraju biti.</strong> Pravilnik o natječajima (NN 154/2025) traži da se uz rezultate objave završno izvješće i grafički prilozi rješenja (čl. 81.). Traži i da se na stranicama HKA omogući uvid u <em>sva</em> pristigla rješenja te da se održi izložba svih rješenja (čl. 84.). DAZ je kod prošlih natječaja (Dom zdravlja Vrbani, park Šestine) objavio sve radove. <strong>Izložba svih 88 radova s maketama</strong> najavljena je „za otprilike mjesec dana”.</p>
+  <p>Do tada su dostupni samo radovi koje su autori sami objavili:</p>
+  <ul class="self-published">
+    <li><strong>Zaha Hadid Architects</strong> + UPI2M, Buro Happold, Arup — <a href="https://www.instagram.com/p/DdrR35mADzJ/" target="_blank" rel="noopener">Instagram ↗</a></li>
+    <li><strong>3LHD</strong> — <a href="https://www.instagram.com/p/DdrYCvxFfDA/" target="_blank" rel="noopener">Instagram ↗</a> · <a href="https://www.linkedin.com/posts/3lhd_deminutiv-inspekting-tering-activity-7508928803059093504-YuPT" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+    <li><strong>GEplus arhitekti</strong> + DBA Architects — <a href="https://www.instagram.com/p/DdrLnnbjki8/" target="_blank" rel="noopener">Instagram ↗</a></li>
+    <li><strong>Urbane ideje</strong> + Kengo Kuma &amp; Associates — <a href="https://www.tportal.hr/kultura/clanak/foto-pogledajte-kako-su-urbane-ideje-i-slavni-japanski-arhitekti-zamislili-novi-maksimir-foto-20260924" target="_blank" rel="noopener">tportal ↗</a></li>
+    <li><strong>Otto Barić</strong> i tim — <a href="https://www.tportal.hr/kultura/clanak/foto-ovako-je-maksimir-zamislio-poznati-hrvatski-arhitekt-malo-je-drugaciji-od-pobjednika-20260924" target="_blank" rel="noopener">tportal ↗</a></li>
+    <li><strong>Proarh</strong> — <a href="https://www.jutarnji.hr/vijesti/zagreb/nevidene-vizije-maksimira-objavljeni-odbaceni-projekti-3lhd-proarh-geplus-urbane-ideje-kengo-kuma-15749656" target="_blank" rel="noopener">Jutarnji, galerija ↗</a></li>
+    <li><strong>IEC Architects + Engineers</strong> — <a href="https://www.index.hr/sport/clanak/foto-egipcani-imaju-posebnu-ideju-za-maksimir-evo-sto-bi-sve-taj-stadion-imao/2838626.aspx" target="_blank" rel="noopener">Index ↗</a> <span class="muted">(porijeklo ureda nije provjereno)</span></li>
+  </ul>
+  <p class="muted small">Zbirno: <a href="https://net.hr/sport/nogomet/kako-je-mogao-izgledati-novi-maksimir-pogledajte-projekte-koji-nisu-pobijedili-9014428a-b857-11f1-936f-9600040c8f8e" target="_blank" rel="noopener">net.hr — projekti koji nisu pobijedili ↗</a>. Propisi, rokovi i kako zatražiti sve radove: <a href="#/research-08-rezultati">research 08, §8</a>.</p>
+`;
 
 export function renderAward(el: HTMLElement, rank: number): boolean {
   const a = awards.find((x) => x.rank === rank);
