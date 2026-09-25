@@ -1034,3 +1034,144 @@ body.lb-open {
 .self-published li {
   margin: 6px 0;
 }
+
+/* ---------- Svi radovi ---------- */
+
+.rad-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  margin: 4px 0 16px;
+}
+#rad-q {
+  flex: 1 1 280px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 15px;
+  color: var(--navy);
+}
+.rad-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rad-filters button {
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.rad-filters button.on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.rad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.rad-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--white);
+  color: var(--navy);
+  text-decoration: none;
+}
+.rad-card:hover {
+  border-color: var(--navy);
+  box-shadow: 0 6px 18px rgba(0, 47, 108, 0.1);
+  text-decoration: none;
+  color: var(--navy);
+}
+.rad-card--award {
+  border-color: var(--red);
+}
+.rad-card--rejected {
+  opacity: 0.7;
+}
+.rad-thumb {
+  position: relative;
+  aspect-ratio: 1600 / 1012;
+  background: var(--surface);
+}
+.rad-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.rad-rank {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.rad-card--award .rad-rank {
+  background: var(--red);
+}
+.rad-body {
+  padding: 10px 12px 12px;
+}
+.rad-lead {
+  font-weight: 700;
+  font-size: 14.5px;
+  line-height: 1.25;
+}
+.rad-people {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rad-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.rad-hero img {
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+.rad-hero figcaption {
+  padding: 6px 10px;
+}
+.jury {
+  white-space: pre-line;
+  font-size: 14.5px;
+}
+.rad-roles td {
+  padding: 4px 8px 4px 0;
+}
+.rad-rejected {
+  border-color: var(--danger);
+}
+@media (max-width: 760px) {
+  .rad-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .rad-filters button {
+    font-size: 12px;
+  }
+}

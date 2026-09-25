@@ -15,6 +15,7 @@ import research05 from "../../research/05-mediji-politika.md?raw";
 import research06 from "../../research/06-status-natjecaja.md?raw";
 import research07 from "../../research/07-kronologija-objava.md?raw";
 import research08 from "../../research/08-rezultati-natjecaja.md?raw";
+import research09 from "../../research/09-svi-radovi.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
@@ -147,6 +148,14 @@ export const docs: DocSection[] = [
         subtitle: "88 radova, 5 nagrada, VG13 pobjednik — činjenice, izjave, reakcije",
         repoPath: "research/08-rezultati-natjecaja.md",
         raw: research08,
+        section: "research",
+      },
+      {
+        slug: "research-09-svi-radovi",
+        title: "09 — Svih 88 radova",
+        subtitle: "Popis po rangu: šifre, autori, zemlje (službeni EOJN zapisnik)",
+        repoPath: "research/09-svi-radovi.md",
+        raw: research09,
         section: "research",
       },
     ],

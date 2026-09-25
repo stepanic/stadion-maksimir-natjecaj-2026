@@ -7,7 +7,7 @@ export const landingHtml = /* html */ `
   <div>
     <div class="hero-eyebrow">Novo · 24. 9. 2026.</div>
     <strong>Objavljeni rezultati: 88 radova, 5 nagrada. Pobjednik je VG13 Architects (Milano).</strong>
-    <span>Pogledaj sve nagrađene radove i sve njihove panele →</span>
+    <span>Pogledaj nagrađene radove i <u>svih 88 natječajnih radova</u> →</span>
   </div>
 </a>
 

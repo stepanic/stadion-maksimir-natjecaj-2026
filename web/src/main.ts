@@ -5,6 +5,7 @@ import { docs, docIndex, type DocEntry } from "./docs";
 import { renderMarkdown, renderMermaidIn } from "./markdown";
 import { landingHtml } from "./landing";
 import { renderResultsIndex, renderAward } from "./rezultatiView";
+import { renderRadoviIndex, renderRad } from "./radoviView";
 
 const navEl = document.getElementById("nav")!;
 const contentEl = document.getElementById("content")!;
@@ -20,6 +21,7 @@ function buildNav() {
   const html: string[] = [];
   html.push(`<a class="nav-home" href="#/" data-slug="__home__">Naslovnica</a>`);
   html.push(`<a class="nav-home nav-results" href="#/rezultati" data-slug="rezultati">Rezultati natječaja · 5 nagrađenih radova</a>`);
+  html.push(`<a class="nav-home nav-results" href="#/radovi" data-slug="radovi">Svih 88 natječajnih radova</a>`);
   for (const section of docs) {
     html.push(`<div class="nav-section">`);
     html.push(`<div class="nav-section-title">${section.title}</div>`);
@@ -121,6 +123,20 @@ function renderResults(slug: string) {
   window.scrollTo({ top: 0 });
 }
 
+function renderRadovi(slug: string) {
+  const code = slug.split("/")[1];
+  const base = [{ label: "Naslovnica", href: "#/" }];
+  if (code) {
+    const r = renderRad(contentEl, code);
+    setCrumbs([...base, { label: "Svi radovi", href: "#/radovi" }, { label: r ? r.code : "404" }]);
+  } else {
+    renderRadoviIndex(contentEl);
+    setCrumbs([...base, { label: "Svih 88 radova" }]);
+  }
+  setActiveNav("radovi");
+  window.scrollTo({ top: 0 });
+}
+
 function sectionTitle(id: string): string {
   return docs.find((s) => s.id === id)?.title ?? "";
 }
@@ -143,6 +159,10 @@ async function route() {
   const { slug, hash } = parseRoute();
   if (!slug) {
     renderHome();
+    return;
+  }
+  if (slug === "radovi" || slug.startsWith("radovi/")) {
+    renderRadovi(slug);
     return;
   }
   if (slug === "rezultati" || slug.startsWith("rezultati/")) {
