@@ -1211,6 +1211,9 @@ body.lb-open {
 }
 
 /* ── Glasanje javnosti (#/glasanje) ─────────────────────────────────────── */
+[hidden] {
+  display: none !important;
+}
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;

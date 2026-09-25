@@ -269,7 +269,7 @@ function ballotHtml(): string {
       </div>
       <div class="gl-sum ${sum === 100 ? "ok" : sum > 100 ? "over" : ""}">
         Raspodijeljeno <strong>${sum}</strong> / 100
-        ${sum < 100 && entries.length ? `<button class="btn btn-sm" data-act="spread">Raspodijeli ostatak (${100 - sum})</button>` : ""}
+        ${entries.length ? `<button class="btn btn-sm" data-act="spread" ${sum >= 100 ? "hidden" : ""}>Raspodijeli ostatak (${Math.max(0, 100 - sum)})</button>` : ""}
       </div>
       ${
         st.consent
@@ -286,9 +286,7 @@ function ballotHtml(): string {
               <button class="btn" data-act="noconsent">Odustani</button>
             </div>`
           : `<div class="gl-actions">
-              <button class="btn btn-primary" data-act="submit" ${
-                st.busy || !open || !dirty || (entries.length > 0 && sum !== 100) ? "disabled" : ""
-              }>${hasServer ? "Predaj izmijenjeni listić" : "Predaj listić"}</button>
+              <button class="btn btn-primary" data-act="submit" ${submitDisabled() ? "disabled" : ""}>${hasServer ? "Predaj izmijenjeni listić" : "Predaj listić"}</button>
               ${hasServer && dirty ? `<button class="btn" data-act="reset">Vrati predani listić</button>` : ""}
               ${hasServer ? `<button class="btn" data-act="withdraw" ${st.busy ? "disabled" : ""}>Povuci glas</button>` : ""}
               ${!open ? `<span class="muted small">Glasanje je zatvoreno.</span>` : ""}
@@ -376,9 +374,43 @@ function integrityHtml(): string {
     </section>`;
 }
 
+function submitDisabled(): boolean {
+  const n = Object.keys(st.draft).length;
+  const sum = sumPoints(st.draft);
+  const open = st.results?.open ?? true;
+  return !!st.busy || !open || sameItems(st.draft, st.my?.items ?? {}) || (n > 0 && sum !== 100);
+}
+
+function updateBallotInPlace(el: HTMLElement) {
+  const sum = sumPoints(st.draft);
+  const box = el.querySelector<HTMLElement>(".gl-sum");
+  if (box) {
+    box.classList.toggle("ok", sum === 100);
+    box.classList.toggle("over", sum > 100);
+    box.querySelector("strong")!.textContent = String(sum);
+    const spread = box.querySelector<HTMLButtonElement>('[data-act="spread"]');
+    if (spread) {
+      spread.hidden = sum >= 100;
+      spread.textContent = `Raspodijeli ostatak (${Math.max(0, 100 - sum)})`;
+    }
+  }
+  el.querySelectorAll<HTMLElement>(".gl-row").forEach((row) => {
+    const bar = row.querySelector<HTMLElement>(".gl-bar span");
+    if (bar) bar.style.width = `${Math.min(100, st.draft[row.dataset.code!] ?? 0)}%`;
+  });
+  const submit = el.querySelector<HTMLButtonElement>('[data-act="submit"]');
+  if (submit) submit.disabled = submitDisabled();
+}
+
 function draw() {
   const el = root;
   if (!el) return;
+  // Puni re-render: sačuvaj scroll i fokus (npr. uzastopni klikovi na +/−).
+  const y = window.scrollY;
+  const act = document.activeElement as HTMLElement | null;
+  const focusKey = act?.closest<HTMLElement>(".gl-row")
+    ? `.gl-row[data-code="${act.closest<HTMLElement>(".gl-row")!.dataset.code}"] ${act.dataset.act ? `[data-act="${act.dataset.act}"]` : "input"}`
+    : null;
   const res = st.results;
   const focusQ = document.activeElement?.id === "gl-q";
 
@@ -416,7 +448,10 @@ function draw() {
     const q = el.querySelector<HTMLInputElement>("#gl-q")!;
     q.focus();
     q.setSelectionRange(q.value.length, q.value.length);
+  } else if (focusKey) {
+    el.querySelector<HTMLElement>(focusKey)?.focus({ preventScroll: true });
   }
+  window.scrollTo({ top: y });
   bind(el);
 }
 
@@ -424,11 +459,20 @@ function bind(el: HTMLElement) {
   el.querySelectorAll<HTMLElement>(".gl-row").forEach((row) => {
     const code = row.dataset.code!;
     const input = row.querySelector<HTMLInputElement>("input")!;
+    const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v) || 0));
     const set = (v: number) => {
-      saveDraft({ ...st.draft, [code]: Math.max(0, Math.min(100, Math.round(v) || 0)) });
+      saveDraft({ ...st.draft, [code]: clamp(v) });
       draw();
     };
-    input.addEventListener("change", () => set(Number(input.value)));
+    // Tipkanje ažurira samo zbroj/trake/gumb na mjestu. Puni draw() bi zamijenio
+    // DOM usred Tab-a i izgubio fokus (klik na sljedeće polje bi promašio).
+    input.addEventListener("input", () => {
+      saveDraft({ ...st.draft, [code]: clamp(Number(input.value)) });
+      updateBallotInPlace(el);
+    });
+    input.addEventListener("change", () => {
+      input.value = String(st.draft[code] ?? 0);
+    });
     row.querySelector('[data-act="dec"]')!.addEventListener("click", () => set((st.draft[code] ?? 0) - 5));
     row.querySelector('[data-act="inc"]')!.addEventListener("click", () => set((st.draft[code] ?? 0) + 5));
     row.querySelector('[data-act="remove"]')!.addEventListener("click", () => {
