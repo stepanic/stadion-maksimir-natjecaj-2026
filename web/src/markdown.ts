@@ -47,22 +47,25 @@ const md = new MarkdownIt({
   },
 });
 
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[čć]/g, "c")
+    .replace(/đ/g, "d")
+    .replace(/š/g, "s")
+    .replace(/ž/g, "z")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
 md.use(anchor, {
   permalink: anchor.permalink.linkInsideHeader({
     symbol: "#",
     placement: "before",
     class: "header-anchor",
   }),
-  slugify: (s) =>
-    s
-      .toLowerCase()
-      .replace(/[čć]/g, "c")
-      .replace(/đ/g, "d")
-      .replace(/š/g, "s")
-      .replace(/ž/g, "z")
-      .replace(/[^\w\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-"),
+  slugify,
 });
 
 // Rewrite internal links: relative .md paths -> hash routes when known.
@@ -90,10 +93,19 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
   return defaultLinkRender(tokens, idx, options, env, self);
 };
 
+const REPO_BLOB = "https://github.com/stepanic/stadion-maksimir-natjecaj-2026/blob/main";
+
 function rewriteHref(href: string, docPath?: string): string {
   if (!href) return href;
-  // External, mailto, anchors — leave alone (anchor jumps within current doc).
-  if (/^(https?:|mailto:|#)/.test(href)) return href;
+  // External, mailto — leave alone.
+  if (/^(https?:|mailto:)/.test(href)) return href;
+  // Sidro unutar dokumenta: hash ruter treba `#/<slug>#<sidro>`, inače bi `#sidro` postao nepoznat slug.
+  if (href.startsWith("#")) {
+    const slug = docPath ? pathToSlug[normalizePath(docPath)] : undefined;
+    // GitHub sidra zadržavaju dijakritike (#tko-što-vidi); ovdje ih slugify skida kao i u naslovima.
+    const id = slugify(decodeURIComponent(href.slice(1)));
+    return slug ? `#/${slug}#${id}` : `#${id}`;
+  }
 
   // Strip URL fragment, remember it for re-appending.
   const [pathPartRaw, hashPart] = href.split("#");
@@ -111,7 +123,11 @@ function rewriteHref(href: string, docPath?: string): string {
     const h = hashPart ? `#${hashPart}` : "";
     return `#/${pathToSlug[pathPart]}${h}`;
   }
-  // Not a bundled doc — keep as-is (will 404 visibly, which is desired signal).
+  // Nije u manifestu (skripta, JSON, mapa…): pokaži datoteku u javnom repou.
+  if (docPath && !pathPart.startsWith("..")) {
+    const h = hashPart ? `#${hashPart}` : "";
+    return `${REPO_BLOB}/${pathPart.replace(/\/$/, "")}${h}`;
+  }
   return href;
 }
 

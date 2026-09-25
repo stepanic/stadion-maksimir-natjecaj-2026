@@ -1,6 +1,6 @@
 # Glasanje javnosti — provjerljivi zapis
 
-Neslužbeno glasanje na [#/glasanje](https://stadion-maksimir-8cl.pages.dev/#/glasanje). Svaka osoba
+Neslužbeno glasanje na [#/glasanje](https://maksimir.domovina.ai/#/glasanje). Svaka osoba
 potvrđena eOsobnom ili Certilia mobile.ID-jem ima jedan glas od **100 bodova** koje raspoređuje po
 88 natječajnih radova. Listić smije mijenjati do **31. 12. 2027. u 23:59** (Europe/Zagreb).
 Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
@@ -15,6 +15,8 @@ Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
 | Ekran listića, rezultata i potvrde | `web/src/glasanjeView.ts` |
 | Satni snapshot → OpenTimestamps | `scripts/maksimir_checkpoint.py`, pokreće ga `.github/workflows/maksimir-checkpoint.yml` |
 | Neovisna provjera | `scripts/maksimir_verify.py` |
+| Dijeljenje glasa (javno / ZK), zapisnik ZK grupe | `domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql` |
+| ZK dokaz u pregledniku (Semaphore v4) | `web/src/zk.ts`; stranica objave `web/src/shareView.ts`; OG kartica `web/functions/g/[id].ts` |
 | Snapshotovi i `.ots` dokazi | `glasanje/checkpoints/` (ova mapa) |
 
 Prijava koristi istu infrastrukturu kao domovina.ai: Certilia proxy `certilia.domovina.ai`, edge funkciju
@@ -55,6 +57,19 @@ ili pokreni `ots verify checkpoints/<datoteka>.json.ots`.
 potvrđuje Certilia preko našeg poslužitelja. Zato je broj glasača u svakom satnom snapshotu, pa je
 svaki nagli skok trajno zabilježen. Glasanje nije tajno prema operateru baze (veza `voter_id → oib_hash`
 postoji u bazi). Javni su samo agregati i, po zatvaranju, lanac pod pseudonimima.
+
+## Dijeljenje glasa
+
+Nakon predaje glasač može glas podijeliti **javno** (ime iz eOsobne u obliku koji izabere, svi bodovi,
+zapis u lancu) ili **anonimno**, sa Semaphore ZK dokazom da je glas predala jedna od N potvrđenih osoba.
+Obje objave imaju poveznicu `https://maksimir.domovina.ai/g/<id>` s OG karticom za društvene mreže.
+Zapisnik ZK grupe je javan uvijek (`maksimir_zk_group()`) i ulazi u satni snapshot (`maksimir-snapshot/2`):
+
+```
+zk hash = sha256(prev_hash|seq|op|commitment)   (op = add | remove, genesis 64 × 0)
+```
+
+Detalji, dijagrami i plan za sljedeće faze na blockchainu: [docs/glasanje-kako-radi.md](../docs/glasanje-kako-radi.md).
 
 ## Upravljanje
 

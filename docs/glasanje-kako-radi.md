@@ -1,7 +1,7 @@
 # Kako tehnički radi glasanje javnosti
 
 Ovaj dokument korak po korak opisuje što se događa od trenutka kad netko otvori stranicu
-[stadion-maksimir.domovina.ai/#/glasanje](https://stadion-maksimir.domovina.ai/#/glasanje)
+[maksimir.domovina.ai/#/glasanje](https://maksimir.domovina.ai/#/glasanje)
 do trenutka kad bilo tko, bez povjerenja u nas, može provjeriti da nitko nije promijenio
 nijedan glas.
 
@@ -11,7 +11,13 @@ Glasanje je **neslužbeno** i nema utjecaja na odluku ocjenjivačkog suda. Pravi
 - jedna osoba ima jedan glas od **100 bodova** koje raspoređuje po 88 natječajnih radova kako želi
   (svih 100 jednom radu ili npr. 50/30/20);
 - listić se smije mijenjati ili povući do **31. 12. 2027. u 23:59** (po zagrebačkom vremenu), a broji se zadnja verzija;
-- rezultati su javni uživo.
+- rezultati su javni uživo;
+- svoj glas glasač može podijeliti **javno** (s imenom iz eOsobne) ili **anonimno** (sa ZK dokazom).
+
+Sve u fazi 1 radi **offchain**: bez pametnih ugovora i bez novčanika, ali s istim kriptografskim
+alatima koji se koriste i na blockchainu (SHA-256 lanci, OpenTimestamps u Bitcoinu, Semaphore ZK
+dokazi). Što bi u sljedećim fazama trebalo preseliti na blockchain opisano je u poglavlju
+[Sljedeće faze](#sljedeće-faze-što-preseliti-onchain).
 
 ## Sadržaj
 
@@ -23,9 +29,11 @@ Glasanje je **neslužbeno** i nema utjecaja na odluku ocjenjivačkog suda. Pravi
 6. [Korak 5: potvrda za glasača](#korak-5-potvrda-za-glasača)
 7. [Korak 6: satni snapshot u Bitcoinu](#korak-6-satni-snapshot-u-bitcoinu)
 8. [Korak 7: neovisna provjera](#korak-7-neovisna-provjera)
-9. [Tko što vidi](#tko-što-vidi)
-10. [Što sustav ne rješava](#što-sustav-ne-rješava)
-11. [Gdje je kôd](#gdje-je-kôd)
+9. [Korak 8: podijeli svoj glas, javno ili anonimno](#korak-8-podijeli-svoj-glas-javno-ili-anonimno)
+10. [Tko što vidi](#tko-što-vidi)
+11. [Što sustav ne rješava](#što-sustav-ne-rješava)
+12. [Sljedeće faze: što preseliti onchain](#sljedeće-faze-što-preseliti-onchain)
+13. [Gdje je kôd](#gdje-je-kôd)
 
 ## 1. Pregled sustava
 
@@ -35,7 +43,7 @@ javnom repozitoriju.
 ```mermaid
 flowchart LR
   subgraph K["Glasač"]
-    B["Preglednik<br/>stadion-maksimir.domovina.ai"]
+    B["Preglednik<br/>maksimir.domovina.ai"]
   end
 
   subgraph C["Certilia (AKD)"]
@@ -74,6 +82,12 @@ flowchart LR
 |---|---|
 | Preglednik | Prikazuje radove, drži nacrt listića u `localStorage` dok se ne preda, zove RPC-eve baze. |
 | Certilia proxy | Posreduje u OIDC prijavi prema Certiliji. Jedini zna client secret. |
+| Dijeljenje i ZK: tablice, zapisnik grupe, RPC-evi | [`domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925160000_maksimir_share_zk.sql) |
+| Test dijeljenja i ZK-a (13 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_share_zk.sql) |
+| ZK u pregledniku (Semaphore: ključ, dokaz, provjera) | [`web/src/zk.ts`](../web/src/zk.ts) |
+| Stranica objave i gumbi za dijeljenje | [`web/src/shareView.ts`](../web/src/shareView.ts) |
+| OG kartica za `/g/<id>` | [`web/functions/g/[id].ts`](../web/functions/g/%5Bid%5D.ts) |
+| E2E test ZK toka | [`web/scripts/zk-e2e.mjs`](../web/scripts/zk-e2e.mjs) |
 | Edge funkcija `certilia` | Provjerava potpis `id_tokena`, pretvara identitet u sesiju u bazi. |
 | Postgres | Čuva glasače, listiće i lanac hasheva. Sva pravila glasanja provode se u bazi, ne u pregledniku. |
 | GitHub Action | Svaki sat uzima snapshot stanja i žigoše ga u Bitcoinu preko OpenTimestampsa. |
@@ -358,6 +372,113 @@ Pojedinačni `.ots` dokaz može se provjeriti i bez naše skripte: na
 Provjera je isprobana i u suprotnom smjeru: namjerno izmijenjen listić u jednom redu lanca
 skripta je otkrila s dvije greške i izlaznim kodom 1.
 
+## Korak 8: podijeli svoj glas, javno ili anonimno
+
+Glasač nakon predaje listića može sam izabrati kako će svoj glas podijeliti. Obje objave dobivaju
+stalnu poveznicu `https://maksimir.domovina.ai/g/<id>` koja se na društvenim mrežama prikazuje kao
+kartica s naslovom, opisom i slikom. Tako svaka objava ujedno poziva i druge da glasaju.
+
+| | Javno, s imenom | Anonimno, sa ZK dokazom |
+|---|---|---|
+| Što se vidi | ime iz eOsobne u izabranom obliku, svi bodovi, zapis u lancu | samo da je glas predala potvrđena osoba |
+| Oblik imena | „Ime Prezime”, „Ime P.” ili bez imena | nema imena |
+| Kako se provjerava | zapis `#seq` i hash u lancu listića, po zatvaranju s `maksimir_verify.py` | SNARK dokaz i korijen grupe, odmah, u pregledniku posjetitelja |
+| Isključivanje | bilo kada; poveznica ostaje, ali više ne prikazuje glas | dokaz ostaje, jer ne otkriva ništa osobno |
+
+Ime dolazi iz eOsobne (`identity_verifications`), a ne iz polja koje glasač sam upisuje. Zato oznaka
+„identitet potvrđen eOsobnom” uz ime znači baš to.
+
+### Javna objava
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as Glasač
+  participant W as Preglednik
+  participant DB as Postgres
+  participant PF as Pages Function /g/id
+  actor V as Posjetitelj
+
+  U->>W: izabere oblik imena i potvrdi privolu
+  W->>DB: maksimir_set_public('full' | 'initial' | 'anon')
+  DB->>DB: provjera: potvrđen, privola, predan listić
+  DB-->>W: share_id (12 znakova, stalan po glasaču)
+  U->>V: dijeli https://maksimir.domovina.ai/g/share_id
+  V->>PF: GET /g/share_id (ili crawler društvene mreže)
+  PF->>DB: maksimir_share(id)
+  PF-->>V: HTML s OG karticom + preusmjeravanje na #/glasanje/g/id
+  V->>DB: maksimir_share(id)
+  DB-->>V: ime, bodovi, zapis iz lanca (ili null ako više nije javno)
+```
+
+### Anonimna objava sa ZK dokazom
+
+ZK dokaz (*zero-knowledge proof*, dokaz bez otkrivanja znanja) omogućuje da glasač dokaže tvrdnju
+„jedan sam od N potvrđenih glasača”, a da ne otkrije koji. Koristi se
+[Semaphore v4](https://docs.semaphore.pse.dev): Groth16 dokazi nad krivuljom BN254, hash funkcija
+Poseidon i Merkleovo stablo LeanIMT. Parametri kruga (*trusted setup*) dolaze iz javne
+ceremonije projekta PSE.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant W as Preglednik glasača
+  participant DB as Postgres
+  actor V as Posjetitelj
+
+  Note over W: Tajni ključ nastaje i ostaje ovdje<br/>(localStorage + preuzimanje datoteke).
+  W->>W: identitet = EdDSA par ključeva<br/>commitment = Poseidon(javni ključ)
+  W->>DB: maksimir_zk_register(commitment) — prijavljen
+  DB->>DB: potvrđen + privola + predan listić<br/>zapis „add” u zapisnik grupe (lanac hasheva)
+  W->>DB: maksimir_zk_group() — javni popis commitmenta
+  W->>W: Merkleovo stablo svih članova<br/>ZK dokaz: korijen, nullifier, poruka, scope
+  W->>DB: maksimir_zk_share(dokaz, zk_seq) — BEZ prijave
+  DB-->>W: id objave (bez veze na glasača)
+  V->>DB: maksimir_share(id) + maksimir_zk_group()
+  V->>V: 1. SNARK je valjan (verifyProof)<br/>2. poruka i scope su baš ovog glasanja<br/>3. zapisnik grupe je neprekinut lanac hasheva<br/>4. korijen = stablo iz zapisnika do zk_seq
+```
+
+Pojmovi, ukratko:
+
+- **Commitment** je Poseidon hash javnog ključa. Iz njega se ne može doznati ni tajni ključ ni tko je
+  glasač. Popis svih commitmenta je javan.
+- **Grupa** su svi upisani commitmenti, redom upisa, bez uklonjenih. Zapisnik grupe
+  (`maksimir_zk_log`) je append-only lanac hasheva, kao i lanac listića:
+
+  ```
+  hash = sha256(prev_hash | seq | op | commitment)      op = add | remove
+  ```
+
+- **Nullifier** je `Poseidon(scope, tajni ključ)`. Isti ključ uvijek daje isti nullifier, pa jedna
+  osoba ima jednu anonimnu objavu. Baza drugi dokaz s istim nullifierom ne sprema, nego vraća
+  postojeću objavu.
+- **Poruka i scope** su fiksni: `"glasao-sam"` i `"maksimir-2026"`. Dokaz izrađen za drugu svrhu ne
+  prolazi ni bazu ni provjeru na stranici.
+- **Novi ključ** (npr. na drugom uređaju) zapisuje u grupu `remove` starog i `add` novog commitmenta.
+  Stari dokazi i dalje vrijede za stanje grupe u kojem su izrađeni (`zk_seq`).
+
+Zašto se dokaz sprema bez prijave: objava se šalje zasebnim, anonimnim klijentom, pa u bazi ne
+postoji veza „ova sesija je spremila ovaj dokaz”. Baza provjerava oblik dokaza, poruku, scope i to
+da `zk_seq` postoji. Sam SNARK Postgres ne može provjeriti, pa to radi svaki preglednik koji otvori
+objavu. Neispravan dokaz stranica prikazuje kao neispravan.
+
+Što je isprobano (`web/scripts/zk-e2e.mjs`, nad lokalnom bazom): ispravan dokaz prolazi sve četiri
+provjere; dokaz nad grupom s izmišljenim članom ima valjan SNARK, ali mu korijen ne odgovara javnoj
+grupi, pa ga stranica odbija; izmijenjen nullifier ruši SNARK; zamjena ključa daje ispravan lanac
+`add, add, add, remove, add`. Izrada dokaza traje oko 2 s, a provjera nekoliko milisekundi.
+
+### Snapshot v2
+
+Satni snapshot sada nosi i vrh zapisnika ZK grupe te broj javnih glasača
+(`schema: maksimir-snapshot/2`). Tako se u Bitcoin žigoše i stanje grupe, pa se ni njezina povijest
+ne može tiho prepisati. Provjera:
+
+```sh
+python3 scripts/maksimir_verify.py lanac.json glasanje/checkpoints/*.json --zk zk_grupa.json
+```
+
+`zk_grupa.json` je izlaz javnog RPC-a `maksimir_zk_group()`, koji je dostupan i tijekom glasanja.
+
 ## Tko što vidi
 
 | Podatak | Javnost tijekom glasanja | Javnost po zatvaranju | Operater baze |
@@ -368,6 +489,11 @@ skripta je otkrila s dvije greške i izlaznim kodom 1.
 | Cijeli lanac pod pseudonimima | ne | da | da |
 | Pojedinačni listić povezan s osobom | ne | ne | da |
 | OIB | ne | ne | samo šifriran; ključ je u edge funkciji |
+| Javni listić (ime iz eOsobne + bodovi) | da, ako je glasač tako izabrao | da | da |
+| Popis ZK commitmenta i zapisnik grupe | da | da | da |
+| Koji je glasač upisao koji commitment | ne | ne | da (granica faze 1) |
+| Tko je autor anonimnog ZK dokaza | ne | ne | posredno, preko veze glasač → commitment |
+| Tajni ZK ključ | ne | ne | ne; nikad ne napušta preglednik |
 
 Cijeli lanac tijekom glasanja namjerno nije javan: pseudonim i točno vrijeme predaje omogućili bi
 nekome tko zna da je određena osoba glasala u 15:36 da pronađe njezin listić.
@@ -381,8 +507,46 @@ nekome tko zna da je određena osoba glasala u 15:36 da pronađe njezin listić.
   riješili, jer popis ovlaštenih glasača i dalje sastavlja operater. Zaštita je u tome što je broj
   glasača u svakom satnom snapshotu, pa bi svaki nagli skok bio trajno i javno zabilježen.
 
+- **ZK anonimnost vrijedi prema javnosti, ne prema operateru.** Upis commitmenta ide kroz prijavljenu
+  sesiju, pa operater zna koji je glasač upisao koji commitment. Iz dokaza se to ne vidi, ali operater
+  bi mogao isprobati svaki commitment. Rješenje je u sljedećim fazama (anonimne vjerodajnice).
+- **Anonimni skup je mali dok je grupa mala.** S jednim članom dokaz ne skriva ništa. Stranica zato
+  uz svaki dokaz piše koliko je članova grupa imala.
+
 Ono što sustav rješava: nakon satnog snapshota nitko, pa ni operater, ne može tiho promijeniti,
 obrisati ili preslagati već predane glasove niti lažirati zbrojeve iz tog trenutka.
+
+## Sljedeće faze: što preseliti onchain
+
+Faza 1 namjerno nema pametnih ugovora. Glasači ne trebaju novčanik ni kriptovalutu, nema naknada za
+transakcije, a sve kriptografske provjere već sad radi svaki preglednik. Ipak, dio povjerenja i dalje
+leži na operateru baze. Ovo su koraci koji bi to povjerenje prenijeli na javni blockchain (npr. L2
+mrežu poput Base, Optimism ili Gnosis Chain), otprilike redom korisnosti. **Na blockchain nikad ne
+idu osobni podaci**, nego samo hashevi, commitmenti i dokazi.
+
+| # | Što | Danas (offchain) | Onchain | Što se dobiva |
+|---|---|---|---|---|
+| 1 | Korijen ZK grupe | zapisnik u Postgresu, vrh u satnom OTS snapshotu | [Semaphore ugovor](https://docs.semaphore.pse.dev/guides/groups): operater dodaje commitmente, ugovor čuva povijest korijena | provjera bez preuzimanja cijelog zapisnika; korijen je javan odmah, ne za sat vremena |
+| 2 | Registar ZK objava | tablica `maksimir_shares`, SNARK provjerava preglednik | `validateProof` u ugovoru: dokaz se provjerava i nullifier trajno bilježi | nitko ne može sakriti ni obrisati anonimnu objavu; dvostruki nullifier odbija ugovor |
+| 3 | Sidrenje lanca listića | OpenTimestamps svaki sat (Bitcoin, kasni nekoliko sati) | vrh lanca listića i ZK grupe kao događaj ugovora, npr. svakih 5 minuta | brža i jeftinija potvrda; isti vrh može i dalje ići u Bitcoin |
+| 4 | Javni glasovi | stranica `/g/<id>` iz baze | potpisana atestacija (npr. [EAS](https://attest.org)) s hashem listića i zapisom iz lanca | objava preživi i ako stranica nestane |
+| 5 | Upis u grupu bez veze na osobu | operater zna vezu glasač → commitment | anonimna vjerodajnica: Certilia (ili operater) slijepo potpiše pravo na jedan upis, a upis ide s nepovezive adrese preko relayera | ni operater ne može povezati anonimni dokaz s osobom |
+| 6 | Tajni listić s dokazom točnog zbroja | listići su u bazi u čitljivom obliku | [MACI](https://maci.pse.dev): šifrirani listići u ugovoru, koordinator objavljuje zbroj sa ZK dokazom da je točan | glasanje postaje tajno i prema operateru; štiti i od kupovine glasova |
+| 7 | Dokaz o sadržaju glasa bez otkrivanja | ZK dokaz kaže samo „glasao sam” | vlastiti krug: „dao sam ≥ X bodova radu Y” bez otkrivanja ostatka listića | anonimna objava koja ipak kaže koga podržavaš |
+
+Napomene za kasnije faze:
+
+- **Korak 6 i javne objave idu jedno protiv drugog.** MACI štiti od kupovine glasova tako da glasač
+  ne može dokazati kako je glasao. Javna objava radi upravo suprotno. Ako se uvede MACI, javna
+  objava postaje izjava, a ne dokaz.
+- **Relayer i naknade.** Glasači ne trebaju novčanik ako transakcije šalje relayer koji plaća naknadu.
+  Relayer ne smije moći mijenjati sadržaj; to jamče dokaz i potpis.
+- **GDPR.** Na blockchainu se ništa ne može obrisati, zato tamo ne idu imena, OIB-i ni `oib_hash`.
+  Javni listić s imenom ostaje u bazi (može se isključiti); onchain ide najviše hash.
+- **Trusted setup.** Semaphore koristi javnu ceremoniju PSE-a. Vlastiti krug (korak 7) traži novu
+  ceremoniju ili sustav bez nje (npr. PLONK s univerzalnim parametrima).
+- **Kompatibilnost.** Formule hasheva i fiksne vrijednosti poruke i scopea iz faze 1 treba zadržati,
+  da dokazi i potvrde izdani sada vrijede i nakon prelaska.
 
 ## Gdje je kôd
 

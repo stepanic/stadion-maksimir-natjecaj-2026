@@ -18,6 +18,9 @@ import research08 from "../../research/08-rezultati-natjecaja.md?raw";
 import research09 from "../../research/09-svi-radovi.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
+import glasanjeKakoRadi from "../../docs/glasanje-kako-radi.md?raw";
+import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
+import glasanjeReadme from "../../glasanje/README.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -204,6 +207,36 @@ export const docs: DocSection[] = [
         repoPath: "research/cross-check/C-konzervatorski-REPORT.md",
         raw: ccC,
         section: "cross-check",
+      },
+    ],
+  },
+  {
+    id: "glasanje",
+    title: "Glasanje javnosti",
+    items: [
+      {
+        slug: "glasanje-kako-radi",
+        title: "Kako tehnički radi glasanje",
+        subtitle: "Korak po korak s dijagramima: eOsobna, lanac hasheva, Bitcoin, ZK dokaz",
+        repoPath: "docs/glasanje-kako-radi.md",
+        raw: glasanjeKakoRadi,
+        section: "glasanje",
+      },
+      {
+        slug: "glasanje-provjera",
+        title: "Provjerljivi zapis i upravljanje",
+        subtitle: "Formula hasha, satni checkpointi, neovisna provjera",
+        repoPath: "glasanje/README.md",
+        raw: glasanjeReadme,
+        section: "glasanje",
+      },
+      {
+        slug: "glasanje-odluke",
+        title: "Odluke, mjerenja i zamke",
+        subtitle: "Zašto baš ovako, testovi utrke, što je koštalo vremena (25.9.2026.)",
+        repoPath: "docs/2026-09-25-glasanje-javnosti.md",
+        raw: glasanjeOdluke,
+        section: "glasanje",
       },
     ],
   },
