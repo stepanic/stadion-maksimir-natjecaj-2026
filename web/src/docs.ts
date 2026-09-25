@@ -24,6 +24,14 @@ import opsNiceToHave from "../../docs/2026-09-25-web-nice-to-have.md?raw";
 import glasanjeKakoRadi from "../../docs/glasanje-kako-radi.md?raw";
 import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
 import glasanjeReadme from "../../glasanje/README.md?raw";
+import chainReadme from "../../docs/blockchain/README.md?raw";
+import chainIntegracija from "../../docs/blockchain/08-integracija-s-fazom-1.md?raw";
+import chainKontrola from "../../docs/blockchain/06-kontrola-glasaca.md?raw";
+import chainVerzije from "../../docs/blockchain/07-verzioniranje.md?raw";
+import chainArhitektura from "../../docs/blockchain/01-arhitektura.md?raw";
+import chainWebBaza from "../../docs/blockchain/04-web-i-baza.md?raw";
+import chainAdrKljuc from "../../docs/blockchain/adr/0001-kljuc-glasaca-passkey-i-24-rijeci.md?raw";
+import chainSesija from "../../docs/2026-09-26-glasanje-onchain.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -240,6 +248,76 @@ export const docs: DocSection[] = [
         repoPath: "docs/2026-09-25-glasanje-javnosti.md",
         raw: glasanjeOdluke,
         section: "glasanje",
+      },
+    ],
+  },
+  {
+    id: "glasanje-lanac",
+    title: "Glasanje na lancu (Gnosis)",
+    items: [
+      {
+        slug: "lanac-pregled",
+        title: "Pregled i odluke",
+        subtitle: "MaksimirGlasanjeV1: plan, odluke, stanje, otvorena pitanja",
+        repoPath: "docs/blockchain/README.md",
+        raw: chainReadme,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-integracija",
+        title: "Plan spajanja s fazom 1",
+        subtitle: "Redoslijed, dan prijelaza, izvor rezultata, /g/<id>, povratak, E2E (26.9.2026.)",
+        repoPath: "docs/blockchain/08-integracija-s-fazom-1.md",
+        raw: chainIntegracija,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-kontrola",
+        title: "Glasač ima kontrolu nad glasom",
+        subtitle: "Tko drži koji ključ, tko što može, iskrene granice",
+        repoPath: "docs/blockchain/06-kontrola-glasaca.md",
+        raw: chainKontrola,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-verzije",
+        title: "Verzioniranje ugovora",
+        subtitle: "V1, V2… bez proxyja, zamrznut izvor, selidba uz glasačev dokaz",
+        repoPath: "docs/blockchain/07-verzioniranje.md",
+        raw: chainVerzije,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-arhitektura",
+        title: "Arhitektura ugovora",
+        subtitle: "Funkcije, listić, zbroj, grupa, izmjereni gas",
+        repoPath: "docs/blockchain/01-arhitektura.md",
+        raw: chainArhitektura,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-web-baza",
+        title: "Web i domovina-api",
+        subtitle: "Registrar, web tok, baza",
+        repoPath: "docs/blockchain/04-web-i-baza.md",
+        raw: chainWebBaza,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-adr-kljuc",
+        title: "ADR 0001: ključ glasača",
+        subtitle: "24 riječi za oporavak + passkey (PRF) za otključavanje",
+        repoPath: "docs/blockchain/adr/0001-kljuc-glasaca-passkey-i-24-rijeci.md",
+        raw: chainAdrKljuc,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-sesija",
+        title: "Sesija 25.–26. 9.: zamke i mjerenja",
+        subtitle: "Kako je nastao V1, zamke, otvorene stavke",
+        repoPath: "docs/2026-09-26-glasanje-onchain.md",
+        raw: chainSesija,
+        section: "glasanje-lanac",
       },
     ],
   },
