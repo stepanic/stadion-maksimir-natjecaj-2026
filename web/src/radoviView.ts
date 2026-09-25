@@ -93,6 +93,7 @@ export function renderRadoviIndex(el: HTMLElement) {
   const countries = new Set(radovi.flatMap((r) => r.countries));
   const hr = radovi.filter(isCroatian).length;
   el.innerHTML = `
+    <div class="rad-intro">
     <section class="hero results-hero">
       <div class="hero-eyebrow">Službeni izvor: EOJN RH, tender 76778 · objavljeno 25. 9. 2026.</div>
       <h1>Svih 88 natječajnih radova</h1>
@@ -108,6 +109,7 @@ export function renderRadoviIndex(el: HTMLElement) {
       <div class="kpi"><div class="kpi-label">S hrvatskim sudionikom</div><div class="kpi-value">${hr}</div><div class="kpi-meta">barem jedan član tima iz HR</div></div>
       <div class="kpi"><div class="kpi-label">Nagrade</div><div class="kpi-value">5</div><div class="kpi-meta"><a href="#/rezultati">svi paneli nagrađenih →</a></div></div>
     </section>
+    </div>
 
     <div class="rad-toolbar">
       <input id="rad-q" type="search" placeholder="Traži ured, autora, zemlju ili šifru…" value="${esc(state.q)}" aria-label="Pretraga radova" />

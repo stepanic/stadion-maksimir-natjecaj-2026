@@ -1037,6 +1037,40 @@ body.lb-open {
 
 /* ---------- Svi radovi ---------- */
 
+/* Na widescreenu mreža radova ispunjava prostor lijevo i desno. */
+.content--wide {
+  max-width: 1920px;
+}
+@media (min-width: 1280px) {
+  /* Uvod i brojke u jednom redu, da mreža počne više. */
+  .content--wide .rad-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 32px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+  .content--wide .rad-intro .hero {
+    border-bottom: 0;
+    margin-bottom: 0;
+    padding: 8px 0;
+  }
+  .content--wide .rad-intro .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 0;
+  }
+  .content--wide .rad-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+@media (min-width: 1700px) {
+  .content--wide .rad-intro .card-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .rad-toolbar {
   display: flex;
   flex-wrap: wrap;

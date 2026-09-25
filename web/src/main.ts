@@ -157,6 +157,8 @@ function parseRoute(): { slug: string; hash: string } {
 async function route() {
   sidebarEl.classList.remove("open");
   const { slug, hash } = parseRoute();
+  // Mreža svih radova koristi punu širinu ekrana; ostale stranice ostaju u stupcu za čitanje.
+  contentEl.classList.toggle("content--wide", slug === "radovi");
   if (!slug) {
     renderHome();
     return;
