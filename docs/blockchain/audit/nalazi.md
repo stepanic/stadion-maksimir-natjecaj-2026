@@ -24,6 +24,7 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | C-02 | niska (klijent) | `fetchGroup` filtrira grupu preko `args` koje viem tipovi uz više događaja ne predviđaju | stroga provjera tipova (DOM, TS 5.9) | test s tuđom grupom + obrambeni filter |
 | C-03 | niska (klijent) | Web Crypto/WebAuthn tipovi traže `Uint8Array<ArrayBuffer>`; strogi build weba bi pao | stroga provjera tipova | kopija u svjež buffer (i brisanje kopije) |
 | K-04 | info (UX) | kopiranje riječi otvara rizik međuspremnika (sinkronizacija, druge aplikacije) | pregled pri dodavanju „Kopiraj” | brisanje nakon 60 s + upozorenje; ispis kao preporučen put |
+| K-05 | niska (UX) | svi passkeyji istog imena, nasumičan `user.id` → gomilanje i zabuna pri izboru | stvarni test (Matija) | ime s otiskom ključa, `user.id` iz ključa (zamjena umjesto gomilanja), izravno otključavanje |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac

@@ -88,6 +88,27 @@ export function secretToIdentity(secret: Uint8Array): Identity {
   return Identity.import(toB64(secret));
 }
 
+/** Kratki, čitljivi otisak ključa (iz javnog commitmenta): „904493…340948”. Isti na stranici,
+ *  na ispisanom listu i u imenu passkeyja, pa se zna koji passkey čuva koji ključ. */
+export function keyFingerprint(secret: Uint8Array): string {
+  const c = secretToIdentity(secret).commitment.toString();
+  return `${c.slice(0, 6)}…${c.slice(-6)}`;
+}
+
+/**
+ * `user.id` passkeyja izveden iz ključa: sha256("maksimir-passkey-user|" + commitment)[0..16].
+ * Isti ključ → isti user.id, pa upravitelj lozinki (iCloud Keychain, Google) novi passkey za
+ * isti ključ ZAMIJENI umjesto da ih gomila. Commitment je ionako javan (na lancu), a user.id
+ * ostaje u pregledniku.
+ */
+export async function passkeyUserId(secret: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
+  const c = secretToIdentity(secret).commitment.toString();
+  return own((await sha256(`maksimir-passkey-user|${c}`)).slice(0, 16));
+}
+
+/** Ime passkeyja kakvo se vidi u Lozinkama i u izborniku: „Maksimir glasanje · ključ 904493…340948”. */
+export const passkeyLabel = (secret: Uint8Array, prefix = "Maksimir glasanje"): string => `${prefix} · ključ ${keyFingerprint(secret)}`;
+
 /** Ključ iz faze 1 (`maksimir-zk-kljuc.txt`, base64 od 32 bajta) → tajna. Isti commitment. */
 export function phase1ExportToSecret(exported: string): Uint8Array {
   const k = exported.trim();
@@ -244,15 +265,15 @@ const prfFirst = (cred: PublicKeyCredential): Uint8Array | null => {
 
 export type PasskeyOpts = { rpId?: string; creds?: Creds };
 
-/** Nova passkey za glasanje. `user.id` je nasumičan — ne veže passkey uz osobu. */
-export async function createPasskey(opts: PasskeyOpts & { label?: string } = {}): Promise<{ credentialId: string; prf: Uint8Array | null; prfEnabled: boolean }> {
+/** Nova passkey za glasanje. Bez `userId` je `user.id` nasumičan; `protectWithPasskey` ga izvodi iz ključa. */
+export async function createPasskey(opts: PasskeyOpts & { label?: string; userId?: Uint8Array } = {}): Promise<{ credentialId: string; prf: Uint8Array | null; prfEnabled: boolean }> {
   const creds = opts.creds ?? defaultCreds();
   const salt = await prfSalt();
   const cred = (await creds.create({
     publicKey: {
       rp: { id: opts.rpId ?? RP_ID, name: "domovina.ai" },
       user: {
-        id: globalThis.crypto.getRandomValues(new Uint8Array(16)),
+        id: opts.userId ? own(opts.userId) : globalThis.crypto.getRandomValues(new Uint8Array(16)),
         name: opts.label ?? "Maksimir glasanje",
         displayName: opts.label ?? "Maksimir glasanje",
       },
@@ -294,8 +315,17 @@ export async function evaluatePrf(opts: PasskeyOpts & { credentialId?: string } 
  * Zaštiti tajnu novim passkeyjem: izradi passkey, dobij PRF (neki preglednici ga vrate tek
  * pri prvom `get`), omotaj i spremi. Vraća `credentialId`.
  */
-export async function protectWithPasskey(secret: Uint8Array, store: BlobStore, opts: PasskeyOpts & { label?: string } = {}): Promise<string> {
-  const created = await createPasskey(opts);
+export async function protectWithPasskey(
+  secret: Uint8Array,
+  store: BlobStore,
+  opts: PasskeyOpts & { label?: string; labelPrefix?: string } = {}
+): Promise<string> {
+  // ime s otiskom ključa + user.id iz ključa: prepoznatljivo u Lozinkama, bez gomilanja
+  const created = await createPasskey({
+    ...opts,
+    label: opts.label ?? passkeyLabel(secret, opts.labelPrefix),
+    userId: await passkeyUserId(secret),
+  });
   let prf = created.prf;
   if (!prf) prf = (await evaluatePrf({ ...opts, credentialId: created.credentialId })).prf;
   try {

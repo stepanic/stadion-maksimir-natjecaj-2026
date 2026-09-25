@@ -9,7 +9,9 @@ import {
   KeystoreError,
   checkConfirmation,
   confirmationPositions,
+  keyFingerprint,
   localBlobStore,
+  passkeyLabel,
   newSecret,
   prfSupported,
   protectWithPasskey,
@@ -23,6 +25,15 @@ import {
 
 const RP_ID = location.hostname;
 const FP_KEY = "maksimir-demo-fingerprint"; // otisak (javan) za usporedbu između posjeta
+const CRED_KEY = "maksimir-demo-credential"; // koji passkey pripada ovoj probi (javni ID, nije tajna)
+const LABEL_PREFIX = "Maksimir TEST";
+const readCred = () => {
+  try {
+    return localStorage.getItem(CRED_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
 const store = localBlobStore();
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -182,14 +193,20 @@ $("b-confirm").onclick = () => {
 $("b-protect").onclick = async () => {
   if (!S.secret) return;
   try {
-    await protectWithPasskey(S.secret, store, { rpId: RP_ID, label: "Maksimir TEST (localhost)" });
-    S.fingerprint = fp(secretToIdentity(S.secret).commitment);
+    const name = passkeyLabel(S.secret, LABEL_PREFIX);
+    const credentialId = await protectWithPasskey(S.secret, store, { rpId: RP_ID, labelPrefix: LABEL_PREFIX });
+    S.fingerprint = keyFingerprint(S.secret);
     writeFp(S.fingerprint);
+    try {
+      localStorage.setItem(CRED_KEY, credentialId);
+    } catch {
+      /* privatni prozor */
+    }
     zeroize(S.secret);
     S.secret = null;
     S.protectedKey = true;
     S.errors[4] = false;
-    result(4, "ok", `Ključ je zaključan tvojim passkeyjem i obrisan iz memorije. Otisak: <span class="fp">${S.fingerprint}</span>`);
+    result(4, "ok", `Ključ je zaključan tvojim passkeyjem i obrisan iz memorije. U Lozinkama se passkey zove <b>${name}</b>, s istim otiskom kao ovdje.`);
     record("protected", { fingerprint: S.fingerprint });
   } catch (e) {
     // K-01: ključ OSTAJE — riječi su već zapisane
@@ -215,7 +232,8 @@ $("b-words-only").onclick = () => {
 
 $("b-unlock").onclick = async () => {
   try {
-    const { secret } = await unlockWithPasskey(store, { rpId: RP_ID });
+    // znamo koji passkey pripada ovoj probi → preglednik ga traži izravno, bez izbornika
+    const { secret } = await unlockWithPasskey(store, { rpId: RP_ID, credentialId: readCred() });
     const got = fp(secretToIdentity(secret).commitment);
     zeroize(secret);
     const saved = readFp();
@@ -289,7 +307,7 @@ const hideReveal = () => {
 
 $("b-reveal").onclick = async () => {
   try {
-    const { words } = await revealWords(store, { rpId: RP_ID });
+    const { words } = await revealWords(store, { rpId: RP_ID, credentialId: readCred() });
     showWords($("reveal-words"), words);
     words.fill("");
     $("reveal-box").hidden = false;
@@ -331,7 +349,7 @@ $("b-recover").onclick = () => {
 
 $("b-reset").onclick = () => {
   try {
-    for (const k of Object.keys(localStorage)) if (k.startsWith("maksimir-keystore-v1:") || k === FP_KEY) localStorage.removeItem(k);
+    for (const k of Object.keys(localStorage)) if (k.startsWith("maksimir-keystore-v1:") || k === FP_KEY || k === CRED_KEY) localStorage.removeItem(k);
   } catch {
     /* ništa */
   }

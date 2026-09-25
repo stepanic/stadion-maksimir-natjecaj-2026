@@ -215,3 +215,12 @@ flowchart LR
   „što se događa u pozadini”, rječnik. Automatski provjereni tokovi bez passkeyja: kriva i točna
   potvrda, K-02, oporavak (23 riječi, nepoznata riječ, točan unos daje „isti ključ ✔”).
 - **Testova:** 88; ugovor i klijent na 100 % naredbi, grana, funkcija i linija.
+
+### Dopuna kruga 8 — kopiranje, ispis, ime passkeyja
+
+- **K-04:** „Kopiraj” i „Ispiši” za riječi; međuspremnik se briše nakon 60 s.
+- **K-05:** ime passkeyja nosi otisak ključa, a `user.id` je izveden iz ključa. Lažni
+  autentifikator glumi pravilo zamjene po `user.id` (iCloud/Google), a test dokazuje da tri zaštite
+  istog ključa ostave **jedan** passkey, dok drugi ključ dobiva drugi passkey s drugim imenom.
+  Dva uređaja (dva autentifikatora) i dalje otvaraju istu tajnu.
+- **Testova:** 91; klijent i ugovor na 100 %.

@@ -135,12 +135,13 @@
   <!-- 4 -->
   <section class="card step" id="s4">
     <div class="step-head"><span class="num">4</span><h2>Zaključaj ključ passkeyjem</h2><span class="badge"></span></div>
-    <p>Preglednik će te pitati da napraviš passkey. Potvrdi licem, prstom ili lozinkom računala.</p>
+    <p>Preglednik će te pitati da napraviš passkey. Potvrdi licem, prstom ili lozinkom računala. Passkey će se zvati po otisku tvog ključa, npr. <i>Maksimir TEST · ključ 904493…340948</i>, pa ćeš ga u Lozinkama lako prepoznati.</p>
     <button id="b-protect">Napravi passkey i zaključaj ključ</button>
     <button id="b-words-only" class="secondary" hidden>Preskoči — koristit ću samo riječi</button>
     <div class="result" id="r4"></div>
     <details><summary>Što se događa u pozadini?</summary>
       <p>Passkey vrati tajne bajtove (PRF). Iz njih se izračuna ključ za šifriranje (HKDF), a njime se tvoj ključ zaključa (AES-256-GCM). Zaključani ključ sprema se u ovaj preglednik, a u pravom glasanju i na naš poslužitelj, kako bi ga našao tvoj novi uređaj. Bez tvog passkeyja ta je datoteka bezvrijedna. Otključani ključ se odmah briše iz memorije.</p>
+      <p>Ime passkeyja sadrži otisak ključa, a njegov interni ID izveden je iz ključa. Zato novi passkey za <b>isti</b> ključ zamijeni stari umjesto da ih se nakupi više (iCloud Keychain, Google upravitelj lozinki).</p>
       <p>Ako izrada passkeyja ne uspije, ključ ostaje ovdje dok ne pokušaš ponovno. Riječi si već zapisao, pa ključ ne smije nestati.</p>
     </details>
   </section>
@@ -201,7 +202,7 @@
 
   <section class="card">
     <h2>Počni ispočetka</h2>
-    <p class="lead">Briše probni ključ iz ovog preglednika. Passkey „Maksimir TEST (localhost)” ostaje u Lozinkama (Postavke → Lozinke) i možeš ga ondje obrisati.</p>
+    <p class="lead">Briše probni ključ iz ovog preglednika. Passkey „Maksimir TEST · ključ …” ostaje u Lozinkama (Postavke → Lozinke → localhost) i ondje ga možeš obrisati. Po otisku u imenu vidiš koji je čiji.</p>
     <button id="b-reset" class="secondary">Obriši probu i kreni ispočetka</button>
   </section>
 

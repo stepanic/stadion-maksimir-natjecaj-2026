@@ -14,7 +14,10 @@ import {
   credentialIdHash,
   localBlobStore,
   multiBlobStore,
+  keyFingerprint,
   newSecret,
+  passkeyLabel,
+  passkeyUserId,
   prfSupported,
   phase1ExportToSecret,
   prfSalt,
@@ -37,6 +40,8 @@ type Mode = "prf-on-create" | "prf-on-get-only" | "no-prf" | "prf-as-view";
 
 function fakeAuthenticator(mode: Mode = "prf-on-create") {
   const passkeys = new Map<string, Buffer>(); // credentialId (b64u) → tajna passkeyja
+  const byUser = new Map<string, string>(); // user.id (hex) → credentialId; isti user.id ZAMIJENI stari passkey
+  const names = new Map<string, string>(); // credentialId → ime u „Lozinkama”
   const calls: { create: any[]; get: any[] } = { create: [], get: [] };
   let pick: string | undefined; // koji passkey „korisnik izabere” kad nije zadan
   const prfOf = (id: string, salt: Uint8Array) => new Uint8Array(createHmac("sha256", passkeys.get(id)!).update(salt).digest());
@@ -49,7 +54,12 @@ function fakeAuthenticator(mode: Mode = "prf-on-create") {
     async create(o: any) {
       calls.create.push(o);
       const id = b64u(randomBytes(16));
+      const uid = Buffer.from(o.publicKey.user.id).toString("hex");
+      const old = byUser.get(uid);
+      if (old) (passkeys.delete(old), names.delete(old));
+      byUser.set(uid, id);
       passkeys.set(id, randomBytes(32));
+      names.set(id, o.publicKey.user.name);
       pick = id;
       const salt = o.publicKey.extensions.prf.eval.first as Uint8Array;
       return cred(id, mode === "prf-on-create" || mode === "prf-as-view" ? prfOf(id, salt) : null, mode !== "no-prf");
@@ -63,7 +73,7 @@ function fakeAuthenticator(mode: Mode = "prf-on-create") {
       return cred(id, mode === "no-prf" ? null : prfOf(id, salt), mode !== "no-prf");
     },
   };
-  return { creds: creds as unknown as CredentialsContainer, calls, passkeys, choose: (id: string) => (pick = id) };
+  return { creds: creds as unknown as CredentialsContainer, calls, passkeys, names, choose: (id: string) => (pick = id) };
 }
 
 const memStore = (): BlobStore & { data: Map<string, WrappedSecret> } => {
@@ -245,17 +255,53 @@ describe("client/keystore (ADR 0001)", () => {
       await expect(unlockWithPasskey(memStore(), { creds: a.creds })).to.be.rejectedWith(KeystoreError, "izaberi drugi");
     });
 
-    it("dva passkeyja (iPhone + Windows Hello) otključavaju ISTU tajnu", async () => {
+    it("ime passkeyja nosi otisak ključa; user.id je izveden iz ključa", async () => {
+      const a = fakeAuthenticator();
+      const [s1, s2] = [newSecret(), newSecret()];
+      await protectWithPasskey(s1, memStore(), { creds: a.creds, labelPrefix: "Maksimir TEST" });
+      await protectWithPasskey(s2, memStore(), { creds: a.creds });
+      const [o1, o2] = a.calls.create.map((c) => c.publicKey.user);
+      expect(o1.name).to.equal(`Maksimir TEST · ključ ${keyFingerprint(s1)}`);
+      expect(o1.displayName).to.equal(o1.name);
+      expect(o2.name).to.equal(`Maksimir glasanje · ključ ${keyFingerprint(s2)}`);
+      expect(Buffer.from(o1.id)).to.deep.equal(Buffer.from(await passkeyUserId(s1)));
+      expect(Buffer.from(o1.id)).to.not.deep.equal(Buffer.from(o2.id));
+      expect(o1.id).to.have.length(16);
+    });
+
+    it("ponovna zaštita ISTOG ključa zamijeni passkey (ne gomila); drugi ključ = drugi passkey", async () => {
       const a = fakeAuthenticator();
       const store = memStore();
       const s = newSecret();
-      const idPhone = await protectWithPasskey(s, store, { creds: a.creds });
-      const idPc = await protectWithPasskey(s, store, { creds: a.creds });
-      a.choose(idPhone);
-      const x = await unlockWithPasskey(store, { creds: a.creds });
-      a.choose(idPc);
-      const y = await unlockWithPasskey(store, { creds: a.creds });
+      await protectWithPasskey(s, store, { creds: a.creds });
+      await protectWithPasskey(s, store, { creds: a.creds });
+      await protectWithPasskey(s, store, { creds: a.creds });
+      expect(a.passkeys.size).to.equal(1);
+      expect(Buffer.from((await unlockWithPasskey(store, { creds: a.creds })).secret)).to.deep.equal(Buffer.from(s));
+      await protectWithPasskey(newSecret(), store, { creds: a.creds });
+      expect(a.passkeys.size).to.equal(2);
+      expect(new Set(a.names.values()).size).to.equal(2); // različita imena
+    });
+
+    it("keyFingerprint: kratki otisak iz commitmenta, isti za isti ključ", () => {
+      const s = newSecret();
+      const c = secretToIdentity(s).commitment.toString();
+      expect(keyFingerprint(s)).to.equal(`${c.slice(0, 6)}…${c.slice(-6)}`);
+      expect(keyFingerprint(wordsToSecret(secretToWords(s)))).to.equal(keyFingerprint(s));
+      expect(passkeyLabel(s)).to.equal(`Maksimir glasanje · ključ ${keyFingerprint(s)}`);
+    });
+
+    it("dva uređaja (iPhone + Windows Hello) otključavaju ISTU tajnu", async () => {
+      const phone = fakeAuthenticator();
+      const pc = fakeAuthenticator(); // drugi ekosustav: vlastiti passkey s istim user.id
+      const store = memStore();
+      const s = newSecret();
+      await protectWithPasskey(s, store, { creds: phone.creds });
+      await protectWithPasskey(s, store, { creds: pc.creds });
+      const x = await unlockWithPasskey(store, { creds: phone.creds });
+      const y = await unlockWithPasskey(store, { creds: pc.creds });
       expect(Buffer.from(x.secret)).to.deep.equal(Buffer.from(y.secret));
+      expect(x.credentialId).to.not.equal(y.credentialId);
       expect(secretToIdentity(x.secret).commitment).to.equal(secretToIdentity(s).commitment);
     });
 

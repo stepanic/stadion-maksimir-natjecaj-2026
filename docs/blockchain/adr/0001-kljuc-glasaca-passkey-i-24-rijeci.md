@@ -186,7 +186,17 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
 
    Tekst za glasača: „Riječi se ne spremaju nigdje osim šifrirano tvojim passkeyjem. Mi ih ne
    možemo vidjeti ni vratiti. Ako izgubiš i passkey i riječi, ključ je nepovratno izgubljen.”
-4. **EIP-7702** ne utječe na ovu odluku ([istraživanje](../istrazivanja/2026-09-26-eip7702-passkey-gnosis.md)).
+4. **Ime i identitet passkeyja** (izmjena 26. 9. 2026., nakon testa u kojem su se nakupili
+   passkeyji istog imena):
+   - **Ime** = `Maksimir glasanje · ključ 904493…340948`. Otisak je isti kao na stranici i na
+     ispisanom listu, pa se u Lozinkama i u izborniku zna koji passkey čuva koji ključ.
+   - **`user.id`** = `sha256("maksimir-passkey-user|" + commitment)[0..16]`, dakle izveden iz
+     ključa. Upravitelj lozinki passkey s istim `rpId` i istim `user.id` **zamijeni**, pa ponovna
+     zaštita istog ključa ne gomila zapise. Commitment je ionako javan (na lancu), a `user.id`
+     ne napušta preglednik.
+   - Kad stranica zna koji passkey pripada ključu (lokalno zapamćen `credentialId`, javan podatak),
+     otključavanje ga traži izravno, bez izbornika.
+5. **EIP-7702** ne utječe na ovu odluku ([istraživanje](../istrazivanja/2026-09-26-eip7702-passkey-gnosis.md)).
 
 ## Pravilo toka: neuspjeli passkey ne smije izgubiti ključ (K-01)
 
@@ -217,6 +227,7 @@ stateDiagram-v2
 | Tok izrade nakon te greške | otkrio K-01 (popravljeno) |
 | Izrada passkeyja (Matija potvrdio dijalog) | ✔ passkey „Maksimir TEST (localhost)” u iCloud Keychainu, PRF izlaz dobiven, omot spremljen |
 | Otključavanje passkeyjem | ✔ isti passkey, **isti commitment** kao pri izradi (`3790297512…`) |
+| Opaženo (drugi test) | više passkeyja istog imena „Maksimir TEST (localhost)” u Lozinkama; nije jasno koji je koji (K-05). **Popravljeno:** ime s otiskom, `user.id` iz ključa |
 | Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02). **Popravljeno:** gumb je neaktivan dok ključ postoji |
 
 ## Plan implementacije
