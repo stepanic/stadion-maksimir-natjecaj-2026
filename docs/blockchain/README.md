@@ -1,5 +1,7 @@
 # Glasanje javnosti na Gnosis Chainu
 
+> Sažetak sesije, zamke i otvorene stavke: [2026-09-26-glasanje-onchain.md](../2026-09-26-glasanje-onchain.md).
+
 Status 26. 9. 2026.: **`MaksimirGlasanjeV1` je prošao 6 krugova audita (47 testova, 100 % pokrivenosti,
 23/23 mutanta ubijena, 800 fuzz koraka), radi na Chiadu (testnet) i prošao je E2E kroz stvarni
 kod relayera.** Na Gnosis mainnet još nije deployan. Web još nije spojen, jer se `web/` seli na

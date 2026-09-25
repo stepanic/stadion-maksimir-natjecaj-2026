@@ -565,6 +565,10 @@ idu osobni podaci**, nego samo hashevi, commitmenti i dokazi.
 | 6 | Tajni listić s dokazom točnog zbroja | listići su u bazi u čitljivom obliku | [MACI](https://maci.pse.dev): šifrirani listići u ugovoru, koordinator objavljuje zbroj sa ZK dokazom da je točan | glasanje postaje tajno i prema operateru; štiti i od kupovine glasova |
 | 7 | Dokaz o sadržaju glasa bez otkrivanja | ZK dokaz kaže samo „glasao sam” | vlastiti krug: „dao sam ≥ X bodova radu Y” bez otkrivanja ostatka listića | anonimna objava koja ipak kaže koga podržavaš |
 
+> **Stanje 26. 9. 2026.:** koraci 1–3 i ključ glasača (passkey + 24 riječi) razrađeni su i
+> implementirani na grani `feat/glasanje-onchain`: ugovor `MaksimirGlasanjeV1` na Chiadu, audit i
+> relayer. Vidi [docs/blockchain/](blockchain/README.md).
+
 Napomene za kasnije faze:
 
 - **Korak 6 i javne objave idu jedno protiv drugog.** MACI štiti od kupovine glasova tako da glasač
