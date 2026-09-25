@@ -1,6 +1,7 @@
 # Glasanje javnosti na Gnosis Chainu
 
-Status 26. 9. 2026.: **`MaksimirGlasanjeV1` radi na Chiadu (testnet) i prošao je E2E kroz stvarni
+Status 26. 9. 2026.: **`MaksimirGlasanjeV1` je prošao 6 krugova audita (47 testova, 100 % pokrivenosti,
+23/23 mutanta ubijena, 800 fuzz koraka), radi na Chiadu (testnet) i prošao je E2E kroz stvarni
 kod relayera.** Na Gnosis mainnet još nije deployan. Web još nije spojen, jer se `web/` seli na
 Astro u drugoj sesiji.
 
@@ -39,7 +40,7 @@ novčanik ni xDAI.
 
 | Dio | Mjesto | Provjera |
 |---|---|---|
-| Ugovor V1 | [`chain/contracts/v1/MaksimirGlasanjeV1.sol`](../../chain/contracts/v1/MaksimirGlasanjeV1.sol) | 10 Hardhat testova, s pravim Groth16 dokazima |
+| Ugovor V1 | [`chain/contracts/v1/MaksimirGlasanjeV1.sol`](../../chain/contracts/v1/MaksimirGlasanjeV1.sol) | 47 testova s pravim Groth16 dokazima; 100 % naredbi, grana, funkcija i linija; 23/23 mutanta ubijena; [audit](audit/README.md) |
 | Klijent (kripto u pregledniku) | [`chain/client/`](../../chain/client/) | isti hash poruke kao ugovor (test); grupa s lanca uz provjeru korijena |
 | Relayer | [`chain/relayer/`](../../chain/relayer/) | typecheck, 3 testa, pravi tok na Chiadu |
 | Deploy + manifest | [`chain/scripts/deploy-v1.ts`](../../chain/scripts/deploy-v1.ts) | [`deployments/chiado/v1.json`](../../chain/deployments/chiado/v1.json) |
