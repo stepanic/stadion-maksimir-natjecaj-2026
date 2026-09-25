@@ -24,8 +24,10 @@ jobs:
       - name: zamrznute verzije nisu mijenjane
         run: npm run check-frozen
       - run: npx hardhat test
-      - name: pokrivenost 100 % (naredbe, grane, funkcije, linije)
+      - name: pokrivenost ugovora 100 % (naredbe, grane, funkcije, linije)
         run: npm run coverage
+      - name: pokrivenost klijenta 100 % (kriptografija preglednika)
+        run: npm run coverage:client
 
   relayer:
     runs-on: ubuntu-latest

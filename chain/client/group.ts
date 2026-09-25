@@ -25,7 +25,8 @@ export async function fetchGroup(
     const to = from + step - 1n > latest ? latest : from + step - 1n;
     logs.push(...(await client.getLogs({ address: semaphore, events: SEMAPHORE_ABI.filter((x) => x.type === "event"), args: { groupId }, fromBlock: from, toBlock: to })));
   }
-  logs.sort((a, b) => (a.blockNumber === b.blockNumber ? a.logIndex! - b.logIndex! : a.blockNumber! < b.blockNumber! ? -1 : 1));
+  // redoslijed na lancu: blok, pa indeks događaja u bloku
+  logs.sort((a, b) => Number(a.blockNumber! - b.blockNumber!) || a.logIndex! - b.logIndex!);
 
   const g = new Group();
   for (const l of logs) {

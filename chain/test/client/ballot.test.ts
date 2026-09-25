@@ -15,6 +15,7 @@ import {
   entriesHash,
   migrateMessage,
   registerTypedData,
+  toJson,
 } from "../../client/ballot";
 
 // V1 na Chiadu/Gnosisu ima ovaj entriesHash kao immutable — popis se NIKAD ne smije promijeniti.
@@ -72,6 +73,10 @@ describe("client/ballot", () => {
     expect(ballotMessage({ ...base, revision: 2 })).to.not.equal(m);
     expect(ballotMessage({ ...base, points: encodePoints({ GY0F1A9OM: 100 }) })).to.not.equal(m);
     expect(migrateMessage({ chainId: 100, contract: base.contract, successor: zeroAddress })).to.not.equal(m);
+  });
+
+  it("toJson: bigint → decimalni string (za relayer)", () => {
+    expect(toJson({ a: 2n ** 255n, b: [1n], c: "x" })).to.equal(`{"a":"${(2n ** 255n).toString()}","b":["1"],"c":"x"}`);
   });
 
   it("EIP-712 domena registracije je vezana uz verziju 1, lanac i ugovor", () => {
