@@ -7,7 +7,7 @@ zamrznutim commitom, bez ikakve izmjene koda. Audit koji implementator radi uz k
 | Datum | Dokument | Stanje koda | Tag | Reviewer |
 |---|---|---|---|---|
 | 26. 9. 2026. | [2026-09-26-neovisni-review-glasanje.md](2026-09-26-neovisni-review-glasanje.md) | `faaaa5f` (+ `domovina-api` `d5d88b7`) | `audit-fable-2026-09-26` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
-| 26. 9. 2026. | [2026-09-26-neovisni-review-wiring.md](2026-09-26-neovisni-review-wiring.md) | `feat/glasanje-integracija` `ef4c5d8` (+ `domovina-api` `feat/maksimir-chain` `6b6ad33`); necommitani rad izvan opsega | `audit-fable-2026-09-26-wiring` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
+| 26. 9. 2026. | [2026-09-26-neovisni-review-wiring.md](2026-09-26-neovisni-review-wiring.md) | `feat/glasanje-integracija` `ef4c5d8` → proširenje na `1ecab96` (+ `domovina-api` `feat/maksimir-chain` `6b6ad33` → `106f205`) | `audit-fable-2026-09-26-wiring`, `audit-fable-2026-09-26-wiring-2` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
 
 ## Zašto ovako
 
@@ -57,8 +57,8 @@ prije popisa nalaza stoji jedna rečenica presude o cjelini.
 
 ## Sljedeći pregled
 
-Drugi pregled (wiring, `ef4c5d8` / `6b6ad33`) je napravljen dok je druga sesija još pisala web tok i
-popravljala E2E, pa pokriva samo commitani dio. Kad taj rad bude commitan, drugi pregled se **proširuje**
-(popis u njegovu odjeljku „Što ostaje za proširenje”), s novim tagom `audit-fable-<datum>-wiring-2` ili
-sličnim. Stanje starih nalaza: F-01, F-02, F-04 i F-06 wiring nije adresirao; tablica ispravaka
-dokumentacije iz prvog pregleda još je otvorena.
+Drugi pregled je napravljen u dva dijela: prvo nad commitanim dijelom wiringa (`ef4c5d8` / `6b6ad33`, tag
+`…-wiring`), zatim proširen nad dovršenim wiringom (`1ecab96` / `106f205`, tag `…-wiring-2`), oboje u istom
+dokumentu. Stanje: F-01, F-02, F-04 i F-06 nisu adresirani; tablica ispravaka dokumentacije iz prvog pregleda
+još je otvorena; CI na grani pada (F-22). Treći pregled ide nakon popravaka i prije Gnosis deploya: provjeriti
+F-13/F-14/F-15/F-20 i zeleni CI, pa Gnosis manifest i konfiguraciju (registrar, `RELAYER_CHAINS`, `maksimir_chains`).

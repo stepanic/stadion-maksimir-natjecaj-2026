@@ -2,15 +2,15 @@
 
 **Datum:** 26. 9. 2026.
 **Recenzent:** Claude Fable 5.1, kao neovisni reviewer koda koji je napisao Claude Opus 5.5
-**Pregledano stanje:** grana `feat/glasanje-integracija` na `ef4c5d8` (tri commita iznad `faaaa5f`:
-`c65fce9` plan 08, `178a2c2` klijent, `ef4c5d8` relayer u Workeru) i `domovina-api` grana
+**Pregledano stanje (prvi dio, ~01:50 CEST):** grana `feat/glasanje-integracija` na `ef4c5d8` (tri commita iznad
+`faaaa5f`: `c65fce9` plan 08, `178a2c2` klijent, `ef4c5d8` relayer u Workeru) i `domovina-api` grana
 `feat/maksimir-chain` na `6b6ad33` (dva commita iznad `d5d88b7`: migracija `20260926120000_maksimir_chain.sql`
-+ test, edge funkcija `maksimir-register`). Sve linije u nalazima odnose se na ta dva commita.
-**Izvan opsega:** necommitane izmjene u oba worktreea u trenutku pregleda (ovaj repo:
-`web/src/chainVote.ts`, `chainVoteView.ts`, `glasanje.ts`, `glasanjeView.ts`, `shareView.ts`,
-`web/worker/relayer/*`, `web/scripts/glasanje-chain-e2e.mjs`; `domovina-api`: izmjene migracije i testa).
-Druga sesija ih još piše i popravlja uz E2E, pa se ovaj dokument **proširuje** kad taj rad bude commitan
-(vidi „Što ostaje za proširenje” na kraju).
++ test, edge funkcija `maksimir-register`). Nalazi F-13…F-19 i sve linije u njima odnose se na ta dva commita.
+**Proširenje (~02:00 CEST, odjeljak [Proširenje](#proširenje-1ecab96--106f205)):** ista grana na `1ecab96` (četiri
+commita više: web tok `7f83aaf`, snapshot v3 + `verify --chain` `382d046`, Safe 2/3 na Chiadu `eafde60`, docs
+`1ecab96`) i `domovina-api` na `106f205` (`_maksimir_set_public_for` za listić s lanca). Oba worktreea čista.
+Nalazi F-20…F-22 i status starih nalaza odnose se na to stanje; gdje se broj retka u migraciji promijenio,
+naveden je novi.
 **Opseg:** samo čitanje i analiza. Ništa u implementaciji, testovima ni dokumentaciji nije mijenjano.
 **Prethodni pregled:** [2026-09-26-neovisni-review-glasanje.md](2026-09-26-neovisni-review-glasanje.md)
 (F-01…F-12, tag `audit-fable-2026-09-26`). Nalazi ovdje nastavljaju numeraciju (F-13…).
@@ -342,19 +342,126 @@ Novo:
 7. **F-19, ugovor (V2):** `semaphore.validateProof(groupId, ownershipProof)` pa `cast` istog glasača mora proći.
 8. **CI:** `chain.yml` mora se izvršiti na grani wiringa prije PR-a (`git push` grane); danas nema nijednog runa.
 
-## Što ostaje za proširenje (kad necommitani rad bude commitan)
+## Proširenje (`1ecab96` / `106f205`)
 
-Ovaj dokument ne pokriva web tok (`chainVote.ts`, `chainVoteView.ts`, grananje u `glasanjeView.ts`,
-`shareView.ts` za `chain`/kartice s lanca), E2E skriptu, ni izmjene relayera i migracije nastale nakon
-`ef4c5d8` / `6b6ad33`. Pri proširenju treba provjeriti barem: (1) gdje web zove `generateProof` (F-04),
-(2) je li tok registracija → predaja i dalje jedan korak (F-01, F-13), (3) što `share.ts` i `shareView.ts`
-prikazuju za neprovjerene `chain` objave (F-14), (4) što se dogodilo s `keystore.ts` (F-06), (5) je li migracija
-promijenjena na mjestima koja ovaj pregled citira, i (6) je li `chain.yml` prošao na grani.
+Pročitano u cijelosti: `web/src/chainVote.ts` (375), `chainVoteView.ts` (824), izmjene `glasanje.ts`,
+`glasanjeView.ts`, `shareView.ts`, `web/worker/share.ts`, `web/worker/relayer/{relay,route,types}.ts` + test,
+`web/scripts/glasanje-chain-e2e.mjs`, `scripts/maksimir_chain.py`, `maksimir_checkpoint.py`, `maksimir_verify.py`,
+`test_maksimir_chain.py`, `chain/scripts/safe-chiado.ts`, `chain/deployments/chiado/owner.json`,
+`.github/workflows/chain.yml`, `web/vite.config.ts`, docs 02/03/08/README/audit/nalazi.md; u `domovina-api`
+nova `_maksimir_set_public_for` i test.
+
+Uživo, samo čitanjem (25. 9. 23:54 UTC): `V1.owner()` na Chiadu = `0x2b7c…64e9` (Safe iz `owner.json`, drži);
+`gh run list -w chain.yml --branch feat/glasanje-integracija`: **jedan run, `failure`** (vidi F-22);
+checkpoint: i dalje zadnji `schedule` 21:33 UTC, dakle 22:17 i 23:17 preskočeni (F-05).
+
+### Odgovori na šest točaka iz prve verzije
+
+| # | Pitanje | Nalaz u `1ecab96` |
+|---|---|---|
+| 1 | gdje web zove `generateProof` (F-04) | `chainVote.ts:282,340,353` preko `proveBallot`/`proveOwnership`/`proveShare` iz `chain/client/ballot.ts`, i dalje bez `snarkArtifacts`; poruka na ekranu to i kaže („prvi put preuzima ~2 MB”, `:280`). **F-04 otvoren** |
+| 2 | je li registracija → predaja jedan korak (F-01, F-13) | da, doslovno: `chainVoteView.ts:262-276` (`advance()`: `ensureRegistered` → `refreshMy` → `send` bez ikakvog čekanja); `chainVote.ts:238-253` čeka potvrdu `register` u bloku pa odmah gradi dokaz nad grupom u kojoj je zadnji dodani član upravo glasač. **F-01 i F-13 otvoreni**, a tekst uvjeta (`chainVoteView.ts:570`) tvrdi „domovina.ai … ne zna koji je listić tvoj” |
+| 3 | što `share.ts`/`shareView.ts` prikazuju za `chain` objave (F-14) | stranica objave (`shareView.ts:270-310`) provjerava događaj na lancu, dobro; OG kartica (`share.ts:53-56`) za `kind = 'chain'` bez provjere tvrdi „glas je predala stvarna osoba potvrđena eOsobnom, a dokaz je na lancu”. **F-14 otvoren** (kartica potvrđuje neprovjeren red) |
+| 4 | `keystore.ts` (F-06) | nepromijenjen: `keyFingerprint` (`:91-97`) i `user.id` (`:99-106`) i dalje iz commitmenta. **F-06 otvoren** |
+| 5 | citirana mjesta u migraciji | funkcije do retka 633 nepromijenjene; nova `_maksimir_set_public_for` (`:638-677`) pomiče ostatak za 41: `maksimir_chain_share` `:680-701`, `maksimir_public_ballots` `:746-763`, `zk_shares` `:757`. Sadržaj isti, nalazi F-14 i F-16 vrijede |
+| 6 | `chain.yml` na grani | grana je pushana; run na `1ecab96` **pada** u jobu `relayer` (F-22) |
+
+### Što proširenje potvrđuje da drži
+
+| Tvrdnja | Gdje |
+|---|---|
+| ključ na uređaju: tajna samo u memoriji, s passkeyjem se briše nakon radnje (`finishKey`), riječi nestaju prije potvrde, kriva potvrda odbijena | `chainVoteView.ts:290-297, 385-399`; E2E A1, B |
+| tuđi valjani ključ ne prolazi kao „moj”: commitment mora biti onaj iz `maksimir_chain_registrations` | `acceptKey`, `chainVoteView.ts:358-371`; E2E B („to nije ključ upisan za tebe”) |
+| dokaz vlasništva na stranici objave: SNARK + poruka + korijen + `ballotOf`, podmetnut nullifier pada | `shareView.ts:212-257`; E2E A3 |
+| anonimna objava provjerava se s lanca, ne iz baze | `shareView.ts:270-310` → `readShareTx` |
+| rezultati = lanac + ostatak faze 1 samo za ugovor s `counts`; testna mreža se ne zbraja | `chainVote.ts:311-330`; E2E D |
+| „preuzmi paket i pošalji sam” kad relayer padne; paket = točno `cast(revision, points, proof)` | `chainVote.ts:296-306`, `chainVoteView.ts:775-783` |
+| relayer: napojnica ≥ 0,01 gwei, gornja granica i dalje `MAX_FEE_GWEI` | `relay.ts:82-90, 111-114`; test `withTip` |
+| verifikator neovisan o webu: vlastiti keccak (vektori), `runtimeCodeKeccak256` koda na adresi, zbroj iz `BallotCast`/`Migrated` = `results()`, snapshot v3 = događaji do bloka + `blockHash` | `maksimir_chain.py`, `maksimir_verify.py:153-191`; 9 testova bez mreže + `MAKSIMIR_LIVE` |
+| vlasnik V1 na Chiadu = Safe 2/3, 1 potpis odbijen, stari vlasnik odbijen (probni put za Gnosis, F-10 `renounceOwnership` sad traži 2 potpisa) | `owner.json`, `owner()` uživo |
+| web radi nad bazom bez migracije (I-04): konfiguracija lanca samo uz `chain_from` ili `?lanac=` | `chainVoteView.ts:93-102` |
+
+### F-20
+
+**Uređaj i stranica čuvaju vezu commitment ↔ nullifier u čistom tekstu** — *niska–srednja (privatnost)*
+
+**Gdje:** `chainVote.ts:74-81` (`localStorage` ključevi `maksimir-chain-commitment`,
+`maksimir-chain-nullifier:<chainId>:<ugovor>:<commitment>`, `maksimir-chain-share:…:<commitment>`,
+`maksimir-chain-last-tx`), `:259-265` (`nullifierFor` sprema nullifier pod commitmentom), `chainVoteView.ts:68-80`
+(`globalThis.__chainVote.state` vraća `commitment`, `nullifier`, `ballot` svakoj skripti na stranici, i u produkciji),
+komentar `chainVote.ts:9-10` („u localStorage idu samo javni podaci”).
+
+Commitment i nullifier jesu pojedinačno javni, ali **veza** među njima je upravo ono što Semaphore skriva: tko je
+ima, zna „ovaj commitment (= ova osoba po registraru) predao je ovaj listić”. Danas je ta veza u `localStorage`
+(trajno, po uređaju) i u globalnom objektu (svaka ekstenzija, svaki XSS iz F-07, svaki sinkronizirani profil).
+Faza 1 tu vezu nikad nije stavila na klijent (nullifier objave nije bio vezan uz commitment u pohrani).
+Namjera je legitimna (prikaz „moj listić” bez otključavanja ključa), ali se cijena ne spominje ni u ADR-u 0001 ni
+u uvjetima. Isto vrijedi za `maksimir-chain-share:<commitment>` (anonimna objava ↔ commitment).
+
+**Preporuka.** Nullifier i id objave držati u `sessionStorage` ili ih ponovno izračunati nakon otključavanja (ključ
+je ionako potreban za svaku promjenu), a `__chainVote` izložiti samo kad je `import.meta.env.MODE === "e2e"`. Ako
+trajna pohrana ostaje, u uvjete i ADR 0001 dodati rečenicu: „Ovaj uređaj pamti koji je listić tvoj.”
+Test: nakon predaje, `localStorage` ne sadrži nijedan ključ koji istodobno sadrži commitment i nullifier (pada danas).
+
+### F-21
+
+**Testna oznaka `?lanac=` bira i ugovor koji se broji; checkpoint faze 1 ovisi o RPC-u Gnosisa** — *niska (ops), proširuje F-18*
+
+- `chainVoteView.ts:104-122` (`selectChain`): `?lanac=<label>` uzima **bilo koji** red iz `maksimir_chains`,
+  pa i `gnosis` s `counts = true`, i to prije `chain_from`. Popis oznaka je javan (`maksimir_chain_config().chains`).
+  Tko prije dana D otvori `?lanac=gnosis`, registrira se i prenese listić: baza ga briše iz faze 1 (F-18), a web
+  do dana D prikazuje samo fazu 1. Traka „TESTNA MREŽA” se ne prikazuje jer `counts = true`. Preporuka: `?lanac=`
+  smije birati samo redove s `counts = false`, ili `_maksimir_chain_open()` traži `chain_from` za ugovore koji se broje.
+- `scripts/maksimir_checkpoint.py:75-83, 105-107`: čim postoji `chain/deployments/gnosis/v1.json`, `chain_part()`
+  zove RPC Gnosisa i **baca** iznimku kad RPC ne odgovori; `main()` je ne hvata, pa nema ni checkpointa faze 1.
+  Satno sidrenje faze 1 tako dobiva novu točku kvara (uz F-05). Preporuka: `try/except` oko `chain_part()`,
+  snapshot bez `chain` uz upozorenje, i rezervni RPC.
+
+### F-22
+
+**CI na grani pada; typecheck weba ovisi o `chain/node_modules`** — *info (ops)*
+
+`gh run view` za `1ecab96`: `contracts` i `verify-scripts` prolaze, `relayer` pada na `npm run typecheck` s
+`TS2307: Cannot find module '@semaphore-protocol/core'` / `'viem'` / `'@scure/bip39'` u `../chain/client/*.ts`.
+Lokalno prolazi jer `chain/node_modules` postoji; u CI-ju `web/` instalira samo svoje pakete, a TypeScript
+module iz `chain/client/` razrješava od te mape naviše. Vite `dedupe` (`vite.config.ts:13-15`) rješava bundle,
+ne i typecheck. Dokument 08 tablica „Stanje implementacije” to ne bilježi, a 2026-09-26-glasanje-onchain.md
+točno predviđa („CI još nije vidio granu”). Preporuka: `paths` u `web/tsconfig.json` na `web/node_modules`, ili
+`npm ci` i u `chain/` u tom jobu; PR u `main` tek sa zelenim CI-jem.
+
+### Ažuriran status starih nalaza
+
+| ID | Stanje na `1ecab96` / `106f205` |
+|---|---|
+| F-01 | otvoren; web tok ga izvodi doslovno (točka 2 gore); uvjeti v2 na ekranu ponavljaju tvrdnju |
+| F-02, F-14 | otvoreni; OG kartica sad afirmativno opisuje i neprovjerene `chain` redove |
+| F-04 | otvoren; nova uporaba u `proveOwnership` |
+| F-05 | otvoren; nakon 21:33 UTC nema zakazanih runova do 23:54 UTC |
+| F-06 | otvoren |
+| F-08 | otvoren; nova `_maksimir_set_public_for` (`106f205`) dopušta ponovno uključivanje kartice s lanca, ista trajnost |
+| F-09, F-17 | otvoreni (500 s `e.message`, `localhost:5173`, observability) |
+| F-10 | `renounceOwnership`/`setMerkleTreeDuration` sad iza Safea 2/3 na Chiadu; V1 ostaje isti |
+| F-13, F-15, F-16, F-18, F-19 | otvoreni; F-18 konkretiziran u F-21 |
+| I-01…I-08 (Opusovi nalazi iz E2E) | pročitani; I-07 (provjera `registrar()` prije upisa) je isto što ovaj pregled navodi kao „drži”; nijedan ne preklapa F-13…F-22 |
+
+### Dopuna tablice ispravaka dokumentacije
+
+| Gdje | Danas piše | Treba pisati |
+|---|---|---|
+| `chainVoteView.ts:570` (uvjeti v2 na ekranu) | domovina.ai … ne zna koji je listić tvoj | zna ako spoji zapise registrara i relayera; listić se šalje odmah nakon upisa (F-01) |
+| `chainVote.ts:9-10` | u localStorage idu samo javni podaci | i veza commitment ↔ nullifier (F-20) |
+| `08` „Stanje implementacije” | 33/33, `npm run check` | + CI na grani pada u `relayer` (F-22) dok se ne popravi |
+| `08:474-478` (E2E prije testa) | `maksimir-zk-identity`, `maksimir-keystore-v1`, `maksimir-draft`, `maksimir-auth` | + `maksimir-chain-*` ključevi (F-20) u backup i vraćanje |
+
+### Testovi koje vrijedi dodati (proširenje)
+
+9. **F-20:** nakon predaje `Object.keys(localStorage)` ne sadrži ključ s commitmentom i nullifierom zajedno; `globalThis.__chainVote` je `undefined` u produkcijskom buildu.
+10. **F-21:** `selectChain(cfg, "?lanac=gnosis")` vraća `null` kad je `counts = true` i `chain_from` nije nastupio; `maksimir_checkpoint.py` s nedostupnim RPC-om i dalje piše snapshot faze 1.
+11. **F-22:** `npm run typecheck` u `web/` prolazi bez `chain/node_modules` (CI to već traži).
 
 ## Napomena o ograničenju
 
-Statički pregled s nekoliko čitanja uživo. Testove wiringa nisam pokretao (Mac bez swapa, druga sesija ih upravo
-vrti); tvrdnje o tome što testovi pokrivaju dolaze iz čitanja njihova koda. Produkcija u trenutku pregleda
+Statički pregled s nekoliko čitanja uživo. Testove wiringa nisam pokretao (Mac bez swapa; druga sesija ih je vrtjela do `1ecab96`); tvrdnje o tome što testovi pokrivaju dolaze iz čitanja njihova koda. Produkcija u trenutku pregleda
 nema ništa od wiringa (relayer 404, migracija nije primijenjena), pa nijedan nalaz odavde nije danas
 iskoristiv na `maksimir.domovina.ai`; svi vrijede od trenutka deploya. Nijedan alat ne dokazuje odsutnost
 ranjivosti; ovaj dokument dokazuje samo koje su klase napada provjerene i s kojim ishodom.
