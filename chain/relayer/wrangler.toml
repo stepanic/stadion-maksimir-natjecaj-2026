@@ -17,6 +17,7 @@ CONTRACT_ADDRESS = ""
 CHAIN_ID = "100"                       # "10200" za Chiado
 GNOSIS_RPC_URL = "https://rpc.gnosischain.com"
 ALLOWED_ORIGINS = "https://maksimir.domovina.ai,https://stadion-maksimir.domovina.ai,https://stadion-maksimir-8cl.pages.dev,http://localhost:5173,http://localhost:4321"
+MAX_FEE_GWEI = "5"
 IP_DAILY_LIMIT = "50"
 GLOBAL_DAILY_LIMIT = "5000"
 

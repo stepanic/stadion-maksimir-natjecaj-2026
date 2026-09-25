@@ -7,6 +7,8 @@ export type Env = {
   GNOSIS_RPC_URL?: string;
   CONTRACT_ADDRESS?: string;
   ALLOWED_ORIGINS?: string;
+  /** Gornja granica maxFeePerGas u gwei (zadano 5; tipično je Gnosis na ~0,00000001 gwei). */
+  MAX_FEE_GWEI?: string;
   IP_DAILY_LIMIT?: string;
   GLOBAL_DAILY_LIMIT?: string;
 };

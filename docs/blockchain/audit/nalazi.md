@@ -12,6 +12,9 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | A-03 | niska | mrtav uvjet `successor == address(0)` u `migrate` | pokrivenost grana | popravljeno |
 | A-04 | niska | redoslijed provjera → zapis → vanjski poziv u `register`; neinicijaliziran `sum` | Slither | popravljeno |
 | A-06 | srednja (testovi) | provjera scopea listića nije bila izravno testirana; bez nje isti glasač dobiva drugi listić | mutacijsko testiranje (M17) | test + fuzz napad |
+| R-01 | srednja (relayer) | nema gornje granice cijene gasa; pri zagušenju član grupe može isprazniti sponzora | pregled relayera (model troška) | `MAX_FEE_GWEI` (zadano 5) |
+| R-02 | niska (relayer) | parser propušta 78-znamenkaste brojeve > uint256 | test granica | provjera raspona + test |
+| C-01 | info (klijent) | `fetchGroup` vjeruje jednom RPC-u (i događaji i korijen dolaze od njega) | pregled klijenta | preporuka: web provjerava korijen na drugom RPC-u |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac
@@ -120,3 +123,24 @@ flowchart LR
 
 **Popravak (testovi):** rubni test „isti glasač s drugim scopeom → WrongScope” (provjerava i da je
 nullifier doista drugi) i fuzz napad „drugi scope” s nasumičnim scopeom.
+
+## R-01 — relayer bez granice cijene gasa
+
+Relayer je slao transakcije po bilo kojoj cijeni koju mreža traži. Pri zagušenju (npr. 100 gwei)
+član grupe mogao bi slati izmjene listića (do 50 dnevno po IP-u, 5 000 ukupno) i potrošiti
+sponzorov xDAI stotinama puta brže nego inače. **Popravak:** relayer odbija slanje (503) kad je
+`maxFeePerGas` iznad `MAX_FEE_GWEI` (zadano 5 gwei, a Gnosis je danas na ~0,00000001 gwei) i šalje
+s procijenjenim naknadama. Glasač tada može poslati paket sam.
+
+## R-02 — raspon brojeva u relayeru
+
+`/^\d{1,78}$/` propušta brojeve do 10⁷⁸, a uint256 ide do ~1,16·10⁷⁷. Takav broj ne bi prošao
+ugovor, ali bi pao tek u kodiranju viema, s nejasnom greškom. **Popravak:** provjera
+`≤ 2²⁵⁶ − 1` i testovi za granicu i najveću dopuštenu vrijednost.
+
+## C-01 — klijent vjeruje jednom RPC-u
+
+`fetchGroup` čita događaje i korijen s istog RPC-a. Zlonamjeran RPC mogao bi dati lažnu grupu i
+lažan korijen. Posljedica je samo da dokaz ne prođe na lancu (pravi korijen je drugačiji), pa
+listić ne bi bio ni prihvaćen ni podmetnut. Ne može se iskoristiti za tuđi glas. **Preporuka za
+web:** korijen provjeriti na drugom neovisnom RPC-u.

@@ -20,9 +20,12 @@ type Proof = {
 
 export class BadRequest extends Error {}
 
+const UINT256_MAX = (1n << 256n) - 1n;
 const num = (v: unknown, what: string): bigint => {
   if ((typeof v !== "string" && typeof v !== "number") || !/^\d{1,78}$/.test(String(v))) throw new BadRequest(`${what}: nije broj`);
-  return BigInt(v);
+  const n = BigInt(v);
+  if (n > UINT256_MAX) throw new BadRequest(`${what}: veći od uint256`);
+  return n;
 };
 
 function parseProof(p: unknown): Proof {
@@ -90,7 +93,14 @@ export async function relay(env: Env, call: Call, ip: string): Promise<RelayResu
     return { status: conflict ? 409 : 400, body: { ok: false, error: reason ?? "simulacija nije prošla" } };
   }
 
-  // 2. kočnice troška
+  // 2. kočnice troška: gornja granica cijene gasa (zagušenje mreže ne smije isprazniti sponzora)
+  const maxFee = BigInt(Math.round(Number(env.MAX_FEE_GWEI ?? 5) * 1e9));
+  const fees = await pc.estimateFeesPerGas();
+  if ((fees.maxFeePerGas ?? 0n) > maxFee) {
+    return { status: 503, body: { ok: false, error: "gas je trenutno preskup — pokušaj kasnije ili pošalji paket sam" } };
+  }
+
+  // dnevni limiti
   if (!(await bump(env.RELAY_KV, `global:${day()}`, Number(env.GLOBAL_DAILY_LIMIT ?? 5000)))) {
     return { status: 429, body: { ok: false, error: "dnevni proračun relayera je potrošen — paket možeš poslati i sam" } };
   }
@@ -101,7 +111,7 @@ export async function relay(env: Env, call: Call, ip: string): Promise<RelayResu
   // 3. slanje (nonce utrka dvaju istodobnih zahtjeva → ponovi)
   for (let attempt = 0; ; attempt++) {
     try {
-      const txHash = await wallet.writeContract(req as never);
+      const txHash = await wallet.writeContract({ ...req, maxFeePerGas: fees.maxFeePerGas, maxPriorityFeePerGas: fees.maxPriorityFeePerGas } as never);
       return { status: 200, body: { ok: true, txHash } };
     } catch (e) {
       if (attempt < 3 && isNonceError(e)) {

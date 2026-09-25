@@ -24,4 +24,10 @@ test("odbija krive oblike prije ikakvog poziva lanca", () => {
   assert.throws(() => parseCall("share", { proof: { ...proof, nullifier: "-1" } }), BadRequest);
   assert.throws(() => parseCall("register", { commitment: "1", deadline: "2", signature: "0x12" }), BadRequest);
   assert.throws(() => parseCall("admin", {}), BadRequest);
+  // revizija izvan uint32 (ugovor bi je odbio, ali viem bi je tiho odrezao)
+  assert.throws(() => parseCall("cast", { revision: 2 ** 32, points: "0x", proof }), BadRequest);
+  // broj veći od uint256
+  assert.throws(() => parseCall("share", { proof: { ...proof, nullifier: "9".repeat(79) } }), BadRequest);
+  assert.throws(() => parseCall("share", { proof: { ...proof, nullifier: "9".repeat(78) } }), BadRequest); // 78 znamenki > uint256
+  assert.doesNotThrow(() => parseCall("share", { proof: { ...proof, nullifier: ((1n << 256n) - 1n).toString() } }));
 });

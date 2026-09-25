@@ -9,7 +9,7 @@ timeline
   Krug 1 : A-01 dvostruko glasanje preko verzija : A-02 check-frozen : Chiado redeploy
   Krug 2 : Slither (A-04) : pokrivenost 76 → 100 % grana (A-03) : prag 100 % u CI-ju
   Krug 3 : stateful fuzz 800 koraka : 22/22 mutanta ubijena : A-06 rupa u testovima
-  Krug 4 : klijent i relayer
+  Krug 4 : klijent (7 testova, otisak popisa radova) : relayer R-01 granica gasa, R-02 raspon : C-01 RPC
 ```
 
 ## Krug 0 — redizajn i prvi testovi
@@ -94,3 +94,12 @@ test i fuzz napad, pa sad padaju 2 testa iz pravog razloga.
 
 Mutanti na koje pada samo jedan test (npr. M06, M14, M15, M21) imaju ciljani test za točno tu
 provjeru. To je dovoljno, jer mutacija ne može proći neprimijećeno.
+
+## Krug 4 — klijent i relayer
+
+- **Klijent** (`test/client/ballot.test.ts`, 7 testova): otisak popisa radova zaključan na V1
+  `entriesHash` (popis se nikad ne smije promijeniti), odbijanje svakog neispravnog listića
+  (nepoznata šifra, zbroj ≠ 100, negativni, decimalni, NaN, > 100), poruka ovisi o svakom polju,
+  EIP-712 domena.
+- **Relayer:** R-01 (granica cijene gasa), R-02 (raspon uint256). Testovi za granice.
+- **C-01:** povjerenje u jedan RPC nije iskoristivo za tuđi glas. Preporuka je dodana za web.
