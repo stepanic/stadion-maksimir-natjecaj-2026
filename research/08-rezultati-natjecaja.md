@@ -78,7 +78,46 @@ Službeni PDF-ovi (po 10 panela, samo slike bez tekstualnog sloja):
 
 ## 8. Jesu li dostupni i nenagrađeni radovi?
 
-*Dopunjava se.*
+**Kratko: zasad ne službeno, ali po Pravilniku moraju biti.** Stanje 25.9.2026.:
+
+- Službeno su objavljeni samo podaci i PDF-ovi **5 nagrađenih radova**. To vrijedi za stranicu natječaja, HKA (vijest 6202) i TED (obavijest [661302-2026](https://ted.europa.eu/en/notice/661302-2026/pdf), koja navodi samo nagrađene). DAZ još nema zapis u arhivi rezultata.
+- Popis ostalih **83 šifre i autora ne postoji javno**. Nema ni galerije ni završnog izvješća.
+- Na **EOJN-u** (tender 76778, Dokumentacija o nabavi) je 25.9. u 05:07 dodan dokument **„Zapisnik o pregledu i ocjeni”** (176 KB). Dostupan je samo uz prijavu. Zbog veličine vjerojatno ne sadrži grafičke priloge.
+
+### Što propisi traže
+
+| Propis | Obveza |
+|---|---|
+| Pravilnik NN 154/2025, čl. 4. st. 1. t. III | postupak i odluke OS-a „moraju biti dokumentirani i **javno dostupni** od trenutka objave rezultata” |
+| čl. 28. st. 5 | javno predstavljanje „uvidom u **sva** pristigla natječajna rješenja … javnom objavom na mrežnim stranicama i javnim izlaganjem” |
+| čl. 81. st. 1 · Uvjeti t. 1.7 | obavijest u EOJN-u „uz **obaveznu objavu završnog izvješća** natječaja i **grafičkih priloga** natječajnih rješenja” |
+| čl. 84. st. 3 | (i) objava na stranicama **HKA** s uvidom u **sva** rješenja i završno izvješće; (ii) **izložba svih rješenja**, najkasnije 30 dana nakon objave i isteka roka za žalbu, u trajanju od najmanje 5 dana; (iii) javna tribina |
+| čl. 86. st. 2 | naručitelj i provoditelj smiju objavljivati i izlagati **sve** radove radi informiranja javnosti |
+
+**Presedan DAZ-a:** kod *Doma zdravlja Vrbani* i *Javnog parka Šestine* DAZ je na stranici rezultata objavio **sve** radove (kartica „Ostali radovi”) i konačno izvješće. Očekivanje za Maksimir je isto. Izložbu svih radova s maketama Ana Boljar najavila je „za otprilike mjesec dana”, dakle krajem listopada ili početkom studenoga 2026.
+
+### Nenagrađeni radovi koje su autori sami objavili (24.–25.9.)
+
+| Autori | Gdje |
+|---|---|
+| **Zaha Hadid Architects** + UPI2M, Buro Happold, LDA Design, Arup, SISA | [Instagram @zha.world](https://www.instagram.com/p/DdrR35mADzJ/) |
+| **3LHD** | [Instagram](https://www.instagram.com/p/DdrYCvxFfDA/) · [LinkedIn](https://www.linkedin.com/posts/3lhd_deminutiv-inspekting-tering-activity-7508928803059093504-YuPT) |
+| **GEplus arhitekti** + DBA Architects | [Instagram](https://www.instagram.com/p/DdrLnnbjki8/) |
+| **Urbane ideje** + Kengo Kuma &amp; Associates | [Facebook](https://www.facebook.com/urbane.ideje/posts/1674460161346427) · [tportal](https://www.tportal.hr/kultura/clanak/foto-pogledajte-kako-su-urbane-ideje-i-slavni-japanski-arhitekti-zamislili-novi-maksimir-foto-20260924) |
+| **Otto Barić** i tim | [Facebook](https://www.facebook.com/otto.baric.5/posts/28550865257888922) · [tportal](https://www.tportal.hr/kultura/clanak/foto-ovako-je-maksimir-zamislio-poznati-hrvatski-arhitekt-malo-je-drugaciji-od-pobjednika-20260924) |
+| **Proarh** (Davor Mateković) | [Jutarnji — galerija odbačenih projekata](https://www.jutarnji.hr/vijesti/zagreb/nevidene-vizije-maksimira-objavljeni-odbaceni-projekti-3lhd-proarh-geplus-urbane-ideje-kengo-kuma-15749656) |
+| **IEC Architects + Engineers** ⚠️ | [Index](https://www.index.hr/sport/clanak/foto-egipcani-imaju-posebnu-ideju-za-maksimir-evo-sto-bi-sve-taj-stadion-imao/2838626.aspx) · [tportal](https://www.tportal.hr/vijesti/clanak/mogao-je-izgledati-i-ovako-hrvatski-arhitekti-pokazali-svoje-vizije-novog-maksimira-20260925). Index ga zove egipatskim, a tportal hrvatskim uredom. Opis rada gotovo je isti kao ZHA-in, pa je moguća zabuna. Nije provjereno. |
+
+Zbirni pregled: [net.hr — projekti koji nisu pobijedili](https://net.hr/sport/nogomet/kako-je-mogao-izgledati-novi-maksimir-pogledajte-projekte-koji-nisu-pobijedili-9014428a-b857-11f1-936f-9600040c8f8e).
+Napomena: tportalov članak *„Ovi stadioni nisu prošli”* prikazuje nagrade 2.–5., a ne nenagrađene radove.
+
+### Kako doći do svih 88 radova
+
+1. **EOJN:** besplatna registracija, pa preuzeti „Zapisnik o pregledu i ocjeni” (76778 → Dokumentacija o nabavi).
+2. **Pratiti** DAZ (`/hr/natjecaji/rezultati/`), HKA vijest 6202 i stranicu natječaja, jer se tamo očekuje kartica „Ostali radovi”.
+3. **Upit DAZ-u** na `natjecaji@d-a-z.hr` (tajnik natječaja Roman Šilje): kada će sva rješenja i završno izvješće biti objavljeni na mreži, uz poziv na čl. 84. st. 3. t. i. Pravilnika.
+4. **Zahtjev za pristup informacijama** Gradu Zagrebu (službenik za informiranje), ako objava izostane nakon izložbe: završno izvješće s prilozima i popis šifri i autora.
+5. **Izložba** (~kraj listopada): jedino mjesto gdje će se sigurno vidjeti svih 88 radova i makete.
 
 ## Izvori
 
