@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ključ glasača — test</title>
+  <style>
+    :root { --bg: #fff; --fg: #111; --muted: #666; --line: #ddd; --ok: #1b7a36; --err: #b3261e; --accent: #0b5cad; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #121212; --fg: #eee; --muted: #aaa; --line: #333; --ok: #5bd07a; --err: #ff8a80; --accent: #7ab7ff; } }
+    body { font: 16px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); max-width: 760px; margin: 0 auto; padding: 16px; }
+    section { border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin: 12px 0; }
+    h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; margin: 0 0 8px; }
+    button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+    #words { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; font-family: ui-monospace, monospace; margin: 8px 0; }
+    .warn { color: var(--err); font-weight: 600; }
+    input, textarea { font: inherit; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+    textarea { width: 100%; min-height: 80px; box-sizing: border-box; }
+    #log { list-style: none; padding: 0; } .ok { color: var(--ok); } .err { color: var(--err); }
+    small { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>Ključ glasača — test passkeyja (ADR 0001)</h1>
+  <small>Lokalna test stranica. Passkey se zove „Maksimir TEST (localhost)” i može se obrisati iz Lozinki nakon testa.</small>
+
+  <section>
+    <h2>1. Podrška</h2>
+    <button id="support">Provjeri PRF podršku</button>
+  </section>
+
+  <section>
+    <h2>2. Novi ključ</h2>
+    <button id="create">Izradi ključ i prikaži 24 riječi</button>
+    <div id="step-words" hidden>
+      <p class="warn">Zapiši ove riječi sada. Prikazuju se samo ovaj put, postoje samo u memoriji ove
+        stranice i nestaju čim potvrdiš. Nismo ih spremili nigdje. Bez njih i bez passkeyja nitko,
+        pa ni mi, ne može vratiti tvoj ključ.</p>
+      <div id="words"></div>
+      <div id="confirm-inputs">
+        <p id="confirm-label"></p>
+        <input class="conf" autocomplete="off" /> <input class="conf" autocomplete="off" /> <input class="conf" autocomplete="off" />
+      </div>
+      <p><button id="confirm">Zapisao sam — zaštiti passkeyjem</button></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Svaki put: otključaj passkeyjem</h2>
+    <button id="unlock">Otključaj (Face ID / Touch ID)</button>
+  </section>
+
+  <section>
+    <h2>4. Oporavak iz 24 riječi</h2>
+    <textarea id="recover-words" placeholder="24 riječi, odvojene razmakom"></textarea>
+    <p><button id="recover">Vrati ključ</button></p>
+  </section>
+
+  <section>
+    <h2>Zapisnik</h2>
+    <ul id="log"></ul>
+  </section>
+  <script type="module" src="./demo.js"></script>
+</body>
+</html>

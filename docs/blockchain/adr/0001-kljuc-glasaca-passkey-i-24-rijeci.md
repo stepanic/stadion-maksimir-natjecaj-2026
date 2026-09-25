@@ -1,6 +1,6 @@
 # ADR 0001 — Ključ glasača: 24 riječi + passkey (PRF) za svakodnevno otključavanje
 
-**Status:** prijedlog (26. 9. 2026.), čeka implementaciju `chain/client/keystore.ts`
+**Status:** prihvaćeno (26. 9. 2026.); implementirano u `chain/client/keystore.ts`, 100 % pokrivenost testovima
 **Odlučuje:** Matija Stepanić
 **Odnosi se na:** `MaksimirGlasanjeV1` (ugovor se **ne mijenja**), [06-kontrola-glasaca.md](../06-kontrola-glasaca.md)
 **Srodno:** `pay.domovina.ai` ADR 0011, 0012 (passkey + seed kao drugi vlasnik Safea), 0013
@@ -163,22 +163,57 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
 - `rpId = domovina.ai` znači da passkey za glasanje dijeli domenu s ostalim domovina.ai uslugama.
   Passkey je poseban zapis (drugi `user.id`), pa se ne miješa s prijavom ili novčanikom.
 
-## Otvorena pitanja
+## Riješena pitanja (Matija, 26. 9. 2026.)
 
-1. **`rpId`:** `domovina.ai` (svuda) ili `maksimir.domovina.ai` (strože, ali passkey ne vrijedi na
-   `stadion-maksimir.domovina.ai`)?
-2. **Potvrda riječi:** tražiti upis 3 nasumične riječi prije prve predaje (preporučeno) ili samo
-   ponuditi ispis?
-3. **Ovisnost o istraživanju EIP-7702:** ne postoji. To istraživanje je za `pay.domovina.ai`
-   (novac, gdje passkey smije i treba potpisivati sam). Ovdje passkey samo otključava ZK tajnu.
+1. **`rpId = domovina.ai`**, dakle passkey vrijedi na svim poddomenama.
+2. **Potvrda riječi je obavezna.** Prije prve predaje glasač upisuje 3 nasumične riječi od 24.
+3. **Riječi se prikazuju jednom.** Aplikacija ih prikaže samo pri izradi i nikad više, jer ne
+   postoji gumb „prikaži ponovno”. Glasaču se to kaže izravno:
+
+   > Zapiši ove riječi sada. Prikazuju se samo ovaj put, postoje samo u memoriji ove stranice i
+   > nestaju čim potvrdiš. Nismo ih spremili nigdje. Bez njih i bez passkeyja nitko, pa ni mi,
+   > ne može vratiti tvoj ključ.
+
+   Iskreno ograničenje: ista tajna postoji i šifrirana tvojim passkeyjem. To omogućuje glasanje
+   Face ID-jem. „Nitko ne može doći do nje” zato vrijedi za sve **osim za vlasnika passkeyja**.
+   Na našim poslužiteljima tajna ne postoji ni u kakvom čitljivom obliku.
+4. **EIP-7702** ne utječe na ovu odluku ([istraživanje](../istrazivanja/2026-09-26-eip7702-passkey-gnosis.md)).
+
+## Pravilo toka: neuspjeli passkey ne smije izgubiti ključ (K-01)
+
+Pronađeno pri prvom testu sa stvarnim passkeyjem. Kad izrada passkeyja ne uspije (npr. prozor
+nema fokus, korisnik otkaže dijalog, preglednik nema PRF), tajna **ostaje u memoriji** i nudi se
+ponovni pokušaj ili nastavak samo s riječima. Glasač je riječi već zapisao. Kad bi se tajna
+obrisala, zapisane riječi bi i dalje vrijedile, ali stranica ne bi imala što zaštititi, pa bi
+glasač morao počinjati ispočetka i ne bi znao koje riječi vrijede.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Prikazane: izradi tajnu, prikaži 24 riječi
+  Prikazane --> Potvrđene: 3 riječi točne\n(riječi nestaju sa stranice)
+  Prikazane --> Prikazane: krivo upisano
+  Potvrđene --> Zaštićene: passkey + PRF uspio\n(omot spremljen, tajna obrisana)
+  Potvrđene --> Potvrđene: passkey nije uspio\n(tajna OSTAJE, ponovni pokušaj)
+  Potvrđene --> SamoRiječi: nastavi bez passkeyja
+  Zaštićene --> [*]
+  SamoRiječi --> [*]
+```
+
+## Test sa stvarnim preglednikom (26. 9. 2026.)
+
+| Provjera | Rezultat |
+|---|---|
+| Brave (Chromium 153) na macOS-u, `getClientCapabilities()` | `extension:prf: true`, `relatedOrigins: true`, `hybridTransport: true` |
+| WebAuthn iz automatiziranog, nefokusiranog prozora | odbijeno: „page does not have focus”. Preglednik traži da je stranica u prvom planu (ispravno) |
+| Tok izrade nakon te greške | otkrio K-01 (popravljeno) |
 
 ## Plan implementacije
 
-- [ ] `chain/client/keystore.ts`: `newSecret`, `toWords`/`fromWords`, `fromPhase1Export`,
+- [x] `chain/client/keystore.ts`: `newSecret`, `toWords`/`fromWords`, `fromPhase1Export`,
       `wrapWithPasskey`/`unwrapWithPasskey` (WebAuthn PRF + HKDF + AES-GCM, sve Web Crypto),
       `prfSupported`
-- [ ] testovi (Node): riječi ↔ tajna ↔ commitment; omot/otomot s lažnim PRF izlazom; krivi
+- [x] testovi (Node, 26 testova, 100 % naredbi/grana/funkcija/linija): riječi ↔ tajna ↔ commitment; omot/otomot s lažnim PRF izlazom; krivi
       `credentialId` (AAD) pada; neispravne riječi (kontrolni zbroj) padaju
-- [ ] test stranica: stvarni passkey u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
+- [x] test stranica (`npm run demo`, `chain/client/demo/`); [ ] stvarni passkey u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
 - [ ] `domovina-api`: tablica `maksimir_keystore` + dva javna RPC-a (upiši, čitaj po hashu)
 - [ ] web (nakon Astro migracije): tokovi iz odluke 5

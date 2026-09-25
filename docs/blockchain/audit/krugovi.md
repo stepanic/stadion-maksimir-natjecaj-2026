@@ -12,6 +12,7 @@ timeline
   Krug 4 : klijent (7 testova, otisak popisa radova) : relayer R-01 granica gasa, R-02 raspon : C-01 RPC
   Krug 5 : ovlasti vlasnika : A-07 redizajn prijelaza na V2 : 23/23 mutanta : Chiado redeploy
   Krug 6 : malleabilnost (polje BN254, ECDSA s) : matrica sljedivosti S1–S9 : mutacije u CI-ju
+  Krug 7 : keystore (ADR 0001) : 100 % pokrivenost klijenta : K-01 tok izrade, T-01 nestabilan test
 ```
 
 ## Krug 0 — redizajn i prvi testovi
@@ -159,3 +160,38 @@ flowchart LR
 | S7 | cast i register nakon roka; fuzz: nakon roka ništa se ne mijenja | M10 |
 | S8 | nullifier listića ≠ nullifier objave; objava s scopeom listića | M18 |
 | S9 | bilo tko šalje paket (stranger); Chiado E2E kroz relayer | (nema mutanta: nema provjere pošiljatelja koju bi se moglo ukloniti) |
+
+## Krug 7 — ključ glasača (keystore, ADR 0001)
+
+```mermaid
+flowchart LR
+  subgraph T["testovi (Node)"]
+    FA["lažni autentifikator<br/>PRF = HMAC(tajna passkeyja, sol)<br/>načini: Chrome, Safari, bez PRF-a, Uint8Array"]
+  end
+  subgraph K["keystore.ts"]
+    W["24 riječi ↔ tajna"]
+    X["omot AES-256-GCM<br/>AAD = credentialId"]
+    F["tokovi: zaštiti / otključaj / oporavak"]
+  end
+  subgraph B["stvarni preglednik"]
+    D["demo stranica<br/>Brave + iCloud Keychain"]
+  end
+  FA --> K
+  K --> D
+```
+
+- **Pokrivenost klijenta** (`chain/client/`: ballot, entries, group, keystore): **100 %**
+  naredbi, grana, funkcija i linija (c8), s pragom u CI-ju (`npm run coverage:client`).
+  Put do 100 % otkrio je dva mrtva ogranka (nepotrebne grane u `sha256` i `checkConfirmation`)
+  i komparator sortiranja s nedohvatljivom granom (prepisan bez grananja).
+- **Zaključane trajne vrijednosti:** test pada ako se promijeni `rpId` ili PRF sol, jer bi to
+  zaključalo sve postojeće ključeve.
+- **Svojstva pod testom:** dva passkeyja otvaraju istu tajnu; oporavak iz riječi i novi passkey
+  daju isti commitment; omot je vezan uz passkey (AAD); izmijenjen šifrat, IV ili verzija pada;
+  omot ne sadrži tajnu ni riječi; ključ iz faze 1 = isti commitment.
+- **T-01 (nestabilan test):** test kontrolnog zbroja mijenjao je redoslijed dviju riječi, a BIP-39
+  kontrolni zbroj ima samo 8 bita, pa bi otprilike 1 od 256 pokretanja lažno pao. Zamijenjen je
+  determinističkim primjerom (24 × „abandon” ne prolazi, a 23 × „abandon” + „art” prolazi).
+- **K-01 (tok izrade):** pri prvom testu sa stvarnim preglednikom izrada passkeyja nije uspjela
+  (nefokusiran prozor), a demo je već obrisao tajnu. Pravilo je dodano u ADR, a demo popravljen:
+  tajna ostaje do uspjeha ili izbora „samo riječi”.

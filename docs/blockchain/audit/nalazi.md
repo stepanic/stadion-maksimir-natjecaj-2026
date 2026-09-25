@@ -17,6 +17,8 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | R-02 | niska (relayer) | parser propušta 78-znamenkaste brojeve > uint256 | test granica | provjera raspona + test |
 | C-01 | info (klijent) | `fetchGroup` vjeruje jednom RPC-u (i događaji i korijen dolaze od njega) | pregled klijenta | preporuka: web provjerava korijen na drugom RPC-u |
 | A-08 | info | malleabilnost nullifiera (+ r) i ECDSA `s` — zaštićeno vanjskim kodom (Semaphore, OZ) | krug 6 | regresijski testovi |
+| K-01 | srednja (klijent) | neuspjela izrada passkeyja brisala je tajnu nakon što su riječi već skrivene | test sa stvarnim passkeyjem (Brave) | pravilo toka u ADR 0001, demo popravljen |
+| T-01 | niska (testovi) | test BIP-39 kontrolnog zbroja lažno pada ~1/256 pokretanja | pregled testa | deterministički primjer |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac
