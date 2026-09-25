@@ -61,6 +61,17 @@
     dl { margin: 0; } dt { font-weight: 700; margin-top: 8px; } dd { margin: 2px 0 0; color: var(--muted); }
     [hidden] { display: none !important; }
     footer { color: var(--muted); font-size: .85rem; margin: 20px 0 40px; }
+    .tools { display: flex; flex-wrap: wrap; gap: 0; }
+    #print-sheet { display: none; }
+    @media print {
+      body { background: #fff; color: #000; }
+      main { display: none !important; }
+      #print-sheet { display: block !important; font: 14pt/1.5 system-ui, sans-serif; padding: 12mm; }
+      #print-sheet h1 { font-size: 18pt; margin: 0 0 4mm; }
+      #print-sheet ol { columns: 3; column-gap: 10mm; font-family: ui-monospace, Menlo, monospace; font-size: 14pt; padding-left: 8mm; }
+      #print-sheet li { margin: 1.5mm 0; }
+      #print-sheet .note { font-size: 10pt; margin-top: 8mm; border-top: 1px solid #000; padding-top: 3mm; }
+    }
   </style>
 </head>
 <body>
@@ -97,8 +108,14 @@
     <div id="words-box" hidden>
       <div class="warnbox">Zapiši ove riječi na papir, točno ovim redom. Ne fotografiraj ih i ne šalji nikome. Tko ima te riječi, može mijenjati tvoj glas.</div>
       <div class="words" id="words"></div>
+      <div class="tools">
+        <button class="secondary" id="b-copy">Kopiraj riječi</button>
+        <button class="secondary" id="b-print">Ispiši</button>
+      </div>
+      <div class="result" id="r2"></div>
     </div>
     <details><summary>Što se događa u pozadini?</summary>
+      <p><b>Kopiraj</b> i <b>Ispiši</b>: riječi možeš kopirati (npr. u upravitelj lozinki) ili ispisati na papir. Kopirane riječi brišemo iz međuspremnika nakon 60 sekundi. Pazi: Apple i neki upravitelji međuspremnika sinkroniziraju ga na tvoje druge uređaje. Najsigurniji je papir.</p>
       <p>Preglednik uzme 32 nasumična bajta (256 bita, više kombinacija nego atoma u svemiru). To je tvoj ključ. Isti bajtovi zapisani su kao 24 riječi prema standardu BIP-39, istom kakav koriste kripto novčanici. Ovo <b>nije</b> novčanik i u njemu nema novca. Iz ključa se računa njegov javni <b>otisak</b> (commitment), a on je jedino što ikad izađe iz preglednika.</p>
     </details>
   </section>
@@ -147,7 +164,11 @@
     <div id="reveal-box" hidden>
       <div class="warnbox">Pazi da ti nitko ne gleda u ekran. Riječi nestaju kad klikneš „Sakrij” ili nakon 2 minute.</div>
       <div class="words" id="reveal-words"></div>
-      <button id="b-hide" class="secondary">Sakrij</button>
+      <div class="tools">
+        <button class="secondary" id="b-copy2">Kopiraj riječi</button>
+        <button class="secondary" id="b-print2">Ispiši</button>
+        <button id="b-hide" class="secondary">Sakrij</button>
+      </div>
     </div>
     <div class="result" id="r6"></div>
     <details><summary>Je li to sigurno?</summary>
@@ -186,6 +207,7 @@
 
   <footer>Tehnički: <code>chain/client/keystore.ts</code>, odluka u ADR 0001. Riječi i ključ nikad ne napuštaju ovu stranicu.</footer>
 </main>
+<div id="print-sheet" aria-hidden="true"></div>
 <script type="module" src="./demo.js"></script>
 </body>
 </html>

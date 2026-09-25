@@ -231,6 +231,55 @@ $("b-unlock").onclick = async () => {
   render();
 };
 
+// ── kopiranje i ispis riječi ────────────────────────────────────────────────────────
+
+const shownWords = (boxId: string) => [...document.querySelectorAll(`#${boxId} span`)].map((el) => el.textContent!.replace(/^\d+\./, "").trim());
+let clipTimer: ReturnType<typeof setTimeout> | undefined;
+
+async function copyWords(boxId: string, resultStep: number) {
+  const words = shownWords(boxId);
+  if (words.length !== 24) return;
+  const text = words.join(" ");
+  try {
+    await navigator.clipboard.writeText(text);
+    record("copied");
+    result(resultStep, "info", "Kopirano. Zalijepi riječi gdje ih čuvaš (npr. u upravitelj lozinki). Za 60 sekundi brišemo ih iz međuspremnika. Pazi: Apple i neki upravitelji međuspremnika sinkroniziraju ga na tvoje druge uređaje.");
+    clearTimeout(clipTimer);
+    clipTimer = setTimeout(async () => {
+      try {
+        // brišemo samo ako su u međuspremniku još naše riječi (bez dopuštenja za čitanje: brišemo svejedno)
+        const now = await navigator.clipboard.readText().catch(() => text);
+        if (now === text) await navigator.clipboard.writeText("");
+        record("clipboardCleared");
+      } catch {
+        /* stranica nije u fokusu — preglednik ne dopušta pristup međuspremniku */
+      }
+    }, 60_000);
+  } catch (e) {
+    result(resultStep, "err", `Kopiranje nije uspjelo (${(e as Error).message}). Označi riječi mišem ili ih prepiši.`);
+  }
+}
+
+function printWords(boxId: string) {
+  const words = shownWords(boxId);
+  if (words.length !== 24) return;
+  const sheet = $("print-sheet");
+  const date = new Date().toLocaleDateString("hr-HR");
+  sheet.innerHTML = `<h1>Moj ključ za glasanje — 24 riječi</h1>
+    <p>Maksimir 2026 · ispisano ${date}${S.fingerprint ? ` · otisak ključa ${S.fingerprint}` : ""}</p>
+    <ol>${words.map((w) => `<li>${w}</li>`).join("")}</ol>
+    <p class="note">Čuvaj ovaj papir kao seed frazu: tko ima ove riječi, može mijenjati tvoj glas. Ne fotografiraj ga.
+    Riječi upiši samo na stranici glasanja na domovina.ai, nikad u novčanik (MetaMask i sl.) i nikad nikome ne šalji.</p>`;
+  record("printed");
+  window.print();
+  sheet.innerHTML = ""; // riječi ne ostaju u stranici nakon ispisa
+}
+
+$("b-copy").onclick = () => copyWords("words", 2);
+$("b-print").onclick = () => printWords("words");
+$("b-copy2").onclick = () => copyWords("reveal-words", 6);
+$("b-print2").onclick = () => printWords("reveal-words");
+
 let hideTimer: ReturnType<typeof setTimeout> | undefined;
 const hideReveal = () => {
   $("reveal-words").innerHTML = "";

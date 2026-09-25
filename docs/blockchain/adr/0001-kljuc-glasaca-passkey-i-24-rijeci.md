@@ -178,6 +178,12 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
    glasati, pa mu riječi ne daju ništa više. Zabrana bi samo spriječila vlasnika da napravi kopiju.
    Isto rade MetaMask i Coinbase Wallet („Reveal Secret Recovery Phrase” uz lozinku ili biometriju).
 
+   - **Kopiraj i Ispiši** (uz prikaz pri izradi i uz ponovni prikaz): riječi se mogu kopirati
+     (npr. u upravitelj lozinki) ili ispisati na čist list (numerirane riječi, otisak ključa,
+     upute), a ostatak stranice se ne ispisuje. Međuspremnik se briše nakon 60 s ako u njemu još
+     stoje naše riječi. Upozorenje glasaču: Apple Universal Clipboard i neki upravitelji
+     međuspremnika sinkroniziraju ga na druge uređaje, pa je papir najsigurniji.
+
    Tekst za glasača: „Riječi se ne spremaju nigdje osim šifrirano tvojim passkeyjem. Mi ih ne
    možemo vidjeti ni vratiti. Ako izgubiš i passkey i riječi, ključ je nepovratno izgubljen.”
 4. **EIP-7702** ne utječe na ovu odluku ([istraživanje](../istrazivanja/2026-09-26-eip7702-passkey-gnosis.md)).
