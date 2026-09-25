@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BadRequest, parseCall } from "../src/relay.ts";
+import { BadRequest, parseCall } from "../relay.ts";
 
 const proof = { merkleTreeDepth: "1", merkleTreeRoot: "2", nullifier: "3", message: "4", scope: "5", points: ["1", "2", "3", "4", "5", "6", "7", "8"] };
 

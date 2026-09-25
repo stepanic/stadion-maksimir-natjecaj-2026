@@ -19,6 +19,17 @@
     { "pattern": "maksimir.domovina.ai/*", "zone_name": "domovina.ai" },
     { "pattern": "stadion-maksimir.domovina.ai/*", "zone_name": "domovina.ai" }
   ],
+  // Relayer glasanja na lancu (/relayer/<chainId>/…, worker/relayer/route.ts). Mreža radi tek
+  // kad postoji i tajna SPONSOR_PRIVATE_KEY_<chainId> (wrangler secret put), inače 503.
+  // Lokalno: tajne u web/.dev.vars (gitignorirano).
+  "kv_namespaces": [{ "binding": "RELAY_KV", "id": "31e439f4ff6e42238fd94ed372f0cf2b" }], // maksimir-relay
+  "vars": {
+    "RELAYER_CHAINS": "{\"10200\":{\"contract\":\"0xe7903145c8F2401fC16D78d9788D34beE0c3e029\",\"rpc\":\"https://rpc.chiadochain.net\"}}",
+    "RELAYER_ALLOWED_ORIGINS": "http://localhost:5173",
+    "MAX_FEE_GWEI": "5",
+    "IP_DAILY_LIMIT": "50",
+    "GLOBAL_DAILY_LIMIT": "5000"
+  },
   "workers_dev": true,
   "preview_urls": true,
   "observability": { "enabled": true }

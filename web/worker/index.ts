@@ -3,10 +3,13 @@
 // Sve ide kroz Worker (run_worker_first u wrangler.jsonc), pa je redoslijed ovdje
 // jedino mjesto s pravilima usmjeravanja:
 //   1. sporedni hostovi → 301 na kanonski (jedna adresa za tražilice),
-//   2. /g/<id> → OG kartica objave glasa (share.ts),
-//   3. /glasanje/g/<id> → ljuska objave (_share.html), sadržaj crta preglednik,
-//   4. sve ostalo → statičke datoteke; nepoznat put → 404.html sa statusom 404.
+//   2. /relayer/<chainId>/… → relayer glasanja na lancu (relayer/route.ts),
+//      prije preusmjeravanja hosta, jer POST ne preživi 301,
+//   3. /g/<id> → OG kartica objave glasa (share.ts),
+//   4. /glasanje/g/<id> → ljuska objave (_share.html), sadržaj crta preglednik,
+//   5. sve ostalo → statičke datoteke; nepoznat put → 404.html sa statusom 404.
 
+import { relayerRoute, type RelayerWorkerEnv } from "./relayer/route.ts";
 import { shareCard } from "./share";
 
 const CANONICAL = "maksimir.domovina.ai";
@@ -15,7 +18,7 @@ const CANONICAL = "maksimir.domovina.ai";
 // *.pages.dev preusmjerava zadnji deploy Pages projekta.
 const ALIASES = new Set(["stadion-maksimir.domovina.ai"]);
 
-type Env = { ASSETS: { fetch(req: Request | string): Promise<Response> } };
+type Env = RelayerWorkerEnv & { ASSETS: { fetch(req: Request | string): Promise<Response> } };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -31,6 +34,8 @@ export default {
 
 async function handle(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+
+  if (url.pathname.startsWith("/relayer/")) return relayerRoute(request, env, url.pathname.slice("/relayer/".length));
 
   if (ALIASES.has(url.hostname)) {
     url.hostname = CANONICAL;

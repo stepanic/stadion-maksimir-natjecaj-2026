@@ -2,12 +2,12 @@
 // (wallet/functions/_lib/relayer.ts): wrangler secret zna stići bez 0x ili s razmakom.
 import { createPublicClient, createWalletClient, http, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { gnosis, gnosisChiado } from "viem/chains";
+import { gnosis, gnosisChiado, hardhat } from "viem/chains";
 import type { Env } from "./types.ts";
 
-/** CHAIN_ID=10200 → Chiado (testnet); sve ostalo → Gnosis (100). */
+/** CHAIN_ID=10200 → Chiado (testnet); 31337 → lokalni Hardhat; sve ostalo → Gnosis (100). */
 export function chainOf(env: Env) {
-  return env.CHAIN_ID === "10200" ? gnosisChiado : gnosis;
+  return env.CHAIN_ID === "10200" ? gnosisChiado : env.CHAIN_ID === "31337" ? hardhat : gnosis;
 }
 
 export function publicClient(env: Env) {
