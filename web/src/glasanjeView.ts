@@ -19,11 +19,29 @@ import {
   CHECKPOINTS_RAW,
   CHECKPOINTS_TREE,
   VERIFY_SCRIPT,
+  setPublic,
+  fetchShare,
+  fetchPublicBallots,
+  shareUrl,
   type Items,
+  type PublicMode,
+  type PublicCard,
+  type PublicBallots,
   type MyBallot,
   type Results,
   type Checkpoint,
 } from "./glasanje";
+import {
+  DOC_GITHUB,
+  DOC_SLUG,
+  ZK_SHARE_TEXT,
+  bindShareButtons,
+  publicCardHtml,
+  publicShareText,
+  shareButtonsHtml,
+} from "./shareView";
+
+const ZK_SHARE_KEY = "maksimir-zk-share"; // {commitment: shareId} — zadnji anonimni dokaz na ovom uređaju
 
 type State = {
   signedIn: boolean;
@@ -37,6 +55,15 @@ type State = {
   showAll: boolean;
   q: string;
   abort: AbortController | null;
+  shareTab: "public" | "zk" | null;
+  pubMode: PublicMode;
+  pubConsent: boolean;
+  myCard: PublicCard | null;
+  pub: PublicBallots | null;
+  pubAll: boolean;
+  zkLocal: string | null; // commitment lokalnog ZK ključa
+  zkShare: string | null;
+  zkImport: boolean;
 };
 
 const st: State = {
@@ -51,6 +78,15 @@ const st: State = {
   showAll: false,
   q: "",
   abort: null,
+  shareTab: null,
+  pubMode: "initial",
+  pubConsent: false,
+  myCard: null,
+  pub: null,
+  pubAll: false,
+  zkLocal: null,
+  zkShare: null,
+  zkImport: false,
 };
 
 let root: HTMLElement | null = null;
@@ -92,10 +128,54 @@ async function load() {
   st.checkpoints = checkpoints;
   st.signedIn = !!session;
   st.my = session ? await fetchMyBallot().catch(() => null) : null;
+  st.pub = await fetchPublicBallots(60).catch(() => null);
+  await loadShareState();
   if (st.my && Object.keys(st.draft).length === 0 && Object.keys(st.my.items).length) {
     saveDraft({ ...st.my.items });
   }
   if (!st.results) st.msg = { kind: "err", text: "Rezultati trenutno nisu dostupni." };
+}
+
+/** Stanje dijeljenja: vlastita javna kartica i lokalni ZK ključ (bez učitavanja snarkjs-a). */
+async function loadShareState() {
+  const my = st.my;
+  st.myCard = null;
+  if (my?.public_mode && my.share_id) {
+    const s = await fetchShare(my.share_id).catch(() => null);
+    st.myCard = s?.kind === "public" ? s.card : null;
+    st.pubMode = my.public_mode;
+  }
+  st.zkLocal = null;
+  st.zkShare = null;
+  if (my?.zk_commitment || localZkKey()) {
+    const { loadIdentity } = await import("./zk");
+    st.zkLocal = loadIdentity()?.commitment.toString() ?? null;
+    if (st.zkLocal) st.zkShare = zkShares()[st.zkLocal] ?? null;
+  }
+}
+
+function localZkKey(): boolean {
+  try {
+    return !!localStorage.getItem("maksimir-zk-identity");
+  } catch {
+    return false;
+  }
+}
+
+function zkShares(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(ZK_SHARE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function rememberZkShare(commitment: string, id: string) {
+  try {
+    localStorage.setItem(ZK_SHARE_KEY, JSON.stringify({ ...zkShares(), [commitment]: id }));
+  } catch {
+    /* nije kritično */
+  }
 }
 
 export async function renderGlasanje(el: HTMLElement) {
@@ -134,6 +214,7 @@ function signIn(): Promise<void> {
     st.signedIn = true;
     st.my = await fetchMyBallot();
     if (Object.keys(st.draft).length === 0 && Object.keys(st.my.items).length) saveDraft({ ...st.my.items });
+    await loadShareState();
     st.msg = { kind: "ok", text: "Prijavljen/a si eOsobnom." };
   });
 }
@@ -164,6 +245,8 @@ async function submit(withConsent = false) {
     st.my = await castBallot(items);
     saveDraft({ ...st.my.items });
     st.results = await fetchResults(true);
+    await loadShareState();
+    st.pub = await fetchPublicBallots(60).catch(() => st.pub);
     st.msg = {
       kind: "ok",
       text: Object.keys(items).length
@@ -197,6 +280,179 @@ function downloadReceipt() {
   a.download = `maksimir-potvrda-${my.receipt.seq}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ── dijeljenje: javno ili anonimno (ZK) ─────────────────────────────────────
+
+async function publish(mode: PublicMode | null) {
+  await run(mode ? "Objavljujem glas javno…" : "Uklanjam javni prikaz…", async () => {
+    st.my = await setPublic(mode);
+    await loadShareState();
+    st.pub = await fetchPublicBallots(60).catch(() => st.pub);
+    st.pubConsent = false;
+    st.msg = { kind: "ok", text: mode ? "Glas je javan. Podijeli poveznicu." : "Glas više nije javan. Stara poveznica ne prikazuje ništa." };
+  });
+}
+
+/** Tekst trenutnog koraka bez punog re-rendera (ZK izračun traje nekoliko sekundi). */
+function step(text: string) {
+  st.busy = text;
+  const box = root?.querySelector<HTMLElement>("[data-busy]");
+  if (box) box.textContent = text;
+}
+
+async function makeZkProof() {
+  await run("Pripremam ZK ključ…", async () => {
+    const zk = await import("./zk");
+    let id = zk.loadIdentity();
+    if (!id) {
+      step("Izrađujem ZK ključ u tvom pregledniku…");
+      id = zk.newIdentity();
+    }
+    const commitment = id.commitment.toString();
+    if (st.my?.zk_commitment !== commitment) {
+      step("Upisujem commitment u grupu potvrđenih glasača…");
+      await zk.registerIdentity(id);
+      st.my = await fetchMyBallot();
+    }
+    const shareId = await zk.createZkShare(id, step);
+    rememberZkShare(commitment, shareId);
+    st.zkLocal = commitment;
+    st.zkShare = shareId;
+    st.pub = await fetchPublicBallots(60).catch(() => st.pub);
+    st.msg = { kind: "ok", text: "Anonimni ZK dokaz je izrađen. Podijeli poveznicu." };
+  });
+}
+
+async function exportZkKey() {
+  const { exportIdentity } = await import("./zk");
+  const k = exportIdentity();
+  if (!k) return;
+  const blob = new Blob(
+    [
+      `Tajni ZK ključ za glasanje o Stadionu Maksimir (Semaphore v4).\n` +
+        `Nikome ga ne šalji: tko ima ključ, može izraditi dokaz u tvoje ime.\n` +
+        `Na drugom uređaju: #/glasanje → Anonimno (ZK) → Uvezi ključ.\n\n${k}\n`,
+    ],
+    { type: "text/plain" }
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "maksimir-zk-kljuc.txt";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function importZkKey(text: string) {
+  await run("Uvozim ZK ključ…", async () => {
+    const zk = await import("./zk");
+    const line = text.split(/\s+/).find((w) => /^[A-Za-z0-9+/]{43}=$/.test(w)) ?? text;
+    const id = zk.importIdentity(line);
+    st.zkLocal = id.commitment.toString();
+    st.zkShare = zkShares()[st.zkLocal] ?? null;
+    st.zkImport = false;
+    st.msg = {
+      kind: "ok",
+      text:
+        st.my?.zk_commitment === st.zkLocal
+          ? "Ključ je uvezen i odgovara ključu u grupi."
+          : "Ključ je uvezen. Pri izradi dokaza zamijenit će ključ koji je sad u grupi.",
+    };
+  });
+}
+
+function shareHtml(): string {
+  const my = st.my;
+  const has = !!my && Object.keys(my.items).length > 0;
+  if (!has) {
+    return `<section class="panel sh-panel">
+      <h2>Podijeli svoj glas</h2>
+      <p class="muted">Kad predaš listić, možeš ga podijeliti na dva načina: <strong>javno</strong>, s imenom iz eOsobne i svim bodovima,
+        ili <strong>anonimno</strong>, sa ZK dokazom da je glas predala stvarna potvrđena osoba, bez otkrivanja tko je i kako je glasala.</p>
+    </section>`;
+  }
+  const tab = st.shareTab ?? (my!.public_mode ? "public" : "zk");
+  const busy = st.busy ? "disabled" : "";
+
+  const modes: [PublicMode, string][] = [
+    ["full", "Ime i prezime iz eOsobne"],
+    ["initial", "Ime i prvo slovo prezimena"],
+    ["anon", "Bez imena (samo „potvrđeni glasač”)"],
+  ];
+  const radios = modes
+    .map(
+      ([m, l]) =>
+        `<label class="sh-radio"><input type="radio" name="pubmode" value="${m}" ${st.pubMode === m ? "checked" : ""} /> ${l}</label>`
+    )
+    .join("");
+
+  const pub = my!.public_mode
+    ? `${st.myCard ? publicCardHtml(st.myCard, { compact: true, href: `#/glasanje/g/${my!.share_id}` }) : ""}
+       ${st.myCard && my!.share_id ? shareButtonsHtml(shareUrl(my!.share_id), publicShareText(st.myCard)) : ""}
+       <div class="sh-modes">${radios}</div>
+       <div class="gl-actions">
+         <button class="btn btn-sm" data-act="pub-change" ${busy || st.pubMode === my!.public_mode ? "disabled" : ""}>Promijeni prikaz imena</button>
+         <button class="btn btn-sm" data-act="pub-off" ${busy}>Ukloni javni prikaz</button>
+       </div>`
+    : `<p>Tvoj glas (svi bodovi) bit će vidljiv svima na stalnoj poveznici i na popisu javnih glasova. Uz njega piše da je identitet potvrđen eOsobnom.</p>
+       <div class="sh-modes">${radios}</div>
+       <label class="sh-consent"><input type="checkbox" data-act="pub-consent" ${st.pubConsent ? "checked" : ""} />
+         Pristajem da se moj glas javno prikaže s izabranim oblikom imena. Javni prikaz mogu isključiti bilo kada.</label>
+       <button class="btn btn-primary" data-act="pub-on" ${busy || !st.pubConsent ? "disabled" : ""}>Objavi moj glas javno</button>`;
+
+  const inGroup = !!my!.zk_commitment;
+  const keyMatches = inGroup && st.zkLocal === my!.zk_commitment;
+  const zk = my!.public_mode
+    ? `<p>Tvoj glas je trenutno javan. Anonimni dokaz ima smisla samo za glas koji nije javan.</p>
+       <button class="btn btn-sm" data-act="pub-off" ${busy}>Ukloni javni prikaz</button>`
+    : `<p>Tvoj preglednik izradi tajni ključ koji ga nikad ne napušta, a u grupu potvrđenih glasača upiše samo njegov
+         <em>commitment</em>. Zatim izračuna <strong>ZK dokaz</strong> (Semaphore, Groth16): „jedan sam od N potvrđenih glasača”.
+         Tko otvori poveznicu, provjerava dokaz u svom pregledniku. Ne vidi ni tko si ni kako si glasao/la.</p>
+       ${
+         st.zkShare && keyMatches
+           ? shareButtonsHtml(shareUrl(st.zkShare), ZK_SHARE_TEXT) +
+             `<p class="small"><a href="#/glasanje/g/${st.zkShare}">Otvori svoj dokaz i provjeri ga →</a></p>`
+           : `<button class="btn btn-primary" data-act="zk-make" ${busy}>Izradi anonimni ZK dokaz</button>`
+       }
+       ${
+         inGroup && !keyMatches
+           ? `<p class="warn small">U grupi je ključ s drugog uređaja ili preglednika. Uvezi taj ključ ili izradi novi.
+               Novi ključ zamjenjuje stari u grupi i daje novi nullifier.</p>`
+           : ""
+       }
+       <div class="gl-actions small">
+         ${st.zkLocal ? `<button class="btn btn-sm" data-act="zk-export">Preuzmi svoj ZK ključ</button>` : ""}
+         <button class="btn btn-sm" data-act="zk-import-toggle">Uvezi ključ s drugog uređaja</button>
+       </div>
+       ${
+         st.zkImport
+           ? `<div class="sh-import"><textarea id="zk-key" rows="3" placeholder="Zalijepi sadržaj datoteke maksimir-zk-kljuc.txt"></textarea>
+               <button class="btn btn-sm btn-primary" data-act="zk-import" ${busy}>Uvezi</button></div>`
+           : ""
+       }
+       <p class="muted small">Anonimnost raste s veličinom grupe. U fazi 1 operater baze zna koji je glasač upisao koji commitment, a javnost ne zna.
+         <a href="#/${DOC_SLUG}">Detalji i plan →</a></p>`;
+
+  return `<section class="panel sh-panel">
+    <h2>Podijeli svoj glas</h2>
+    <div class="sh-tabs" role="tablist">
+      <button role="tab" class="${tab === "public" ? "active" : ""}" data-tab="public">Javno, s imenom${my!.public_mode ? " ✓" : ""}</button>
+      <button role="tab" class="${tab === "zk" ? "active" : ""}" data-tab="zk">Anonimno, sa ZK dokazom${st.zkShare && keyMatches ? " ✓" : ""}</button>
+    </div>
+    <div class="sh-body">${tab === "public" ? pub : zk}</div>
+  </section>`;
+}
+
+function publicListHtml(): string {
+  const p = st.pub;
+  if (!p || (!p.count && !p.zk_shares)) return "";
+  const shown = st.pubAll ? p.ballots : p.ballots.slice(0, 6);
+  return `<section class="panel sh-list">
+    <h2>Javni glasovi <span class="muted small">· ${p.count} javnih · ${p.zk_shares} anonimnih ZK dokaza</span></h2>
+    <p class="muted small">Glasači koji su sami izabrali da im glas bude javan. Klik na ime otvara objavu koju se može podijeliti.</p>
+    <div class="sh-grid">${shown.map((c) => publicCardHtml(c, { compact: true, href: `#/glasanje/g/${c.id}` })).join("")}</div>
+    ${p.ballots.length > 6 ? `<button class="btn btn-sm" data-act="pub-all">${st.pubAll ? "Prikaži manje" : `Prikaži sve (${p.ballots.length})`}</button>` : ""}
+  </section>`;
 }
 
 // ── crtanje ─────────────────────────────────────────────────────────────────
@@ -343,6 +599,8 @@ function integrityHtml(): string {
   return `
     <section class="panel gl-integrity">
       <h2>Kako znaš da nitko nije dirao glasove</h2>
+      <p class="small">Cijeli postupak s dijagramima: <a href="#/${DOC_SLUG}">tehnički opis korak po korak</a>
+        (<a href="${DOC_GITHUB}" target="_blank" rel="noopener">GitHub ↗</a>).</p>
       <ol>
         <li><strong>Lanac hasheva.</strong> Svaka predaja, izmjena ili povlačenje listića dodaje zapis u lanac u kojem svaki zapis sadrži hash prethodnog.
           Baza odbija izmjenu i brisanje zapisa. Svaki potajni ispravak promijenio bi sve hasheve iza njega.</li>
@@ -422,6 +680,8 @@ function draw() {
         Svaki građanin s eOsobnom ima jedan glas: 100 bodova koje raspoređuješ po 88 natječajnih radova kako hoćeš.
         Sve na jedan rad ili npr. 40 / 30 / 20 / 10. Listić smiješ mijenjati do zatvaranja.
       </p>
+      <p class="small"><a href="#/${DOC_SLUG}">Kako tehnički radi, korak po korak →</a> ·
+        <a href="${DOC_GITHUB}" target="_blank" rel="noopener">isti dokument na GitHubu ↗</a></p>
     </section>
 
     <section class="card-grid">
@@ -433,7 +693,7 @@ function draw() {
     ${st.msg ? `<div class="gl-msg gl-msg--${st.msg.kind}">${esc(st.msg.text)}</div>` : ""}
     ${
       st.busy
-        ? `<div class="gl-msg">${esc(st.busy)} ${st.abort ? `<button class="btn btn-sm" data-act="cancel">Odustani</button>` : ""}</div>`
+        ? `<div class="gl-msg"><span data-busy>${esc(st.busy)}</span> ${st.abort ? `<button class="btn btn-sm" data-act="cancel">Odustani</button>` : ""}</div>`
         : ""
     }
     ${authHtml()}
@@ -441,6 +701,8 @@ function draw() {
       ${ballotHtml()}
       ${resultsHtml()}
     </div>
+    ${shareHtml()}
+    ${publicListHtml()}
     ${integrityHtml()}
   `;
 
@@ -536,6 +798,37 @@ function bind(el: HTMLElement) {
     draw();
   });
   on("receipt", downloadReceipt);
+  el.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) =>
+    b.addEventListener("click", () => {
+      st.shareTab = b.dataset.tab as "public" | "zk";
+      draw();
+    })
+  );
+  el.querySelectorAll<HTMLInputElement>('input[name="pubmode"]').forEach((r) =>
+    r.addEventListener("change", () => {
+      st.pubMode = r.value as PublicMode;
+      draw();
+    })
+  );
+  el.querySelector<HTMLInputElement>('[data-act="pub-consent"]')?.addEventListener("change", (e) => {
+    st.pubConsent = (e.target as HTMLInputElement).checked;
+    draw();
+  });
+  on("pub-on", () => void publish(st.pubMode));
+  on("pub-change", () => void publish(st.pubMode));
+  el.querySelectorAll('[data-act="pub-off"]').forEach((b) => b.addEventListener("click", () => void publish(null)));
+  on("pub-all", () => {
+    st.pubAll = !st.pubAll;
+    draw();
+  });
+  on("zk-make", () => void makeZkProof());
+  on("zk-export", () => void exportZkKey());
+  on("zk-import-toggle", () => {
+    st.zkImport = !st.zkImport;
+    draw();
+  });
+  on("zk-import", () => void importZkKey(el.querySelector<HTMLTextAreaElement>("#zk-key")?.value ?? ""));
+  bindShareButtons(el);
   on("all", () => {
     st.showAll = !st.showAll;
     draw();

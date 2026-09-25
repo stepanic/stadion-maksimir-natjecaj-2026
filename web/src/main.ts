@@ -7,6 +7,14 @@ import { landingHtml } from "./landing";
 import { renderResultsIndex, renderAward } from "./rezultatiView";
 import { renderRadoviIndex, renderRad } from "./radoviView";
 import { renderGlasanje } from "./glasanjeView";
+import { renderShare } from "./shareView";
+
+// /g/<id> je poveznica za dijeljenje (Pages Function daje OG karticu i preusmjerava).
+// Ako stigne do SPA-a (lokalni razvoj ili bez Functiona), prebaci na hash rutu.
+{
+  const m = location.pathname.match(/^\/g\/([a-z0-9]{12})\/?$/);
+  if (m) history.replaceState(null, "", `/#/glasanje/g/${m[1]}`);
+}
 
 const navEl = document.getElementById("nav")!;
 const contentEl = document.getElementById("content")!;
@@ -167,6 +175,13 @@ async function route() {
   }
   if (slug === "radovi" || slug.startsWith("radovi/")) {
     renderRadovi(slug);
+    return;
+  }
+  if (slug.startsWith("glasanje/g/")) {
+    setCrumbs([{ label: "Naslovnica", href: "#/" }, { label: "Glasanje javnosti", href: "#/glasanje" }, { label: "Objava glasa" }]);
+    setActiveNav("glasanje");
+    window.scrollTo({ top: 0 });
+    await renderShare(contentEl, slug.slice("glasanje/g/".length));
     return;
   }
   if (slug === "glasanje") {

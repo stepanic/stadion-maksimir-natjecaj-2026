@@ -19,6 +19,12 @@ export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { storageKey: "maksimir-auth" },
 });
 
+// Anonimni klijent bez sesije: ZK dokaz se sprema bez veze na prijavljenog glasača.
+export const sbAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  db: { schema: "domovina_ai" },
+  auth: { persistSession: false, autoRefreshToken: false, storageKey: "maksimir-anon" },
+});
+
 export type Items = Record<string, number>;
 export type ResultRow = { code: string; points: number; backers: number; share: number };
 export type Results = {
@@ -35,7 +41,32 @@ export type MyBallot = {
   items: Items;
   updated_at: string | null;
   receipt: Receipt | null;
+  public_mode: PublicMode | null;
+  share_id: string | null;
+  zk_commitment: string | null;
 };
+export type PublicMode = "full" | "initial" | "anon";
+export type PublicCard = {
+  mode: PublicMode;
+  name: string | null;
+  pseudonym: string;
+  revisions: number;
+  updated_at: string;
+  items: { code: string; points: number; lead: string }[];
+  receipt: Receipt | null;
+};
+export type ZkProof = {
+  merkleTreeDepth: number;
+  merkleTreeRoot: string;
+  nullifier: string;
+  message: string;
+  scope: string;
+  points: string[];
+};
+export type Share =
+  | { id: string; kind: "public"; created_at: string; card: PublicCard | null }
+  | { id: string; kind: "zk"; created_at: string; proof: ZkProof; zk_seq: number };
+export type PublicBallots = { count: number; zk_shares: number; ballots: (PublicCard & { id: string })[] };
 export type Receipt = {
   seq: number;
   prev_hash: string;
@@ -73,6 +104,8 @@ const MESSAGES: Record<string, string> = {
   invalid_ballot: "Bodovi moraju biti cijeli brojevi od 1 do 100.",
   unknown_entry: "Na listiću je nepoznata šifra rada.",
   points_sum_not_100: "Zbroj bodova na listiću mora biti točno 100.",
+  no_ballot: "Najprije predaj listić.",
+  invalid_mode: "Nepoznat način javnog prikaza.",
 };
 
 function rpcError(message: string): VoteError {
@@ -114,6 +147,28 @@ export async function castBallot(items: Items): Promise<MyBallot> {
   resultsCache = null;
   return data as MyBallot;
 }
+
+/** Javni prikaz listića: 'full' | 'initial' | 'anon', ili null za isključivanje. */
+export async function setPublic(mode: PublicMode | null): Promise<MyBallot> {
+  const { data, error } = await sb.rpc("maksimir_set_public", { p_mode: mode });
+  if (error) throw rpcError(error.message);
+  return data as MyBallot;
+}
+
+export async function fetchShare(id: string): Promise<Share | null> {
+  const { data, error } = await sbAnon.rpc("maksimir_share", { p_id: id });
+  if (error) throw rpcError(error.message);
+  return (data as Share | null) ?? null;
+}
+
+export async function fetchPublicBallots(limit = 100): Promise<PublicBallots> {
+  const { data, error } = await sbAnon.rpc("maksimir_public_ballots", { p_limit: limit });
+  if (error) throw rpcError(error.message);
+  return data as PublicBallots;
+}
+
+/** Poveznica za dijeljenje. /g/<id> poslužuje Pages Function s OG karticom. */
+export const shareUrl = (id: string) => `${location.origin}/g/${id}`;
 
 export async function signOut(): Promise<void> {
   await sb.auth.signOut();

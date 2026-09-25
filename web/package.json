@@ -11,6 +11,7 @@
     "deploy:preview": "vite build && wrangler pages deploy dist --project-name stadion-maksimir"
   },
   "dependencies": {
+    "@semaphore-protocol/core": "^4.14.3",
     "@supabase/supabase-js": "^2.117.2",
     "highlight.js": "^11.10.0",
     "markdown-it": "^14.1.0",
