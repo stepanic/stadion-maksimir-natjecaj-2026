@@ -128,3 +128,9 @@ provjerava izmišljenim id-jem, a stvarnu karticu pokriva provjera 1.
 - **Logo u `index.html` imao je `href="#/"`.** Refaktor ruta ga je preskočio, jer je izvan `#content` i nije išao
   kroz `link()`. Radio je samo zato što ga prevoditelj starih linkova pretvori u `/`. Provjera 2c sad to hvata.
 - **PNG bajtovi dva ista screenshota se razlikuju.** Usporedba ide pixelmatchom, ne `Buffer.equals`.
+
+## Vezani dokumenti
+
+- [`2026-09-25-seo-rute-plan.md`](2026-09-25-seo-rute-plan.md): plan i odluke (hash → prave rute, zašto bez Astra)
+- [`2026-09-25-web-nice-to-have.md`](2026-09-25-web-nice-to-have.md): odgođeno (2,27 MB JS po stranici, `docs.ts` glob, slike, Astro)
+- [`2026-09-25-glasanje-javnosti.md`](2026-09-25-glasanje-javnosti.md): glasanje, `ALLOWED_ORIGINS`, E2E

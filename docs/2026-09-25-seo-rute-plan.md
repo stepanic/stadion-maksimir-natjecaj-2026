@@ -5,6 +5,7 @@
 > **Status (25. 9. 2026. navečer): sve faze 1–5 su u produkciji.** Faza 4 i 5 napravljene su zajedno: site poslužuje
 > Worker `maksimir` preko ruta zone (DNS nepromijenjen), `stadion-maksimir.domovina.ai` i `*.pages.dev` daju 301 na
 > `maksimir.domovina.ai`. Kako se provjerava i vraća: [`2026-09-25-regresijske-provjere.md`](2026-09-25-regresijske-provjere.md).
+> Odgođene ideje (JS po ruti, Astro da/ne): [`2026-09-25-web-nice-to-have.md`](2026-09-25-web-nice-to-have.md).
 
 ## Cilj
 

@@ -20,6 +20,7 @@ import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw"
 import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
 import opsSeoPlan from "../../docs/2026-09-25-seo-rute-plan.md?raw";
 import opsRegresija from "../../docs/2026-09-25-regresijske-provjere.md?raw";
+import opsNiceToHave from "../../docs/2026-09-25-web-nice-to-have.md?raw";
 import glasanjeKakoRadi from "../../docs/glasanje-kako-radi.md?raw";
 import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
 import glasanjeReadme from "../../glasanje/README.md?raw";
@@ -276,6 +277,14 @@ export const docs: DocSection[] = [
         subtitle: "npm run check, baseline, ručna provjera u pregledniku, deploy i povrat (25.9.2026.)",
         repoPath: "docs/2026-09-25-regresijske-provjere.md",
         raw: opsRegresija,
+        section: "docs",
+      },
+      {
+        slug: "ops-web-nice-to-have",
+        title: "Web: nice-to-have",
+        subtitle: "Odgođeno: JS po ruti, docs.ts glob, slike, Astro da/ne (25.9.2026.)",
+        repoPath: "docs/2026-09-25-web-nice-to-have.md",
+        raw: opsNiceToHave,
         section: "docs",
       },
     ],
