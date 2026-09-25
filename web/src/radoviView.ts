@@ -51,7 +51,7 @@ export function tidy(s: string): string {
 }
 
 const isCroatian = (r: Rad) => r.countries.includes("Hrvatska");
-const rankLabel = (r: Rad) =>
+export const rankLabel = (r: Rad) =>
   r.status === "rejected" ? "odbijen" : r.award ? `${r.award}. nagrada` : `${r.rank}. mjesto`;
 
 function people(r: Rad): string {
