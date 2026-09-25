@@ -59,6 +59,29 @@ sesija istodobno selila `web/` na Astro i Workers. Grana ne dira `web/`.
 13. **Semaphore v4 predaja admina grupe je dvostupanjska** (`updateGroupAdmin` + `acceptGroupAdmin`).
     Zbog toga mutant M23 nije bio ubijen dok test nije pokušao i `acceptGroupAdmin`.
 
+## Zašto mutacijski test traje dugo (CI, 26. 9.)
+
+Na GitHubovu runneru `npm run mutation` traje **12,5 min**, lokalno oko 4 min.
+
+| Što | Trajanje |
+|---|---|
+| mutanata | 23 |
+| po mutantu na CI-ju | 25–38 s (M22: 7 s, jer odmah pada 32 testa) |
+| po mutantu lokalno | 8–12 s |
+
+Razlog: svaki mutant ponovno kompajlira ugovor i pokreće **cijeli** testni skup (91 test,
+uključujući stateful fuzz i klijentske testove), a stotine pravih Groth16 dokaza (snarkjs, ~0,1–0,3 s
+svaki) na runneru s 2 vCPU-a traju oko 3 puta dulje nego na M-seriji. Mutant je „ubijen” već kad
+padne prvi test, ali skup se ipak odvrti do kraja da bi se prebrojili padovi.
+
+Ubrzanja (otvoreno, nije napravljeno):
+1. `mocha --bail` u mutacijama: stani na prvom padu (gubi se broj padova, a on je samo informativan).
+2. Za mutante pokretati samo `test/v1/**` (klijentski testovi ne ovise o ugovoru).
+3. CI matrica: 23 mutanta u 4 paralelna joba (`node scripts/mutation-test.mjs M01 … M06`).
+4. Fuzz u mutacijama već je smanjen (`FUZZ_SEEDS=2 FUZZ_OPS=25`).
+
+Procjena uz 1–3: ispod 2 min na CI-ju.
+
 ## Stanje
 
 | Dio | Stanje |
@@ -74,6 +97,13 @@ Testni ključevi za Chiado su u `chain/.env.chiado` (gitignorirano, samo testnet
 i sponzor relayera, `0x408d…d30C`, te registrar `0x3bbe…2137`.
 
 ## Otvoreno
+
+- [ ] **Plan spajanja s fazom 1 (offchain)** kao jedan uređen dokument (`docs/blockchain/08-…`).
+      Dijelovi već postoje: [04-web-i-baza.md](blockchain/04-web-i-baza.md) (registrar, web tok,
+      baza, zatvaranje faze 1) i [01 „Prijelaz s faze 1”](blockchain/01-arhitektura.md#prijelaz-s-faze-1).
+      Nedostaju redoslijed, zastavice, rezultati iz dva izvora, `/g/<id>` objave, checkpoint Action
+      nakon prelaska, `maksimir_verify.py --chain` i plan povratka.
+- [ ] **Ubrzati mutacijski test** (vidi gore).
 
 - [ ] **Merge u `main`**: bez konflikata s `origin/main` na dan 26. 9. (provjereno `git merge-tree`).
 - [ ] **Gnosis deploy**: novi Safe 2/3 kao vlasnik, ključ registrara, commitan izvor, git tag
