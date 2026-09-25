@@ -2,6 +2,15 @@
 // Surfaces the most important info: deadlines, key facts, submission steps.
 
 export const landingHtml = /* html */ `
+<a class="results-banner" href="#/rezultati">
+  <img src="/rezultati/1/cover.jpg" alt="Pobjednički rad VG13 — render stadiona" />
+  <div>
+    <div class="hero-eyebrow">Novo · 24. 9. 2026.</div>
+    <strong>Objavljeni rezultati: 88 radova, 5 nagrada. Pobjednik je VG13 Architects (Milano).</strong>
+    <span>Pogledaj sve nagrađene radove i sve njihove panele →</span>
+  </div>
+</a>
+
 <section class="hero">
   <div class="hero-eyebrow">Single Source of Truth · ažurirano 2026-05-26</div>
   <h1>Stadion Maksimir &amp; SRC Svetice</h1>
