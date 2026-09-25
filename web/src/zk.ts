@@ -14,6 +14,7 @@
 
 import { Group, Identity, generateProof, verifyProof, type SemaphoreProof } from "@semaphore-protocol/core";
 import { sb, sbAnon, VoteError, type ZkProof } from "./glasanje";
+import { plural } from "./shareView";
 
 // Isto kao u migraciji domovina-api 20260925160000_maksimir_share_zk.sql.
 export const ZK_MESSAGE = "glasao-sam";
@@ -143,7 +144,7 @@ export async function createZkShare(id: Identity, step: (s: string) => void): Pr
   if (!members.includes(id.commitment.toString())) throw new VoteError("Tvoj ključ još nije u grupi.");
   const group = new Group(members.map(BigInt));
 
-  step(`Računam ZK dokaz nad grupom od ${members.length} ${members.length === 1 ? "člana" : "članova"} (prvi put se preuzima oko 2 MB)…`);
+  step(`Računam ZK dokaz nad grupom od ${members.length} ${plural(members.length, "člana", "člana", "članova")} (prvi put se preuzima oko 2 MB)…`);
   const proof = await generateProof(id, group, ZK_MESSAGE, ZK_SCOPE);
 
   step("Provjeravam dokaz prije objave…");

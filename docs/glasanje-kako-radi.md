@@ -37,13 +37,23 @@ dokazi). Što bi u sljedećim fazama trebalo preseliti na blockchain opisano je 
 
 ## 1. Pregled sustava
 
-Sustav ima pet dijelova. Nijedan od njih ne treba tajni ključ koji bi bio u pregledniku ni u
-javnom repozitoriju.
+Sustav ima sedam dijelova. Nijedan od njih ne treba tajni ključ koji bi bio u pregledniku ni u
+javnom repozitoriju. Jedina tajna u pregledniku je glasačev vlastiti ZK ključ, koji nikad ne izlazi
+iz njega.
 
 ```mermaid
 flowchart LR
   subgraph K["Glasač"]
     B["Preglednik<br/>maksimir.domovina.ai"]
+    ZK["Semaphore u pregledniku<br/>ZK ključ + Groth16 dokaz"]
+  end
+
+  subgraph P["Cloudflare Pages"]
+    PF["Pages Function /g/id<br/>OG kartica za dijeljenje"]
+  end
+
+  subgraph S["PSE (javna ceremonija)"]
+    ART["snark-artifacts.pse.dev<br/>.wasm + .zkey"]
   end
 
   subgraph C["Certilia (AKD)"]
@@ -76,22 +86,35 @@ flowchart LR
   OTS -- "sidrenje" --> BTC
   GA -- "commit" --> REPO
   B -. "čita index.json" .-> REPO
+  B --- ZK
+  ZK -. "parametri kruga" .-> ART
+  ZK -- "6. commitment, dokaz" --> DB
+  PF -- "maksimir_share()" --> DB
 ```
 
 | Dio | Uloga |
 |---|---|
-| Preglednik | Prikazuje radove, drži nacrt listića u `localStorage` dok se ne preda, zove RPC-eve baze. |
+| Preglednik | Prikazuje radove, drži nacrt listića u `localStorage` dok se ne preda, zove RPC-eve baze. Izrađuje i provjerava ZK dokaze. |
 | Certilia proxy | Posreduje u OIDC prijavi prema Certiliji. Jedini zna client secret. |
-| Dijeljenje i ZK: tablice, zapisnik grupe, RPC-evi | [`domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925160000_maksimir_share_zk.sql) |
-| Test dijeljenja i ZK-a (14 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_share_zk.sql) |
-| Brisanje člana grupe uvijek zapisuje `remove` | [`domovina-api`: `supabase/migrations/20260925170000_maksimir_zk_member_removed.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925170000_maksimir_zk_member_removed.sql) |
-| ZK u pregledniku (Semaphore: ključ, dokaz, provjera) | [`web/src/zk.ts`](../web/src/zk.ts) |
-| Stranica objave i gumbi za dijeljenje | [`web/src/shareView.ts`](../web/src/shareView.ts) |
-| OG kartica za `/g/<id>` | [`web/functions/g/[id].ts`](../web/functions/g/%5Bid%5D.ts) |
-| E2E test ZK toka | [`web/scripts/zk-e2e.mjs`](../web/scripts/zk-e2e.mjs) |
 | Edge funkcija `certilia` | Provjerava potpis `id_tokena`, pretvara identitet u sesiju u bazi. |
 | Postgres | Čuva glasače, listiće i lanac hasheva. Sva pravila glasanja provode se u bazi, ne u pregledniku. |
-| GitHub Action | Svaki sat uzima snapshot stanja i žigoše ga u Bitcoinu preko OpenTimestampsa. |
+| GitHub Action | Svaki sat uzima snapshot stanja (lanac listića i ZK grupa) i žigoše ga u Bitcoinu preko OpenTimestampsa. |
+| Pages Function `/g/<id>` | Za poveznice za dijeljenje daje društvenim mrežama naslov, opis i sliku, a posjetitelja preusmjerava na objavu. |
+| PSE artefakti | Parametri Semaphore kruga iz javne ceremonije (*trusted setup*). Preglednik ih preuzima samo pri izradi dokaza (oko 2 MB). |
+
+### Kriptografski algoritmi na jednom mjestu
+
+| Algoritam | Gdje | Čemu služi |
+|---|---|---|
+| Provjera potpisa JWT-a (JWKS, biblioteka `jose`) | edge funkcija `certilia` | Certilijin `id_token` je stvaran; provjeravaju se i `iss` i `aud` |
+| HMAC-SHA256 | `oib_hash`, e-mail računa bez pravog e-maila | jedna osoba = jedan račun, bez čuvanja OIB-a u čitljivom obliku |
+| `pgp_sym_encrypt` (pgcrypto, simetrična enkripcija) | `identity_verifications.oib_ciphertext` | OIB je šifriran; ključ je samo u edge funkciji |
+| SHA-256 | pseudonim glasača, lanac listića, zapisnik ZK grupe | pseudonim ne otkriva osobu; svaki red lanca veže se na prethodni |
+| OpenTimestamps → Bitcoin | satni snapshot | dokaz da je stanje postojalo najkasnije u trenutku Bitcoin bloka |
+| EdDSA na krivulji Baby Jubjub | Semaphore identitet u pregledniku | glasačev tajni ZK ključ |
+| Poseidon hash | commitment, nullifier, Merkleovo stablo | hash prilagođen ZK krugovima |
+| LeanIMT (Merkleovo stablo) | ZK grupa | korijen stabla sažima sve članove; dokaz članstva ne otkriva koji je list |
+| Groth16 nad BN254 | Semaphore dokaz | ZK dokaz „jedan sam od N” koji se provjerava za nekoliko milisekundi |
 
 ## Korak 1: prijava eOsobnom
 
@@ -320,7 +343,7 @@ sequenceDiagram
 Što to znači u praksi:
 
 - **Snapshot** je mala JSON datoteka s vrhom lanca, brojem glasača i bodovima svih 88 radova u
-  tom trenutku. Primjer:
+  tom trenutku. Od verzije 2 sadrži i vrh zapisnika ZK grupe i broj javnih glasača. Primjer:
   [`20260925T134427Z-seq1.json`](../glasanje/checkpoints/20260925T134427Z-seq1.json).
 - **`.ots` datoteka** dokazuje da je upravo taj snapshot postojao najkasnije u trenutku Bitcoin
   bloka u koji je upisan. Nakon nekoliko sati dobiva trajnu Bitcoin atestaciju, a u
@@ -468,6 +491,11 @@ provjere; dokaz nad grupom s izmišljenim članom ima valjan SNARK, ali mu korij
 grupi, pa ga stranica odbija; izmijenjen nullifier ruši SNARK; zamjena ključa daje ispravan lanac
 `add, add, add, remove, add`. Izrada dokaza traje oko 2 s, a provjera nekoliko milisekundi.
 
+Na produkciji je 25. 9. 2026. prošao i pravi test prijavom eOsobnom: prvi anonimni dokaz
+(grupa od jednog člana) prošao je sve četiri provjere u pregledniku posjetitelja, na računalu i
+na širini mobitela. Javna objava s oblikom imena „Ime P.” pokazala je bodove i zapis #1 iz lanca;
+nakon isključivanja ista poveznica više ne prikazuje glas.
+
 ### Snapshot v2
 
 Satni snapshot sada nosi i vrh zapisnika ZK grupe te broj javnih glasača
@@ -560,6 +588,13 @@ Napomene za kasnije faze:
 | Snapshotovi i `.ots` dokazi | [`glasanje/checkpoints/`](../glasanje/checkpoints/) |
 | Baza: tablice, pravila, lanac, RPC-evi | [`domovina-api`: `supabase/migrations/20260925120000_maksimir_voting.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925120000_maksimir_voting.sql) |
 | Test ponašanja baze (18 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_voting.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_voting.sql) |
+| Dijeljenje i ZK: tablice, zapisnik grupe, RPC-evi | [`domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925160000_maksimir_share_zk.sql) |
+| Test dijeljenja i ZK-a (14 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_share_zk.sql) |
+| Brisanje člana grupe uvijek zapisuje `remove` | [`domovina-api`: `supabase/migrations/20260925170000_maksimir_zk_member_removed.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925170000_maksimir_zk_member_removed.sql) |
+| ZK u pregledniku (Semaphore: ključ, dokaz, provjera) | [`web/src/zk.ts`](../web/src/zk.ts) |
+| Stranica objave i gumbi za dijeljenje | [`web/src/shareView.ts`](../web/src/shareView.ts) |
+| OG kartica za `/g/<id>` | [`web/functions/g/[id].ts`](../web/functions/g/%5Bid%5D.ts) |
+| E2E test ZK toka | [`web/scripts/zk-e2e.mjs`](../web/scripts/zk-e2e.mjs) |
 | Edge funkcija `certilia` | [`domovina-api`: `supabase/functions/certilia/index.ts`](https://github.com/domovinatv/domovina-api/blob/main/supabase/functions/certilia/index.ts) |
 
 Vezani dokumenti:

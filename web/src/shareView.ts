@@ -13,6 +13,13 @@ const fmtDate = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("hr-HR", { timeZone: "Europe/Zagreb", dateStyle: "long", timeStyle: "short" }) : "—";
 const short = (h: string, n = 10) => (h.length > 2 * n ? `${h.slice(0, n)}…${h.slice(-n)}` : h);
 
+/** Hrvatska množina uz broj: 1 član, 3 člana, 5 članova (21 član, 12 članova). */
+export function plural(n: number, one: string, few: string, many: string): string {
+  const d = n % 10;
+  const h = n % 100;
+  return d === 1 && h !== 11 ? one : d >= 2 && d <= 4 && (h < 12 || h > 14) ? few : many;
+}
+
 export const displayName = (c: Pick<PublicCard, "name">) => c.name ?? "Potvrđeni glasač";
 
 const entryLabel = (code: string, lead?: string) => {
@@ -144,7 +151,7 @@ function renderPublic(el: HTMLElement, s: Extract<Share, { kind: "public" }>) {
   if (!c) {
     el.innerHTML = `<section class="hero results-hero"><div class="hero-eyebrow">Javni glas · Stadion Maksimir</div>
       <h1>Ovaj glas više nije javan</h1>
-      <p class="hero-lede">Glasač je isključio javni prikaz ili povukao glas.</p></section>${cta}`;
+      <p class="hero-lede">Javni prikaz je isključen ili je glas povučen.</p></section>${cta}`;
     return;
   }
   el.innerHTML = `
@@ -190,7 +197,7 @@ async function renderZk(el: HTMLElement, s: Extract<Share, { kind: "zk" }>) {
       <p class="sh-verdict muted">Provjeravam…</p>
       <h3>Što ovaj dokaz govori, a što ne</h3>
       <ul>
-        <li><strong>Govori:</strong> vlasnik dokaza zna tajni ključ jednog od <span data-members>…</span> članova grupe. Član grupe može postati samo osoba
+        <li><strong>Govori:</strong> vlasnik dokaza zna tajni ključ <span data-members>jednog od članova grupe</span>. Član grupe može postati samo osoba
           potvrđena eOsobnom koja je predala listić.</li>
         <li><strong>Ne govori:</strong> tko je ta osoba ni kako je glasala. Nullifier <span class="mono">${short(p.nullifier)}</span>
           je isti za svaki dokaz iste osobe, pa se jedna osoba ne može predstaviti kao više njih.</li>
@@ -218,12 +225,18 @@ async function renderZk(el: HTMLElement, s: Extract<Share, { kind: "zk" }>) {
     set("snark", r.snark);
     set("message", r.message);
     set("log", r.log === null, r.log ?? "");
-    set("root", r.root, `${r.members} ${r.members === 1 ? "član" : "članova"} u trenutku izrade`);
-    el.querySelectorAll("[data-members]").forEach((x) => (x.textContent = String(r.members)));
+    set("root", r.root, `${r.members} ${plural(r.members, "član", "člana", "članova")} u trenutku izrade`);
+    el.querySelectorAll("[data-members]").forEach(
+      (x) =>
+        (x.textContent =
+          r.members === 1 ? "jedinog člana grupe" : `jednog od ${r.members} ${plural(r.members, "člana", "člana", "članova")} grupe`)
+    );
     const all = r.snark && r.message && r.root && r.log === null;
     verdict.className = `sh-verdict gl-msg gl-msg--${all ? "ok" : "err"}`;
     verdict.textContent = all
-      ? `Dokaz je valjan: glas je predala jedna od ${r.members} ${r.members === 1 ? "potvrđene osobe" : "potvrđenih osoba"} u grupi.`
+      ? r.members === 1
+        ? "Dokaz je valjan: glas je predala jedina potvrđena osoba u grupi. Dok grupa ne naraste, dokaz ne skriva ništa."
+        : `Dokaz je valjan: glas je predala jedna od ${r.members} ${plural(r.members, "potvrđene osobe", "potvrđene osobe", "potvrđenih osoba")} u grupi.`
       : "Dokaz NIJE prošao provjeru.";
   } catch (e) {
     verdict.className = "sh-verdict gl-msg gl-msg--err";

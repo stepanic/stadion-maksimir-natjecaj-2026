@@ -6,7 +6,8 @@ Ovaj dokument bilježi ono što se iz koda ne vidi: zašto je napravljeno baš o
 
 Status: živo na <https://maksimir.domovina.ai/#/glasanje> od 25. 9. 2026. Prvi pravi glas
 (zapis #1, 50/30/20 za tri nagrađena rada) predan je E2E prijavom eOsobnom. Hash potvrde
-poklapa se s neovisnim izračunom u Pythonu.
+poklapa se s neovisnim izračunom u Pythonu. Istog dana na produkciji su prošli i prvi anonimni
+ZK dokaz (sve četiri provjere u pregledniku) i javna objava, koja je nakon testa isključena.
 
 ## Tok
 
@@ -58,7 +59,10 @@ sequenceDiagram
 Plan za blockchain (korijen grupe u Semaphore ugovoru, registar nullifiera, EAS atestacije,
 anonimne vjerodajnice, MACI) nalazi se u [glasanje-kako-radi.md](glasanje-kako-radi.md#sljedeće-faze-što-preseliti-onchain).
 
-### Zašto nije blockchain ni ZK
+### Zašto integritet ne počiva na blockchainu ni ZK-u
+
+(ZK je kasnije dodan za anonimno dijeljenje glasa, vidi gore. Integritet i dalje nosi lanac
+hasheva s OpenTimestampsom.)
 
 Glavni rizik centralne baze nije promjena tuđeg glasa, nego to da operater ubaci
 izmišljene glasače. Blockchain ni ZK (npr. Semaphore) to ne rješavaju: popis ovlaštenih
@@ -96,7 +100,7 @@ na kraju, jer je mali, a svaki sat postaje trajni dokaz stanja (prijedlog korisn
 
 ## Otvoreno
 
-- **Prvi pravi ZK dokaz i javna objava na produkciji** traže prijavu eOsobnom. Lokalno su oba toka prošla kroz pravo sučelje, a na produkciji su RPC-evi i OG kartica provjereni anonimno.
+- **Anonimnost ZK dokaza** ovisi o veličini grupe. Na produkciji grupa zasad ima jednog člana, pa prvi dokaz ne skriva ništa. Stranica to piše uz svaki dokaz.
 
 - **Zakazani cron.** Dosad su prošli samo ručni runovi (`workflow_dispatch`). Treba potvrditi da se `17 * * * *` stvarno pokreće, a prvi `.ots` treba dobiti Bitcoin atestaciju (`"bitcoin": true` u `index.json`).
 - **Prijava s drugačijim e-mailom.** Ako osoba već ima domovina.ai račun s drugim e-mailom nego što ga vraća Certilia, edge funkcija bi mogla pasti na `kyc_store_failed` (unique `oib_hash`). To je zapaženo u kodu, ali nije reproducirano.

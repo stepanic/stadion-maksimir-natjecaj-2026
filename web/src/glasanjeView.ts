@@ -36,6 +36,7 @@ import {
   DOC_SLUG,
   ZK_SHARE_TEXT,
   bindShareButtons,
+  plural,
   publicCardHtml,
   publicShareText,
   shareButtonsHtml,
@@ -297,8 +298,7 @@ async function publish(mode: PublicMode | null) {
 /** Tekst trenutnog koraka bez punog re-rendera (ZK izračun traje nekoliko sekundi). */
 function step(text: string) {
   st.busy = text;
-  const box = root?.querySelector<HTMLElement>("[data-busy]");
-  if (box) box.textContent = text;
+  root?.querySelectorAll<HTMLElement>("[data-busy]").forEach((box) => (box.textContent = text));
 }
 
 async function makeZkProof() {
@@ -439,6 +439,7 @@ function shareHtml(): string {
       <button role="tab" class="${tab === "public" ? "active" : ""}" data-tab="public">Javno, s imenom${my!.public_mode ? " ✓" : ""}</button>
       <button role="tab" class="${tab === "zk" ? "active" : ""}" data-tab="zk">Anonimno, sa ZK dokazom${st.zkShare && keyMatches ? " ✓" : ""}</button>
     </div>
+    ${st.busy ? `<div class="gl-msg"><span data-busy>${esc(st.busy)}</span></div>` : ""}
     <div class="sh-body">${tab === "public" ? pub : zk}</div>
   </section>`;
 }
@@ -448,7 +449,8 @@ function publicListHtml(): string {
   if (!p || (!p.count && !p.zk_shares)) return "";
   const shown = st.pubAll ? p.ballots : p.ballots.slice(0, 6);
   return `<section class="panel sh-list">
-    <h2>Javni glasovi <span class="muted small">· ${p.count} javnih · ${p.zk_shares} anonimnih ZK dokaza</span></h2>
+    <h2>Javni glasovi <span class="muted small">· ${p.count} ${plural(p.count, "javni", "javna", "javnih")} ·
+      ${p.zk_shares} ${plural(p.zk_shares, "anonimni ZK dokaz", "anonimna ZK dokaza", "anonimnih ZK dokaza")}</span></h2>
     <p class="muted small">Glasači koji su sami izabrali da im glas bude javan. Klik na ime otvara objavu koju se može podijeliti.</p>
     <div class="sh-grid">${shown.map((c) => publicCardHtml(c, { compact: true, href: `#/glasanje/g/${c.id}` })).join("")}</div>
     ${p.ballots.length > 6 ? `<button class="btn btn-sm" data-act="pub-all">${st.pubAll ? "Prikaži manje" : `Prikaži sve (${p.ballots.length})`}</button>` : ""}
@@ -607,7 +609,9 @@ function integrityHtml(): string {
         <li><strong>Potvrda.</strong> Nakon predaje preuzmi potvrdu: svoj zapis, njegov hash i pseudonim. Pseudonim je stalan, ali ne otkriva tko si.</li>
         <li><strong>Bitcoin, svaki sat.</strong> Svaki sat se snapshot (vrh lanca + trenutni rezultati) žigoše putem
           <a href="https://opentimestamps.org" target="_blank" rel="noopener">OpenTimestamps ↗</a> i nakon par sati trajno zapisuje u Bitcoin blok.
-          Tko god kasnije prepravi povijest, ne može promijeniti ono što je već u Bitcoinu.</li>
+          Tko god kasnije prepravi povijest, ne može promijeniti ono što je već u Bitcoinu. U snapshotu je i vrh zapisnika ZK grupe.</li>
+        <li><strong>Anonimni ZK dokazi.</strong> Tko podijeli glas anonimno, objavljuje Semaphore dokaz da je jedan od potvrđenih glasača.
+          Svaki posjetitelj ga provjerava u svom pregledniku, a korijen grupe računa iz javnog zapisnika.</li>
         <li><strong>Po zatvaranju</strong> se objavljuje cijeli lanac pod pseudonimima.
           <a href="${VERIFY_SCRIPT}" target="_blank" rel="noopener">maksimir_verify.py ↗</a> iz njega ponovno izračuna svaki hash i izbroji glasove,
           pa provjeri tvoju potvrdu i svaki satni snapshot.</li>
