@@ -66,6 +66,10 @@ type State = {
   zkLocal: string | null; // commitment lokalnog ZK ključa
   zkShare: string | null;
   zkImport: boolean;
+  filter: "all" | "award" | "popular" | "mine";
+  pickAll: boolean;
+  modal: "withdraw" | null;
+  toast: { text: string; undo: Items | null; seen?: boolean } | null;
 };
 
 const st: State = {
@@ -89,6 +93,10 @@ const st: State = {
   zkLocal: null,
   zkShare: null,
   zkImport: false,
+  filter: "all",
+  pickAll: false,
+  modal: null,
+  toast: null,
 };
 
 let root: HTMLElement | null = null;
@@ -184,6 +192,7 @@ export async function renderGlasanje(el: HTMLElement) {
   root = el;
   st.msg = null;
   st.consent = false;
+  st.modal = null;
   el.innerHTML = `<p class="muted">Učitavam glasanje…</p>`;
   await load();
   if (root === el) draw();
@@ -252,10 +261,29 @@ async function submit(withConsent = false) {
     st.msg = {
       kind: "ok",
       text: Object.keys(items).length
-        ? `Listić je predan (zapis #${st.my.receipt?.seq}). Preuzmi potvrdu ispod.`
+        ? `Hvala! Tvoj glas je predan i broji se (zapis #${st.my.receipt?.seq}).`
         : "Glas je povučen.",
     };
   });
+}
+
+/** Povlačenje glasa: prazan listić na poslužitelju, a nacrt ostaje na uređaju za ponovnu predaju. */
+async function withdraw() {
+  const keep = Object.keys(st.draft).length ? { ...st.draft } : { ...(st.my?.items ?? {}) };
+  await run("Povlačim glas…", async () => {
+    st.modal = null;
+    st.my = await castBallot({});
+    saveDraft(keep);
+    st.results = await fetchResults(true);
+    await loadShareState();
+    st.pub = await fetchPublicBallots(60).catch(() => st.pub);
+    st.msg = {
+      kind: "ok",
+      text: "Glas je povučen i više se ne broji. Listić je ostao spremljen ispod: klikni „Predaj glas” kad ga želiš vratiti.",
+    };
+  });
+  st.modal = null;
+  draw();
 }
 
 function downloadReceipt() {
@@ -472,16 +500,137 @@ function publicListHtml(): string {
 
 // ── crtanje ─────────────────────────────────────────────────────────────────
 
-function authHtml(): string {
-  if (st.signedIn && st.my?.verified) {
-    return `<div class="gl-auth gl-auth--ok">✓ Prijavljen/a eOsobnom
-      <button class="btn btn-sm" data-act="signout">Odjava</button></div>`;
+// Nijanse za segmente trake „100 bodova” (ponavljaju se kad je radova više).
+const SEG = ["#002f6c", "#2a5fa8", "#5b8fd0", "#8fb5e3", "#1d4580", "#4577bb"];
+
+type Phase = "empty" | "under" | "over" | "ready" | "done";
+
+function phase(): Phase {
+  const n = Object.keys(st.draft).length;
+  const sum = sumPoints(st.draft);
+  if (!n) return "empty";
+  if (sum > 100) return "over";
+  if (sum < 100) return "under";
+  const server = st.my?.items ?? {};
+  return Object.keys(server).length && sameItems(st.draft, server) ? "done" : "ready";
+}
+
+function stepsHtml(): string {
+  const p = phase();
+  const idx = { empty: 0, under: 1, over: 1, ready: 2, done: 3 }[p];
+  const steps = [
+    ["Odaberi radove", "Klikni „Dodaj” kod radova koji ti se sviđaju."],
+    ["Podijeli 100 bodova", "Više bodova = jača podrška. Sve na jedan rad je u redu."],
+    ["Predaj eOsobnom", "Prijava ide preko Certilije, samo za potvrdu da si stvarna osoba."],
+  ];
+  const signed = st.signedIn && st.my?.verified;
+  return `<section class="gl-steps" aria-label="Kako glasati">
+    <ol>${steps
+      .map(
+        ([t, d], i) =>
+          `<li class="${i < idx ? "done" : i === idx ? "now" : ""}">
+            <span class="gl-step-n">${i < idx ? "✓" : i + 1}</span>
+            <div><strong>${t}</strong><span>${d}</span></div>
+          </li>`
+      )
+      .join("")}</ol>
+    <div class="gl-who">${
+      signed
+        ? `<span class="gl-who-ok">✓ Prijavljen/a eOsobnom</span> <button class="linkish" data-act="signout">Odjava</button>`
+        : `<span class="muted">Već si glasao/la?</span> <button class="linkish" data-act="signin" ${st.busy ? "disabled" : ""}>Prijavi se i vidi svoj listić</button>`
+    }</div>
+  </section>`;
+}
+
+function matches(r: Rad, q: string): boolean {
+  return [r.lead, r.code, ...r.roles.map((x) => x.name), ...r.countries].join(" ").toLowerCase().includes(q);
+}
+
+const PICK_PAGE = 24;
+
+function pickerHtml(): string {
+  const q = st.q.trim().toLowerCase();
+  const share = new Map((st.results?.results ?? []).map((r) => [r.code, r]));
+  let list = radovi.filter((r) => !q || matches(r, q));
+  if (st.filter === "award") list = list.filter((r) => r.award);
+  if (st.filter === "mine") list = list.filter((r) => r.code in st.draft);
+  if (st.filter === "popular")
+    list = [...list].sort((a, b) => (share.get(b.code)?.points ?? 0) - (share.get(a.code)?.points ?? 0));
+  const nMine = Object.keys(st.draft).length;
+  const chips: [State["filter"], string][] = [
+    ["all", `Svi radovi · ${radovi.length}`],
+    ["award", "Nagrađeni · 5"],
+    ["popular", "Najpopularniji kod javnosti"],
+    ["mine", `Na mom listiću · ${nMine}`],
+  ];
+
+  const more = list.length > PICK_PAGE && !st.pickAll && !q && st.filter !== "mine";
+  const cards = (more ? list.slice(0, PICK_PAGE) : list)
+    .map((r) => {
+      const on = r.code in st.draft;
+      const s = share.get(r.code);
+      return `<article class="gp-card${on ? " is-on" : ""}">
+        <button class="gp-img" data-toggle="${r.code}" data-k="img:${r.code}" aria-label="${on ? "Makni s listića" : "Dodaj na listić"}: ${esc(label(r))}">
+          ${r.image ? `<img src="/radovi/${r.code}-t.jpg" alt="" loading="lazy" />` : `<span class="gl-noimg"></span>`}
+          ${on ? `<span class="gp-pts">${st.draft[r.code]} b.</span>` : ""}
+          ${r.award ? `<span class="gp-award">${r.award}. nagrada</span>` : ""}
+        </button>
+        <div class="gp-body">
+          <a class="gp-name" href="${link(`radovi/${r.code}`)}" title="Otvori rad">${esc(label(r))}</a>
+          <span class="gp-meta">${esc(r.countries.join(", ") || "—")}${s && s.points > 0 ? ` · ${pct(s.share)} javnosti` : ""}</span>
+        </div>
+        <button class="btn btn-sm gp-toggle${on ? " is-on" : ""}" data-toggle="${r.code}" data-k="tg:${r.code}">${on ? "✓ Na listiću" : "+ Dodaj"}</button>
+      </article>`;
+    })
+    .join("");
+
+  return `<section class="panel gp-panel" id="gl-radovi">
+    <div class="gp-head">
+      <h2>1. Odaberi radove</h2>
+      <input id="gl-q" type="search" placeholder="Traži: ured, autor, zemlja ili šifra…" value="${esc(st.q)}" aria-label="Traži rad" data-k="q" />
+    </div>
+    <div class="gp-chips" role="tablist">${chips
+      .map(
+        ([f, t]) =>
+          `<button role="tab" aria-selected="${st.filter === f}" class="${st.filter === f ? "active" : ""}" data-filter="${f}" data-k="f:${f}">${t}</button>`
+      )
+      .join("")}</div>
+    ${
+      list.length
+        ? `<div class="gp-grid">${cards}</div>
+           ${more ? `<button class="btn gp-more" data-act="pick-all">Prikaži sve radove (${list.length})</button>` : ""}`
+        : `<p class="muted gp-empty">${st.filter === "mine" ? "Na listiću još nema radova." : "Nijedan rad ne odgovara pretrazi."}</p>`
+    }
+  </section>`;
+}
+
+function hintHtml(p: Phase, sum: number): string {
+  const zero = Object.values(st.draft).filter((v) => !v).length;
+  const note =
+    zero && p !== "empty"
+      ? ` <span class="warn">${zero} ${plural(zero, "rad ima", "rada imaju", "radova ima")} 0 bodova i ne ulaz${zero === 1 ? "i" : "e"} u glas.</span>`
+      : "";
+  return hintText(p, sum) + note;
+}
+
+function hintText(p: Phase, sum: number): string {
+  const signed = st.signedIn && st.my?.verified;
+  switch (p) {
+    case "empty":
+      return Object.keys(st.my?.items ?? {}).length
+        ? "Listić na ovom uređaju je prazan, a predani glas i dalje vrijedi."
+        : "Listić je prazan. Klikni „+ Dodaj” kod rada koji ti se sviđa.";
+    case "under":
+      return `Preostalo ti je još <strong>${100 - sum}</strong> ${plural(100 - sum, "bod", "boda", "bodova")}. Povuci klizač ili klikni „Dodijeli ostatak”.`;
+    case "over":
+      return `Imaš <strong>${sum - 100}</strong> ${plural(sum - 100, "bod", "boda", "bodova")} previše. Smanji nekom radu bodove.`;
+    case "ready":
+      return signed
+        ? "Sve je spremno. Klikni „Predaj glas”."
+        : "Sve je spremno. Klikni „Predaj glas” i potvrdi se eOsobnom ili aplikacijom Certilia mobile.ID.";
+    case "done":
+      return `Tvoj glas je predan i broji se. Možeš ga mijenjati do ${esc(fmtDate(st.results?.closes_at ?? null))}.`;
   }
-  return `<div class="gl-auth">
-    <div><strong>Glasaju građani s eOsobnom ili Certilia mobile.ID.</strong>
-    Listić možeš složiti i bez prijave, a prijava se traži pri predaji.</div>
-    <button class="btn btn-primary" data-act="signin" ${st.busy ? "disabled" : ""}>Prijava eOsobnom (Certilia)</button>
-  </div>`;
 }
 
 function ballotHtml(): string {
@@ -491,118 +640,112 @@ function ballotHtml(): string {
   const hasServer = Object.keys(server).length > 0;
   const dirty = !sameItems(st.draft, server);
   const open = st.results?.open ?? true;
+  const p = phase();
+
+  const segs = entries
+    .filter(([, v]) => v > 0)
+    .map(
+      ([code, v], i) =>
+        `<span style="width:${(Math.min(v, 100) / Math.max(100, sum)) * 100}%;background:${SEG[i % SEG.length]}" title="${esc(label(byCode[code] ?? ({ lead: code } as Rad)))}: ${v}"></span>`
+    )
+    .join("");
 
   const rows = entries
-    .map(([code, pts]) => {
+    .map(([code, pts], i) => {
       const r = byCode[code];
       if (!r) return "";
-      return `<div class="gl-row" data-code="${code}">
-        ${r.image ? `<img src="/radovi/${code}-t.jpg" alt="" loading="lazy" />` : `<span class="gl-noimg"></span>`}
-        <a class="gl-name" href="${link(`radovi/${code}`)}">${esc(label(r))}<span class="muted small"> · <code>${code}</code></span></a>
-        <div class="gl-points">
-          <button class="btn btn-sm" data-act="dec" aria-label="Manje bodova">−</button>
-          <input type="number" min="0" max="100" step="1" value="${pts}" aria-label="Bodovi za ${esc(label(r))}" />
-          <button class="btn btn-sm" data-act="inc" aria-label="Više bodova">+</button>
-          <button class="btn btn-sm gl-x" data-act="remove" aria-label="Makni s listića">✕</button>
-        </div>
-        <div class="gl-bar"><span style="width:${Math.min(100, pts)}%"></span></div>
-      </div>`;
+      return `<li class="gl-row${pts === 0 ? " is-zero" : ""}" data-code="${code}">
+        <span class="gl-dot" style="background:${SEG[i % SEG.length]}"></span>
+        <a class="gl-name" href="${link(`radovi/${code}`)}">${esc(label(r))}</a>
+        <button class="gl-x" data-act="remove" data-k="x:${code}" aria-label="Makni ${esc(label(r))} s listića" title="Makni s listića">✕</button>
+        <input type="range" min="0" max="100" step="1" value="${pts}" data-f="range" data-k="range:${code}" aria-label="Bodovi za ${esc(label(r))}" />
+        <label class="gl-num"><input type="number" inputmode="numeric" min="0" max="100" step="1" value="${pts}" data-f="num" data-k="num:${code}" aria-label="Bodovi za ${esc(label(r))}" /><span>b.</span></label>
+      </li>`;
     })
     .join("");
 
-  const q = st.q.trim().toLowerCase();
-  const matches = q
-    ? radovi
-        .filter((r) => !(r.code in st.draft))
-        .filter((r) =>
-          [r.lead, r.code, ...r.roles.map((x) => x.name), ...r.countries].join(" ").toLowerCase().includes(q)
-        )
-        .slice(0, 8)
-    : [];
+  const submitLabel = !open
+    ? "Glasanje je zatvoreno"
+    : p === "done"
+      ? "✓ Glas je predan"
+      : hasServer
+        ? "Predaj izmijenjeni glas"
+        : "Predaj glas";
 
   return `
-    <section class="panel gl-ballot">
-      <h2>Moj listić</h2>
+    <aside class="panel gl-ballot" id="gl-listic">
+      <div class="gl-ballot-head">
+        <h2>2. Moj listić</h2>
+        <span class="gl-count">${entries.length} ${plural(entries.length, "rad", "rada", "radova")}</span>
+      </div>
+      <div class="gl-meter ${p === "over" ? "over" : sum === 100 ? "ok" : ""}">
+        <div class="gl-meter-num"><strong data-sum>${sum}</strong> / 100 bodova</div>
+        <div class="gl-meter-bar">${segs}</div>
+      </div>
+      <p class="gl-hint" data-hint>${hintHtml(p, sum)}</p>
+      ${entries.length ? `<ul class="gl-rows">${rows}</ul>` : ""}
       ${
         entries.length
-          ? rows
-          : `<p class="muted">Listić je prazan. Dodaj rad pretragom ispod, ili klikni „+ na listić” kod rada u rezultatima ili na stranici rada.</p>`
-      }
-      <div class="gl-add">
-        <input id="gl-q" type="search" placeholder="Dodaj rad: ured, autor, zemlja ili šifra…" value="${esc(st.q)}" aria-label="Dodaj rad na listić" />
-        ${
-          matches.length
-            ? `<div class="gl-suggest">${matches
-                .map((r) => `<button data-add="${r.code}">+ ${esc(label(r))} <code>${r.code}</code></button>`)
-                .join("")}</div>`
-            : ""
-        }
-      </div>
-      <div class="gl-sum ${sum === 100 ? "ok" : sum > 100 ? "over" : ""}">
-        Raspodijeljeno <strong>${sum}</strong> / 100
-        ${entries.length ? `<button class="btn btn-sm" data-act="spread" ${sum >= 100 ? "hidden" : ""}>Raspodijeli ostatak (${Math.max(0, 100 - sum)})</button>` : ""}
-      </div>
-      ${
-        st.consent
-          ? `<div class="gl-consent">
-              <h3>Prije prvog glasa</h3>
-              <ul>
-                <li>Ovo je <strong>neslužbeno</strong> glasanje javnosti. Nema nikakav utjecaj na odluku ocjenjivačkog suda.</li>
-                <li>Imaš jedan glas od 100 bodova. Listić smiješ mijenjati do zatvaranja, a broji se zadnja verzija.</li>
-                <li>Identitet se provjerava putem Certilije. U bazi se čuva samo šifrirani OIB i njegov hash, radi pravila „jedna osoba, jedan listić”.
-                  Glasanje <strong>nije tajno</strong> prema operateru baze. Javno se objavljuju samo zbirni rezultati i, po zatvaranju,
-                  lanac listića pod pseudonimima, bez imena i OIB-a.</li>
-              </ul>
-              <button class="btn btn-primary" data-act="consent" ${st.busy ? "disabled" : ""}>Prihvaćam i predajem listić</button>
-              <button class="btn" data-act="noconsent">Odustani</button>
-            </div>`
-          : `<div class="gl-actions">
-              <button class="btn btn-primary" data-act="submit" ${submitDisabled() ? "disabled" : ""}>${hasServer ? "Predaj izmijenjeni listić" : "Predaj listić"}</button>
-              ${hasServer && dirty ? `<button class="btn" data-act="reset">Vrati predani listić</button>` : ""}
-              ${hasServer ? `<button class="btn" data-act="withdraw" ${st.busy ? "disabled" : ""}>Povuci glas</button>` : ""}
-              ${!open ? `<span class="muted small">Glasanje je zatvoreno.</span>` : ""}
-            </div>`
-      }
-      ${
-        hasServer && st.my?.receipt
-          ? `<div class="gl-receipt">
-              <div><strong>Tvoj glas je zapisan</strong> kao #${st.my.receipt.seq} u lancu (${esc(fmtDate(st.my.updated_at))}).
-              ${dirty ? `<span class="warn">Imaš nepredane izmjene.</span>` : ""}</div>
-              <div class="mono small">${st.my.receipt.hash}</div>
-              <button class="btn btn-sm" data-act="receipt">Preuzmi potvrdu (JSON)</button>
+          ? `<div class="gl-tools">
+              <button class="btn btn-sm" data-act="spread" ${sum >= 100 ? "hidden" : ""}>Dodijeli ostatak (${Math.max(0, 100 - sum)})</button>
+              ${entries.length > 1 ? `<button class="btn btn-sm" data-act="equal">Podijeli jednako</button>` : ""}
+              <button class="btn btn-sm btn-quiet" data-act="clear">Isprazni listić</button>
             </div>`
           : ""
       }
-    </section>`;
+      <div class="gl-submit">
+        <h3>3. Predaj</h3>
+        <button class="btn btn-primary btn-lg" data-act="submit" ${submitDisabled() ? "disabled" : ""}>${submitLabel}</button>
+        ${hasServer && dirty ? `<button class="btn btn-sm btn-quiet" data-act="reset">Odbaci izmjene i vrati predani listić</button>` : ""}
+      </div>
+      ${
+        hasServer && st.my?.receipt
+          ? `<details class="gl-receipt">
+              <summary>✓ Glas zapisan kao #${st.my.receipt.seq} · ${esc(fmtDate(st.my.updated_at))}${dirty ? ` · <span class="warn">imaš nepredane izmjene</span>` : ""}</summary>
+              <p class="small muted">Potvrda služi da kasnije sam/a provjeriš da je tvoj glas ubrojen.</p>
+              <div class="mono small">${st.my.receipt.hash}</div>
+              <div class="gl-actions">
+                <button class="btn btn-sm" data-act="receipt">Preuzmi potvrdu</button>
+                <button class="btn btn-sm btn-danger-quiet" data-act="withdraw" ${st.busy ? "disabled" : ""}>Povuci glas…</button>
+              </div>
+            </details>`
+          : ""
+      }
+    </aside>`;
 }
 
 function resultsHtml(): string {
   const res = st.results;
   if (!res) return "";
   const rows = res.results.filter((r) => r.points > 0);
-  const shown = st.showAll ? rows : rows.slice(0, 15);
+  const shown = st.showAll ? rows : rows.slice(0, 10);
   return `
     <section class="panel gl-results">
-      <h2>Rezultati uživo</h2>
-      <p class="muted small">Udio = zbroj bodova koje je rad dobio podijeljen s ukupnim brojem bodova (glasači × 100).
-      Podupiratelji = koliko je osoba radu dalo barem 1 bod.</p>
+      <h2>Rezultati uživo <span class="muted small">· ${res.voters} ${plural(res.voters, "glasač", "glasača", "glasača")}</span></h2>
+      <p class="muted small">Postotak = udio svih podijeljenih bodova. Podupiratelji = koliko je osoba radu dalo barem 1 bod.</p>
       ${
         rows.length
           ? `<ol class="gl-rank">${shown
-              .map((row) => {
+              .map((row, i) => {
                 const r = byCode[row.code];
                 if (!r) return "";
                 const mine = row.code in st.draft;
                 return `<li>
-                  <a class="gl-name" href="${link(`radovi/${row.code}`)}">${esc(label(r))}</a>
-                  <div class="gl-bar gl-bar--result"><span style="width:${Math.min(100, row.share)}%"></span></div>
-                  <span class="gl-share">${pct(row.share)}</span>
-                  <span class="muted small">${row.backers} podupiratelja</span>
-                  ${mine ? `<span class="muted small">na tvom listiću</span>` : `<button class="btn btn-sm" data-add="${row.code}">+ na listić</button>`}
+                  <span class="gl-place">${i + 1}.</span>
+                  ${r.image ? `<img src="/radovi/${row.code}-t.jpg" alt="" loading="lazy" />` : `<span class="gl-noimg"></span>`}
+                  <div class="gl-rank-main">
+                    <a class="gl-name" href="${link(`radovi/${row.code}`)}">${esc(label(r))}</a>
+                    <div class="gl-bar gl-bar--result"><span style="width:${Math.min(100, row.share)}%"></span></div>
+                    <span class="muted small">${row.backers} ${plural(row.backers, "podupiratelj", "podupiratelja", "podupiratelja")}</span>
+                  </div>
+                  <div class="gl-rank-side">
+                    <span class="gl-share">${pct(row.share)}</span>
+                    ${mine ? `<span class="muted small">✓ na listiću</span>` : `<button class="btn btn-sm" data-toggle="${row.code}">+ Dodaj</button>`}
+                  </div>
                 </li>`;
               })
               .join("")}</ol>
-            ${rows.length > 15 ? `<button class="btn btn-sm" data-act="all">${st.showAll ? "Prikaži manje" : `Prikaži svih ${rows.length}`}</button>` : ""}`
+            ${rows.length > 10 ? `<button class="btn btn-sm" data-act="all">${st.showAll ? "Prikaži manje" : `Prikaži svih ${rows.length}`}</button>` : ""}`
           : `<p>Još nema glasova. Budi prvi.</p>`
       }
     </section>`;
@@ -612,8 +755,8 @@ function integrityHtml(): string {
   const cps = [...st.checkpoints].reverse().slice(0, 8);
   const btc = st.checkpoints.filter((c) => c.bitcoin).at(-1);
   return `
-    <section class="panel gl-integrity">
-      <h2>Kako znaš da nitko nije dirao glasove</h2>
+    <details class="panel gl-integrity">
+      <summary><h2>Kako znaš da nitko nije dirao glasove</h2><span class="muted small">lanac hasheva, Bitcoin žig svaki sat, provjera skriptom</span></summary>
       <p class="small">Cijeli postupak s dijagramima: <a href="${link(DOC_SLUG)}">tehnički opis korak po korak</a>
         (<a href="${DOC_GITHUB}" target="_blank" rel="noopener">GitHub ↗</a>).</p>
       <ol>
@@ -646,7 +789,74 @@ function integrityHtml(): string {
             Provjera: preuzmi .json i .ots pa ih spusti na <a href="https://opentimestamps.org" target="_blank" rel="noopener">opentimestamps.org</a>.</p>`
           : `<p class="muted small">Prvi snapshot se objavljuje unutar sat vremena od prvog glasa.</p>`
       }
-    </section>`;
+    </details>`;
+}
+
+function modalHtml(): string {
+  if (st.consent) {
+    return `<div class="gl-modal" role="dialog" aria-modal="true" aria-labelledby="gl-modal-t">
+      <div class="gl-modal-box">
+        <h3 id="gl-modal-t">Prije prvog glasa</h3>
+        <ul>
+          <li>Ovo je <strong>neslužbeno</strong> glasanje javnosti. Nema nikakav utjecaj na odluku ocjenjivačkog suda.</li>
+          <li>Imaš jedan glas od 100 bodova. Listić smiješ mijenjati do zatvaranja, a broji se zadnja verzija.</li>
+          <li>Identitet se provjerava putem Certilije. U bazi se čuva samo šifrirani OIB i njegov hash, radi pravila „jedna osoba, jedan listić”.
+            Glasanje <strong>nije tajno</strong> prema operateru baze. Javno se objavljuju samo zbirni rezultati i, po zatvaranju,
+            lanac listića pod pseudonimima, bez imena i OIB-a.</li>
+        </ul>
+        <div class="gl-actions">
+          <button class="btn btn-primary" data-act="consent" data-autofocus ${st.busy ? "disabled" : ""}>Prihvaćam i predajem glas</button>
+          <button class="btn" data-act="noconsent">Odustani</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if (st.modal === "withdraw") {
+    const n = Object.keys(st.my?.items ?? {}).length;
+    return `<div class="gl-modal" role="dialog" aria-modal="true" aria-labelledby="gl-modal-t">
+      <div class="gl-modal-box">
+        <h3 id="gl-modal-t">Povući glas?</h3>
+        <p>Tvojih 100 bodova na ${n} ${plural(n, "radu", "rada", "radova")} prestat će se brojati u rezultatima.</p>
+        <p class="muted small">Listić ostaje spremljen na ovom uređaju, pa ga kasnije možeš ponovno predati jednim klikom.
+          Za promjenu bodova ne treba povlačiti glas: samo izmijeni listić i predaj ga ponovno.</p>
+        <div class="gl-actions">
+          <button class="btn btn-primary" data-act="modal-close" data-autofocus>Ne, zadrži glas</button>
+          <button class="btn btn-danger" data-act="withdraw-yes" ${st.busy ? "disabled" : ""}>Da, povuci glas</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return "";
+}
+
+function toastHtml(): string {
+  if (!st.toast) return "";
+  const cls = st.toast.seen ? "gl-toast" : "gl-toast gl-toast--in";
+  st.toast.seen = true;
+  return `<div class="${cls}" role="status">${esc(st.toast.text)}
+    ${st.toast.undo ? `<button class="linkish" data-act="undo">Vrati</button>` : ""}</div>`;
+}
+
+function mobileBarHtml(): string {
+  const n = Object.keys(st.draft).length;
+  if (!n) return "";
+  const sum = sumPoints(st.draft);
+  return `<div class="gl-mbar">
+    <span><strong data-sum>${sum}</strong>/100 · ${n} ${plural(n, "rad", "rada", "radova")}</span>
+    <a class="btn btn-sm btn-primary" href="#gl-listic">Moj listić ↓</a>
+  </div>`;
+}
+
+let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Kratka obavijest na dnu ekrana, po potrebi s „Vrati” (prethodni nacrt). */
+function toast(text: string, undo: Items | null = null) {
+  st.toast = { text, undo };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    st.toast = null;
+    root?.querySelector(".gl-toast")?.remove();
+  }, 7000);
 }
 
 function submitDisabled(): boolean {
@@ -656,23 +866,27 @@ function submitDisabled(): boolean {
   return !!st.busy || !open || sameItems(st.draft, st.my?.items ?? {}) || (n > 0 && sum !== 100);
 }
 
+/** Klizač i tipkanje ažuriraju zbroj, traku i savjet na mjestu (puni draw() bi prekinuo povlačenje). */
 function updateBallotInPlace(el: HTMLElement) {
   const sum = sumPoints(st.draft);
-  const box = el.querySelector<HTMLElement>(".gl-sum");
-  if (box) {
-    box.classList.toggle("ok", sum === 100);
-    box.classList.toggle("over", sum > 100);
-    box.querySelector("strong")!.textContent = String(sum);
-    const spread = box.querySelector<HTMLButtonElement>('[data-act="spread"]');
-    if (spread) {
-      spread.hidden = sum >= 100;
-      spread.textContent = `Raspodijeli ostatak (${Math.max(0, 100 - sum)})`;
-    }
+  const p = phase();
+  el.querySelectorAll<HTMLElement>("[data-sum]").forEach((s) => (s.textContent = String(sum)));
+  const meter = el.querySelector<HTMLElement>(".gl-meter");
+  if (meter) {
+    meter.classList.toggle("ok", sum === 100);
+    meter.classList.toggle("over", sum > 100);
+    const segs = meter.querySelectorAll<HTMLElement>(".gl-meter-bar span");
+    const vals = Object.values(st.draft).filter((v) => v > 0);
+    if (segs.length === vals.length) segs.forEach((s, i) => (s.style.width = `${(Math.min(vals[i], 100) / Math.max(100, sum)) * 100}%`));
   }
-  el.querySelectorAll<HTMLElement>(".gl-row").forEach((row) => {
-    const bar = row.querySelector<HTMLElement>(".gl-bar span");
-    if (bar) bar.style.width = `${Math.min(100, st.draft[row.dataset.code!] ?? 0)}%`;
-  });
+  const hint = el.querySelector<HTMLElement>("[data-hint]");
+  if (hint) hint.innerHTML = hintHtml(p, sum);
+  const spread = el.querySelector<HTMLButtonElement>('[data-act="spread"]');
+  if (spread) {
+    spread.hidden = sum >= 100;
+    spread.textContent = `Dodijeli ostatak (${Math.max(0, 100 - sum)})`;
+  }
+  el.querySelectorAll<HTMLElement>(".gl-row").forEach((row) => row.classList.toggle("is-zero", !st.draft[row.dataset.code!]));
   const submit = el.querySelector<HTMLButtonElement>('[data-act="submit"]');
   if (submit) submit.disabled = submitDisabled();
 }
@@ -680,93 +894,105 @@ function updateBallotInPlace(el: HTMLElement) {
 function draw() {
   const el = root;
   if (!el) return;
-  // Puni re-render: sačuvaj scroll i fokus (npr. uzastopni klikovi na +/−).
+  // Puni re-render: sačuvaj scroll i fokus (npr. uzastopni klikovi, tipkanje u pretrazi).
   const y = window.scrollY;
   const act = document.activeElement as HTMLElement | null;
-  const focusKey = act?.closest<HTMLElement>(".gl-row")
-    ? `.gl-row[data-code="${act.closest<HTMLElement>(".gl-row")!.dataset.code}"] ${act.dataset.act ? `[data-act="${act.dataset.act}"]` : "input"}`
-    : null;
+  const focusKey = act && el.contains(act) ? act.dataset.k ?? null : null;
   const res = st.results;
-  const focusQ = document.activeElement?.id === "gl-q";
 
   el.innerHTML = `
-    <section class="hero results-hero">
+    <section class="hero results-hero gl-hero">
       <div class="hero-eyebrow">Neslužbeno glasanje javnosti · eOsobna / Certilia mobile.ID</div>
       <h1>Tvojih 100 bodova za novi Maksimir</h1>
       <p class="hero-lede">
-        Svaki građanin s eOsobnom ima jedan glas: 100 bodova koje raspoređuješ po 88 natječajnih radova kako hoćeš.
-        Sve na jedan rad ili npr. 40 / 30 / 20 / 10. Listić smiješ mijenjati do zatvaranja.
+        Odaberi radove koji ti se sviđaju i podijeli im 100 bodova: sve jednom radu ili npr. 40 / 30 / 20 / 10.
+        Predaješ jednom, a listić smiješ mijenjati do ${esc(fmtDate(res?.closes_at ?? null))}.
       </p>
-      <p class="small"><a href="${link(DOC_SLUG)}">Kako tehnički radi, korak po korak →</a> ·
-        <a href="${DOC_GITHUB}" target="_blank" rel="noopener">isti dokument na GitHubu ↗</a></p>
+      <div class="gl-hero-kpis">
+        <span><strong>${res?.voters ?? "—"}</strong> ${plural(res?.voters ?? 0, "glasač", "glasača", "glasača")}</span>
+        <span><strong>${radovi.length}</strong> radova</span>
+        <span>glasanje <strong>${res ? (res.open ? "otvoreno" : "zatvoreno") : "—"}</strong></span>
+        <a href="${link(DOC_SLUG)}">Kako radi →</a>
+      </div>
     </section>
 
-    <section class="card-grid">
-      <div class="kpi"><div class="kpi-label">Glasača</div><div class="kpi-value">${res?.voters ?? "—"}</div><div class="kpi-meta">potvrđenih eOsobnom</div></div>
-      <div class="kpi"><div class="kpi-label">Glasanje</div><div class="kpi-value">${res ? (res.open ? "otvoreno" : "zatvoreno") : "—"}</div><div class="kpi-meta">do ${esc(fmtDate(res?.closes_at ?? null))}</div></div>
-      <div class="kpi"><div class="kpi-label">Radova</div><div class="kpi-value">88</div><div class="kpi-meta"><a href="${link("radovi")}">pregledaj sve →</a></div></div>
-    </section>
-
+    ${stepsHtml()}
     ${st.msg ? `<div class="gl-msg gl-msg--${st.msg.kind}">${esc(st.msg.text)}</div>` : ""}
     ${
       st.busy
-        ? `<div class="gl-msg"><span data-busy>${esc(st.busy)}</span> ${st.abort ? `<button class="btn btn-sm" data-act="cancel">Odustani</button>` : ""}</div>`
+        ? `<div class="gl-msg gl-msg--busy"><span class="gl-spin"></span><span data-busy>${esc(st.busy)}</span> ${st.abort ? `<button class="btn btn-sm" data-act="cancel">Odustani</button>` : ""}</div>`
         : ""
     }
-    ${authHtml()}
-    <div class="gl-grid">
+    <div class="gl-layout">
+      ${pickerHtml()}
       ${ballotHtml()}
-      ${resultsHtml()}
     </div>
+    ${resultsHtml()}
     ${shareHtml()}
     ${publicListHtml()}
     ${integrityHtml()}
+    ${mobileBarHtml()}
+    ${toastHtml()}
+    ${modalHtml()}
   `;
 
-  if (focusQ) {
-    const q = el.querySelector<HTMLInputElement>("#gl-q")!;
-    q.focus();
-    q.setSelectionRange(q.value.length, q.value.length);
-  } else if (focusKey) {
-    el.querySelector<HTMLElement>(focusKey)?.focus({ preventScroll: true });
+  const auto = el.querySelector<HTMLElement>("[data-autofocus]");
+  if (auto) auto.focus({ preventScroll: true });
+  else if (focusKey) {
+    const f = el.querySelector<HTMLElement>(`[data-k="${focusKey}"]`);
+    f?.focus({ preventScroll: true });
+    if (f instanceof HTMLInputElement && f.type === "search") f.setSelectionRange(f.value.length, f.value.length);
   }
   window.scrollTo({ top: y });
   bind(el);
 }
 
+function removeFromDraft(code: string) {
+  const prev = { ...st.draft };
+  const d = { ...st.draft };
+  delete d[code];
+  saveDraft(d);
+  toast(`Maknut s listića: ${label(byCode[code])}`, prev);
+  draw();
+}
+
 function bind(el: HTMLElement) {
   el.querySelectorAll<HTMLElement>(".gl-row").forEach((row) => {
     const code = row.dataset.code!;
-    const input = row.querySelector<HTMLInputElement>("input")!;
+    const range = row.querySelector<HTMLInputElement>('[data-f="range"]')!;
+    const num = row.querySelector<HTMLInputElement>('[data-f="num"]')!;
     const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v) || 0));
-    const set = (v: number) => {
-      saveDraft({ ...st.draft, [code]: clamp(v) });
-      draw();
-    };
-    // Tipkanje ažurira samo zbroj/trake/gumb na mjestu. Puni draw() bi zamijenio
-    // DOM usred Tab-a i izgubio fokus (klik na sljedeće polje bi promašio).
-    input.addEventListener("input", () => {
-      saveDraft({ ...st.draft, [code]: clamp(Number(input.value)) });
+    const onInput = (src: HTMLInputElement, other: HTMLInputElement) => () => {
+      const v = clamp(Number(src.value));
+      saveDraft({ ...st.draft, [code]: v });
+      other.value = String(v);
       updateBallotInPlace(el);
-    });
-    input.addEventListener("change", () => {
-      input.value = String(st.draft[code] ?? 0);
-    });
-    row.querySelector('[data-act="dec"]')!.addEventListener("click", () => set((st.draft[code] ?? 0) - 5));
-    row.querySelector('[data-act="inc"]')!.addEventListener("click", () => set((st.draft[code] ?? 0) + 5));
-    row.querySelector('[data-act="remove"]')!.addEventListener("click", () => {
-      const d = { ...st.draft };
-      delete d[code];
-      saveDraft(d);
+    };
+    range.addEventListener("input", onInput(range, num));
+    num.addEventListener("input", onInput(num, range));
+    // Po završetku promjene puni draw(): kartice u galeriji i savjeti se usklade.
+    range.addEventListener("change", () => draw());
+    num.addEventListener("change", () => {
+      num.value = String(st.draft[code] ?? 0);
       draw();
     });
+    row.querySelector('[data-act="remove"]')!.addEventListener("click", () => removeFromDraft(code));
   });
 
-  el.querySelectorAll<HTMLButtonElement>("[data-add]").forEach((b) =>
+  el.querySelectorAll<HTMLButtonElement>("[data-toggle]").forEach((b) =>
     b.addEventListener("click", () => {
-      addToDraft(b.dataset.add!);
+      const code = b.dataset.toggle!;
+      if (code in st.draft) return removeFromDraft(code);
+      addToDraft(code);
       st.draft = getDraft();
-      st.q = "";
+      toast(`Dodano na listić: ${label(byCode[code])}`);
+      draw();
+    })
+  );
+
+  el.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach((b) =>
+    b.addEventListener("click", () => {
+      st.filter = b.dataset.filter as State["filter"];
       draw();
     })
   );
@@ -777,7 +1003,7 @@ function bind(el: HTMLElement) {
   });
 
   const on = (act: string, fn: () => void) =>
-    el.querySelector(`[data-act="${act}"]`)?.addEventListener("click", fn);
+    el.querySelectorAll(`[data-act="${act}"]`).forEach((b) => b.addEventListener("click", fn));
 
   on("signin", () => void signIn());
   on("signout", () =>
@@ -795,11 +1021,34 @@ function bind(el: HTMLElement) {
     draw();
   });
   on("withdraw", () => {
-    saveDraft({});
-    void submit();
+    st.modal = "withdraw";
+    draw();
+  });
+  on("withdraw-yes", () => void withdraw());
+  on("modal-close", () => {
+    st.modal = null;
+    draw();
+  });
+  el.querySelector(".gl-modal")?.addEventListener("click", (e) => {
+    if (e.target !== e.currentTarget) return;
+    st.modal = null;
+    st.consent = false;
+    draw();
+  });
+  on("undo", () => {
+    if (!st.toast?.undo) return;
+    saveDraft(st.toast.undo);
+    st.toast = null;
+    draw();
   });
   on("reset", () => {
     saveDraft({ ...(st.my?.items ?? {}) });
+    draw();
+  });
+  on("clear", () => {
+    const prev = { ...st.draft };
+    saveDraft({});
+    toast("Listić je ispražnjen.", prev);
     draw();
   });
   on("spread", () => {
@@ -812,6 +1061,15 @@ function bind(el: HTMLElement) {
       rest -= share;
     });
     saveDraft(d);
+    draw();
+  });
+  on("equal", () => {
+    const codes = Object.keys(st.draft);
+    const prev = { ...st.draft };
+    const base = Math.floor(100 / codes.length);
+    let extra = 100 - base * codes.length;
+    saveDraft(Object.fromEntries(codes.map((c) => [c, base + (extra-- > 0 ? 1 : 0)])));
+    toast("Bodovi su podijeljeni jednako.", prev);
     draw();
   });
   on("receipt", downloadReceipt);
@@ -833,7 +1091,7 @@ function bind(el: HTMLElement) {
   });
   on("pub-on", () => void publish(st.pubMode));
   on("pub-change", () => void publish(st.pubMode));
-  el.querySelectorAll('[data-act="pub-off"]').forEach((b) => b.addEventListener("click", () => void publish(null)));
+  on("pub-off", () => void publish(null));
   on("pub-all", () => {
     st.pubAll = !st.pubAll;
     draw();
@@ -846,11 +1104,23 @@ function bind(el: HTMLElement) {
   });
   on("zk-import", () => void importZkKey(el.querySelector<HTMLTextAreaElement>("#zk-key")?.value ?? ""));
   bindShareButtons(el);
+  on("pick-all", () => {
+    st.pickAll = true;
+    draw();
+  });
   on("all", () => {
     st.showAll = !st.showAll;
     draw();
   });
 }
+
+// Esc zatvara otvoreni dijalog (jedan slušač za cijelu stranicu).
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || !root?.isConnected || (!st.modal && !st.consent)) return;
+  st.modal = null;
+  st.consent = false;
+  draw();
+});
 
 // ── mali panel na stranici pojedinog rada ───────────────────────────────────
 
