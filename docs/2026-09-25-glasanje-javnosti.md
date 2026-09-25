@@ -92,6 +92,7 @@ na kraju, jer je mali, a svaki sat postaje trajni dokaz stanja (prijedlog korisn
 10. **`maksimir.domovina.ai` nije bio u `ALLOWED_ORIGINS`.** Prijava je radila samo na `stadion-maksimir.domovina.ai` i `*-8cl.pages.dev`, a korisnik dijeli `maksimir.domovina.ai`. Preflight je vraćao 500. Dodano PATCH-om (stara vrijednost + nova domena) i restartom aplikacije; svih pet starih izvora i dalje daje 204.
 11. **snarkjs u Nodeu ne završava proces.** Radnici (*worker threads*) ostaju živi nakon `generateProof`, pa skripta visi. Testne skripte završavaju s `process.exit(0)`.
 12. **Semaphore kodira poruku kao bytes32, bez pomaka.** `"glasao-sam"` postaje UTF-8 dopunjen nulama do 32 bajta i čita se kao broj. Fiksne vrijednosti su zapisane u migraciji i u `web/src/zk.ts`.
+13. **Kaskadno brisanje zaobilazilo je zapisnik grupe.** `maksimir_zk_members` se briše kaskadno s glasačem, pa bi član nestao iz tablice, a ostao u zapisniku. `maksimir_verify.py --zk` je to pokazao nad lokalnom bazom (5 članova u zapisniku, 4 u tablici). Popravak `20260925170000`: `remove` zapisuje okidač nakon brisanja.
 
 ## Otvoreno
 

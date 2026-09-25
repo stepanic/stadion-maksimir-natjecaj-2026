@@ -83,7 +83,8 @@ flowchart LR
 | Preglednik | Prikazuje radove, drži nacrt listića u `localStorage` dok se ne preda, zove RPC-eve baze. |
 | Certilia proxy | Posreduje u OIDC prijavi prema Certiliji. Jedini zna client secret. |
 | Dijeljenje i ZK: tablice, zapisnik grupe, RPC-evi | [`domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925160000_maksimir_share_zk.sql) |
-| Test dijeljenja i ZK-a (13 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_share_zk.sql) |
+| Test dijeljenja i ZK-a (14 provjera) | [`domovina-api`: `supabase/tests/20260925_maksimir_share_zk.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/tests/20260925_maksimir_share_zk.sql) |
+| Brisanje člana grupe uvijek zapisuje `remove` | [`domovina-api`: `supabase/migrations/20260925170000_maksimir_zk_member_removed.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925170000_maksimir_zk_member_removed.sql) |
 | ZK u pregledniku (Semaphore: ključ, dokaz, provjera) | [`web/src/zk.ts`](../web/src/zk.ts) |
 | Stranica objave i gumbi za dijeljenje | [`web/src/shareView.ts`](../web/src/shareView.ts) |
 | OG kartica za `/g/<id>` | [`web/functions/g/[id].ts`](../web/functions/g/%5Bid%5D.ts) |

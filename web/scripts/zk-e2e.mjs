@@ -17,7 +17,8 @@ const anon = createClient(URL, ANON, opts);
 const ok = (c, m) => { if (!c) { console.error("PAD —", m); process.exit(1); } console.log("OK —", m); };
 
 // čišćenje
-psql("alter table domovina_ai.maksimir_zk_log disable trigger user; delete from domovina_ai.maksimir_zk_log; alter table domovina_ai.maksimir_zk_log enable trigger user; delete from domovina_ai.maksimir_shares; delete from domovina_ai.maksimir_voters where oib_hash like 'e2e-zk-%'; delete from auth.users where email like 'e2e-zk-%';");
+// (brisanje glasača okidačem zapisuje 'remove', pa se zapisnik grupe briše zadnji)
+psql("delete from domovina_ai.maksimir_shares; delete from domovina_ai.maksimir_voters where oib_hash like 'e2e-zk-%'; delete from auth.users where email like 'e2e-zk-%'; alter table domovina_ai.maksimir_zk_log disable trigger user; delete from domovina_ai.maksimir_zk_log; alter table domovina_ai.maksimir_zk_log enable trigger user;");
 
 const users = [];
 for (const n of ["a", "b", "c"]) {
