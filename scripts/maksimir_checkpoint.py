@@ -53,6 +53,8 @@ def fetch_snapshot() -> dict:
             "Authorization": f"Bearer {e['VITE_SUPABASE_ANON_KEY']}",
             "Content-Type": "application/json",
             "Content-Profile": "domovina_ai",
+            # Cloudflare ispred api.domovina.ai odbija zadani "Python-urllib/x" (greška 1010).
+            "User-Agent": "maksimir-checkpoint/1 (+https://github.com/stepanic/stadion-maksimir-natjecaj-2026)",
         },
         method="POST",
     )
