@@ -97,12 +97,16 @@ na kraju, jer je mali, a svaki sat postaje trajni dokaz stanja (prijedlog korisn
 11. **snarkjs u Nodeu ne završava proces.** Radnici (*worker threads*) ostaju živi nakon `generateProof`, pa skripta visi. Testne skripte završavaju s `process.exit(0)`.
 12. **Semaphore kodira poruku kao bytes32, bez pomaka.** `"glasao-sam"` postaje UTF-8 dopunjen nulama do 32 bajta i čita se kao broj. Fiksne vrijednosti su zapisane u migraciji i u `web/src/zk.ts`.
 13. **Kaskadno brisanje zaobilazilo je zapisnik grupe.** `maksimir_zk_members` se briše kaskadno s glasačem, pa bi član nestao iz tablice, a ostao u zapisniku. `maksimir_verify.py --zk` je to pokazao nad lokalnom bazom (5 članova u zapisniku, 4 u tablici). Popravak `20260925170000`: `remove` zapisuje okidač nakon brisanja.
+14. **`Identity.import` prihvaća bilo koji niz.** Na produkciji je zalijepljeni tekst „ovo nije ključ” postao novi lokalni ZK ključ. Sljedeći klik na „Izradi” bi glasaču zamijenio ključ u grupi (`remove` + `add`, novi nullifier). Sada ključ mora biti base64 od točno 32 bajta. Ako lokalni ključ već odgovara grupi, drugačiji se ne uvozi, a gumb jasno kaže kad bi zamijenio ključ u grupi.
+15. **Test ne smije pisati po korisnikovom ključu.** Tijekom provjere popravka 14 uvezen je ispravno oblikovan „ključ” od samih nula i prepisao korisnikov pravi ZK ključ u Braveu. Baza nije dirnuta, jer se nije kliknulo „Izradi”. Pravi ključ je u `~/Downloads/maksimir-zk-kljuc.txt` i vraća se ručnim uvozom. Pokušaj da ga stranica sama učita s `127.0.0.1` zapeo je na upitu preglednika za pristup lokalnoj mreži. Negativne slučajeve koji pišu u `localStorage` treba testirati na lokalnom stacku, ne na produkciji s pravim računom.
+16. **Klik po `ref`-u iz alata `find` zna promašiti.** Klik na `ref` odmah nakon `scroll_to` dvaput nije pokrenuo ništa, a klik po koordinatama sa snimke jest. Nakon klika uvijek provjeri učinak.
 
 ## Otvoreno
 
 - **Anonimnost ZK dokaza** ovisi o veličini grupe. Na produkciji grupa zasad ima jednog člana, pa prvi dokaz ne skriva ništa. Stranica to piše uz svaki dokaz.
 
-- **Zakazani cron.** Dosad su prošli samo ručni runovi (`workflow_dispatch`). Treba potvrditi da se `17 * * * *` stvarno pokreće, a prvi `.ots` treba dobiti Bitcoin atestaciju (`"bitcoin": true` u `index.json`).
+- **Zakazani cron se ne pokreće.** Od 13:12 do 17:44 UTC 25. 9. prošlo je pet ručnih runova (`workflow_dispatch`) i nijedan `schedule`, iako je workflow `active`. Ako se ni sutra ne pojavi nijedan, rezerva je vanjski okidač (npr. Cloudflare Cron Trigger koji zove `workflow_dispatch`). Prva dva `.ots` dokaza (seq0, seq1) dobila su Bitcoin atestaciju, pa sidrenje radi.
+- **Korisnikov ZK ključ u Braveu** treba vratiti uvozom iz `~/Downloads/maksimir-zk-kljuc.txt` (točka 15). Dok to ne učini, stranica nudi „Zamijeni ključ u grupi…”, a taj gumb se ne smije kliknuti.
 - **Prijava s drugačijim e-mailom.** Ako osoba već ima domovina.ai račun s drugim e-mailom nego što ga vraća Certilia, edge funkcija bi mogla pasti na `kyc_store_failed` (unique `oib_hash`). To je zapaženo u kodu, ali nije reproducirano.
 - **Provjera `.ots` u pregledniku.** Za sada korisnik provjerava na opentimestamps.org. `cv/web/components/OtsVerify.tsx` može se prenijeti ovamo.
 - **DNS i preview.** `stadion-maksimir.domovina.ai` radi. Preview URL-ovi ostaju bez prijave (točka 3).

@@ -494,7 +494,9 @@ grupi, pa ga stranica odbija; izmijenjen nullifier ruši SNARK; zamjena ključa 
 Na produkciji je 25. 9. 2026. prošao i pravi test prijavom eOsobnom: prvi anonimni dokaz
 (grupa od jednog člana) prošao je sve četiri provjere u pregledniku posjetitelja, na računalu i
 na širini mobitela. Javna objava s oblikom imena „Ime P.” pokazala je bodove i zapis #1 iz lanca;
-nakon isključivanja ista poveznica više ne prikazuje glas.
+nakon isključivanja ista poveznica više ne prikazuje glas. Preuzimanje ključa daje datoteku s uputama
+i jednim retkom ključa. Uvoz te datoteke na „drugom uređaju” vraća isti ključ, a ponovna izrada daje
+istu poveznicu, jer je nullifier isti.
 
 ### Snapshot v2
 
