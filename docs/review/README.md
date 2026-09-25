@@ -7,6 +7,7 @@ zamrznutim commitom, bez ikakve izmjene koda. Audit koji implementator radi uz k
 | Datum | Dokument | Stanje koda | Tag | Reviewer |
 |---|---|---|---|---|
 | 26. 9. 2026. | [2026-09-26-neovisni-review-glasanje.md](2026-09-26-neovisni-review-glasanje.md) | `faaaa5f` (+ `domovina-api` `d5d88b7`) | `audit-fable-2026-09-26` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
+| 26. 9. 2026. | [2026-09-26-neovisni-review-wiring.md](2026-09-26-neovisni-review-wiring.md) | `feat/glasanje-integracija` `ef4c5d8` (+ `domovina-api` `feat/maksimir-chain` `6b6ad33`); necommitani rad izvan opsega | `audit-fable-2026-09-26-wiring` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
 
 ## Zašto ovako
 
@@ -56,6 +57,8 @@ prije popisa nalaza stoji jedna rečenica presude o cjelini.
 
 ## Sljedeći pregled
 
-Drugi pregled ide nakon što wiring offchain ↔ onchain bude commitan (radi ga Opus 5.5 u drugoj sesiji).
-Osim novog koda, mora provjeriti je li wiring adresirao F-01, F-02, F-04 i F-06 iz prvog pregleda i
-ažurirati tablicu na vrhu ove datoteke.
+Drugi pregled (wiring, `ef4c5d8` / `6b6ad33`) je napravljen dok je druga sesija još pisala web tok i
+popravljala E2E, pa pokriva samo commitani dio. Kad taj rad bude commitan, drugi pregled se **proširuje**
+(popis u njegovu odjeljku „Što ostaje za proširenje”), s novim tagom `audit-fable-<datum>-wiring-2` ili
+sličnim. Stanje starih nalaza: F-01, F-02, F-04 i F-06 wiring nije adresirao; tablica ispravaka
+dokumentacije iz prvog pregleda još je otvorena.
