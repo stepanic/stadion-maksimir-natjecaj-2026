@@ -6,7 +6,8 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "check-frozen": "hardhat compile --quiet && node scripts/check-frozen.mjs"
+    "check-frozen": "hardhat compile --quiet && node scripts/check-frozen.mjs",
+    "coverage": "SOLIDITY_COVERAGE=true hardhat coverage && node scripts/check-coverage.mjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
