@@ -3,6 +3,7 @@
 // Podaci: sources/radovi.json (gradi scripts/build_radovi.py).
 
 import radoviData from "../../sources/radovi.json";
+import { renderRadVotePanel } from "./glasanjeView";
 
 type Role = { name: string; role: string };
 export type Rad = {
@@ -27,19 +28,19 @@ export type Rad = {
   links: { url: string; type: string }[];
 };
 
-const radovi = radoviData as Rad[];
-const byCode: Record<string, Rad> = Object.fromEntries(radovi.map((r) => [r.code, r]));
+export const radovi = radoviData as Rad[];
+export const byCode: Record<string, Rad> = Object.fromEntries(radovi.map((r) => [r.code, r]));
 
 export const EOJN_URL = "https://eojn.hr/tender-eo/76778";
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)
   );
 }
 
 // "RANDIĆ I SURADNICI d. o. o." -> "Randić i suradnici d. o. o." (samo za CAPS nazive)
-function tidy(s: string): string {
+export function tidy(s: string): string {
   // Jednorječni nazivi i kratice (XDGA, ZHA, SV60) ostaju kako jesu.
   if (s !== s.toUpperCase() || !/\s/.test(s.trim())) return s;
   return s
@@ -101,6 +102,7 @@ export function renderRadoviIndex(el: HTMLElement) {
         Svaki predani rad sa službenom slikom, autorima, rangom (1–85) i obrazloženjem
         ocjenjivačkog suda. Tri rada su odbijena iz formalnih razloga.
       </p>
+      <p class="hero-cta"><a class="btn btn-primary" href="#/glasanje">Glasaj: raspodijeli svojih 100 bodova →</a></p>
     </section>
 
     <section class="card-grid">
@@ -201,6 +203,8 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
         : ""
     }
 
+    <div class="panel gl-rad-panel" id="gl-rad-panel"></div>
+
     ${
       r.rejection
         ? `<div class="panel rad-rejected"><h2>Rad je odbijen</h2><p>${esc(r.rejection)}</p></div>`
@@ -241,5 +245,6 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
       ${next ? `<a class="btn" href="#/radovi/${next.code}">${esc(rankLabel(next))} →</a>` : `<span></span>`}
     </nav>
   `;
+  void renderRadVotePanel(el.querySelector<HTMLElement>("#gl-rad-panel")!, r.code);
   return r;
 }

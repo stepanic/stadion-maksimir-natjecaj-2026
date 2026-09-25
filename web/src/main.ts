@@ -6,6 +6,7 @@ import { renderMarkdown, renderMermaidIn } from "./markdown";
 import { landingHtml } from "./landing";
 import { renderResultsIndex, renderAward } from "./rezultatiView";
 import { renderRadoviIndex, renderRad } from "./radoviView";
+import { renderGlasanje } from "./glasanjeView";
 
 const navEl = document.getElementById("nav")!;
 const contentEl = document.getElementById("content")!;
@@ -22,6 +23,7 @@ function buildNav() {
   html.push(`<a class="nav-home" href="#/" data-slug="__home__">Naslovnica</a>`);
   html.push(`<a class="nav-home nav-results" href="#/rezultati" data-slug="rezultati">Rezultati natječaja · 5 nagrađenih radova</a>`);
   html.push(`<a class="nav-home nav-results" href="#/radovi" data-slug="radovi">Svih 88 natječajnih radova</a>`);
+  html.push(`<a class="nav-home nav-results" href="#/glasanje" data-slug="glasanje">Glasanje javnosti · tvojih 100 bodova</a>`);
   for (const section of docs) {
     html.push(`<div class="nav-section">`);
     html.push(`<div class="nav-section-title">${section.title}</div>`);
@@ -158,13 +160,20 @@ async function route() {
   sidebarEl.classList.remove("open");
   const { slug, hash } = parseRoute();
   // Mreža svih radova koristi punu širinu ekrana; ostale stranice ostaju u stupcu za čitanje.
-  contentEl.classList.toggle("content--wide", slug === "radovi");
+  contentEl.classList.toggle("content--wide", slug === "radovi" || slug === "glasanje");
   if (!slug) {
     renderHome();
     return;
   }
   if (slug === "radovi" || slug.startsWith("radovi/")) {
     renderRadovi(slug);
+    return;
+  }
+  if (slug === "glasanje") {
+    setCrumbs([{ label: "Naslovnica", href: "#/" }, { label: "Glasanje javnosti" }]);
+    setActiveNav("glasanje");
+    window.scrollTo({ top: 0 });
+    await renderGlasanje(contentEl);
     return;
   }
   if (slug === "rezultati" || slug.startsWith("rezultati/")) {
