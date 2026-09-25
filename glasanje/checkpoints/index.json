@@ -25,5 +25,16 @@
     "zk_seq": 0,
     "zk_hash": "0000000000000000000000000000000000000000000000000000000000000000",
     "zk_members": 0
+  },
+  {
+    "file": "20260925T174355Z-seq1.json",
+    "at": "2026-09-25T17:43:55.330496+00:00",
+    "seq": 1,
+    "hash": "596d9959a92f1c845272d4d9e1d0df500f7282111e34cec5c8b6b596aea18a9a",
+    "voters": 1,
+    "bitcoin": false,
+    "zk_seq": 1,
+    "zk_hash": "433a3c8abad42ffe03d406f91c378881a8bb63ec0aa33ba43347ff16ffada48e",
+    "zk_members": 1
   }
 ]
