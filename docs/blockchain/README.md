@@ -21,6 +21,7 @@ novčanik ni xDAI.
 | 3 | [03-deploy-runbook.md](03-deploy-runbook.md) | Chiado (napravljeno) i Gnosis (sljedeće), korak po korak |
 | 4 | [04-web-i-baza.md](04-web-i-baza.md) | što treba u webu (nakon Astro migracije) i u `domovina-api` (registrar) |
 | ADR | [adr/0001](adr/0001-kljuc-glasaca-passkey-i-24-rijeci.md) | **ključ glasača**: 24 riječi za oporavak + passkey (PRF) za svakodnevno otključavanje |
+| R | [istrazivanja/](istrazivanja/2026-09-26-eip7702-passkey-gnosis.md) | EIP-7702 + passkey na Gnosisu umjesto Safea (provjereno na lancu) |
 | A | [audit/](audit/README.md) | **audit**: metode, checklista napada, [nalazi i popravci](audit/nalazi.md), [krugovi](audit/krugovi.md) |
 | 5 | [05-sljedece-faze.md](05-sljedece-faze.md) | anonimni upis, ZK-JWT bez registrara, MACI, vlastiti krug |
 
