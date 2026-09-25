@@ -167,16 +167,19 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
 
 1. **`rpId = domovina.ai`**, dakle passkey vrijedi na svim poddomenama.
 2. **Potvrda riječi je obavezna.** Prije prve predaje glasač upisuje 3 nasumične riječi od 24.
-3. **Riječi se prikazuju jednom.** Aplikacija ih prikaže samo pri izradi i nikad više, jer ne
-   postoji gumb „prikaži ponovno”. Glasaču se to kaže izravno:
+3. **Riječi se prikazuju pri izradi, a kasnije samo uz svjež passkey** (izmjena 26. 9. 2026.,
+   nakon stvarnog testa u kojem Matija riječi nije zapisao).
+   - Pri izradi: prikaz, potvrda 3 riječi, zatim riječi nestaju sa stranice.
+   - Kasnije: „Prikaži moje riječi” traži svjež Face ID ili Touch ID (`revealWords()`), upozorava
+     na promatrače i skriva riječi na klik ili nakon 2 minute.
+   - Bez passkeyja (samo riječi) nema što prikazati, jer je papir jedina kopija.
 
-   > Zapiši ove riječi sada. Prikazuju se samo ovaj put, postoje samo u memoriji ove stranice i
-   > nestaju čim potvrdiš. Nismo ih spremili nigdje. Bez njih i bez passkeyja nitko, pa ni mi,
-   > ne može vratiti tvoj ključ.
+   **Zašto ponovni prikaz ne smanjuje sigurnost:** tko ima passkey, već može otključati ključ i
+   glasati, pa mu riječi ne daju ništa više. Zabrana bi samo spriječila vlasnika da napravi kopiju.
+   Isto rade MetaMask i Coinbase Wallet („Reveal Secret Recovery Phrase” uz lozinku ili biometriju).
 
-   Iskreno ograničenje: ista tajna postoji i šifrirana tvojim passkeyjem. To omogućuje glasanje
-   Face ID-jem. „Nitko ne može doći do nje” zato vrijedi za sve **osim za vlasnika passkeyja**.
-   Na našim poslužiteljima tajna ne postoji ni u kakvom čitljivom obliku.
+   Tekst za glasača: „Riječi se ne spremaju nigdje osim šifrirano tvojim passkeyjem. Mi ih ne
+   možemo vidjeti ni vratiti. Ako izgubiš i passkey i riječi, ključ je nepovratno izgubljen.”
 4. **EIP-7702** ne utječe na ovu odluku ([istraživanje](../istrazivanja/2026-09-26-eip7702-passkey-gnosis.md)).
 
 ## Pravilo toka: neuspjeli passkey ne smije izgubiti ključ (K-01)
@@ -208,7 +211,7 @@ stateDiagram-v2
 | Tok izrade nakon te greške | otkrio K-01 (popravljeno) |
 | Izrada passkeyja (Matija potvrdio dijalog) | ✔ passkey „Maksimir TEST (localhost)” u iCloud Keychainu, PRF izlaz dobiven, omot spremljen |
 | Otključavanje passkeyjem | ✔ isti passkey, **isti commitment** kao pri izradi (`3790297512…`) |
-| Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02: gumb treba zaključati dok riječi nisu potvrđene) |
+| Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02). **Popravljeno:** gumb je neaktivan dok ključ postoji |
 
 ## Plan implementacije
 
@@ -217,6 +220,9 @@ stateDiagram-v2
       `prfSupported`
 - [x] testovi (Node, 26 testova, 100 % naredbi/grana/funkcija/linija): riječi ↔ tajna ↔ commitment; omot/otomot s lažnim PRF izlazom; krivi
       `credentialId` (AAD) pada; neispravne riječi (kontrolni zbroj) padaju
-- [x] test stranica (`npm run demo`, `chain/client/demo/`); [x] stvarni passkey (Brave, iCloud Keychain) u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
+- [x] test stranica (`npm run demo`, `chain/client/demo/`): vođeni tok od 7 koraka sa stanjima
+      (čeka / sada / gotovo / nije uspjelo), objašnjenja za laike, rječnik
+- [x] stvarni passkey (Brave, iCloud Keychain): izrada i otključavanje, isti otisak
+- [x] `revealWords()` (ponovni prikaz uz passkey) + testovi u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
 - [ ] `domovina-api`: tablica `maksimir_keystore` + dva javna RPC-a (upiši, čitaj po hashu)
 - [ ] web (nakon Astro migracije): tokovi iz odluke 5

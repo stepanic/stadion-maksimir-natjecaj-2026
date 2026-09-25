@@ -19,6 +19,7 @@ import {
   phase1ExportToSecret,
   prfSalt,
   protectWithPasskey,
+  revealWords,
   secretToIdentity,
   secretToWords,
   unlockWithPasskey,
@@ -256,6 +257,26 @@ describe("client/keystore (ADR 0001)", () => {
       const y = await unlockWithPasskey(store, { creds: a.creds });
       expect(Buffer.from(x.secret)).to.deep.equal(Buffer.from(y.secret));
       expect(secretToIdentity(x.secret).commitment).to.equal(secretToIdentity(s).commitment);
+    });
+
+    it("revealWords: passkey ponovno daje iste 24 riječi (i traži biometriju)", async () => {
+      const a = fakeAuthenticator();
+      const store = memStore();
+      const s = newSecret();
+      const expected = secretToWords(s);
+      await protectWithPasskey(s, store, { creds: a.creds });
+      const before = a.calls.get.length;
+      const { words } = await revealWords(store, { creds: a.creds });
+      expect(words).to.deep.equal(expected);
+      expect(a.calls.get.length).to.equal(before + 1);
+      expect(a.calls.get.at(-1).publicKey.userVerification).to.equal("required");
+      expect(secretToIdentity(wordsToSecret(words)).commitment).to.equal(secretToIdentity(s).commitment);
+    });
+
+    it("revealWords bez omota za taj passkey → greška, bez riječi", async () => {
+      const a = fakeAuthenticator();
+      await createPasskey({ creds: a.creds });
+      await expect(revealWords(memStore(), { creds: a.creds })).to.be.rejectedWith(KeystoreError, "izaberi drugi");
     });
 
     it("oporavak: izgubljen passkey → 24 riječi → novi passkey → isti commitment (isti listić)", async () => {

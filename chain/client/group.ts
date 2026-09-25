@@ -12,6 +12,8 @@ const SEMAPHORE_ABI = parseAbi([
   "function getMerkleTreeSize(uint256 groupId) view returns (uint256)",
 ]);
 
+type SemaphoreLog = { blockNumber: bigint | null; logIndex: number | null; eventName: string; args: Record<string, unknown> };
+
 export async function fetchGroup(
   client: PublicClient,
   semaphore: Address,
@@ -20,10 +22,14 @@ export async function fetchGroup(
   step = 50_000n
 ): Promise<Group> {
   const latest = await client.getBlockNumber();
-  const logs = [];
+  const logs: SemaphoreLog[] = [];
   for (let from = fromBlock; from <= latest; from += step) {
     const to = from + step - 1n > latest ? latest : from + step - 1n;
-    logs.push(...(await client.getLogs({ address: semaphore, events: SEMAPHORE_ABI.filter((x) => x.type === "event"), args: { groupId }, fromBlock: from, toBlock: to })));
+    // `args` uz više događaja viem tipovi ne predviđaju, ali ga šalje kao filter teme (groupId je
+    // prvi indeksirani parametar svih četiriju događaja). Test C-02 to provjerava; obrambeni
+    // filter niže jamči ispravnost i kad RPC ili viem filter zanemare.
+    const found = await client.getLogs({ address: semaphore, events: SEMAPHORE_ABI.filter((x) => x.type === "event"), args: { groupId }, fromBlock: from, toBlock: to } as never);
+    logs.push(...(found as unknown as SemaphoreLog[]).filter((l) => (l.args as { groupId?: bigint }).groupId === groupId));
   }
   // redoslijed na lancu: blok, pa indeks događaja u bloku
   logs.sort((a, b) => Number(a.blockNumber! - b.blockNumber!) || a.logIndex! - b.logIndex!);

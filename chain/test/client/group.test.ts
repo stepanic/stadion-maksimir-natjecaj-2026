@@ -20,6 +20,25 @@ describe("client/group — fetchGroup", () => {
     expect(whole.size).to.equal(5);
   });
 
+  it("C-02: tuđe grupe na istom (kanonskom) Semaphoreu ne ulaze u našu grupu", async () => {
+    const [admin] = await hre.viem.getWalletClients();
+    const f = await deploy();
+    const pc = await hre.viem.getPublicClient();
+    const ours = await f.v1.read.groupId();
+    const other = await f.semaphore.read.groupCounter();
+    await f.semaphore.write.createGroup([admin.account.address]);
+    // isprepletene registracije: naša grupa i tuđa grupa na istom ugovoru
+    await f.register(new Identity());
+    await f.semaphore.write.addMember([other, new Identity().commitment]);
+    await f.register(new Identity());
+    await f.semaphore.write.addMembers([other, [new Identity().commitment, new Identity().commitment]]);
+    const g = await fetchGroup(pc as never, f.semaphore.address, ours, 0n);
+    expect(g.size).to.equal(2);
+    expect(g.root).to.equal(f.group.root);
+    const t = await fetchGroup(pc as never, f.semaphore.address, other, 0n);
+    expect(t.size).to.equal(3);
+  });
+
   it("svi Semaphore događaji: MemberAdded, MembersAdded, MemberUpdated, MemberRemoved", async () => {
     const [admin] = await hre.viem.getWalletClients();
     const { semaphore } = await deploy();

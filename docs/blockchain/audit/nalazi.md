@@ -17,8 +17,12 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | R-02 | niska (relayer) | parser propušta 78-znamenkaste brojeve > uint256 | test granica | provjera raspona + test |
 | C-01 | info (klijent) | `fetchGroup` vjeruje jednom RPC-u (i događaji i korijen dolaze od njega) | pregled klijenta | preporuka: web provjerava korijen na drugom RPC-u |
 | A-08 | info | malleabilnost nullifiera (+ r) i ECDSA `s` — zaštićeno vanjskim kodom (Semaphore, OZ) | krug 6 | regresijski testovi |
+| K-02 | niska (UX) | ponovni klik „Izradi ključ” mijenja tajnu i riječi | stvarni test | gumb neaktivan dok ključ postoji |
 | K-01 | srednja (klijent) | neuspjela izrada passkeyja brisala je tajnu nakon što su riječi već skrivene | test sa stvarnim passkeyjem (Brave) | pravilo toka u ADR 0001, demo popravljen |
 | T-01 | niska (testovi) | test BIP-39 kontrolnog zbroja lažno pada ~1/256 pokretanja | pregled testa | deterministički primjer |
+| K-03 | info (UX) | pravilo „riječi samo jednom” nije davalo sigurnost, a sprječavalo je kopiju | stvarni test (riječi nisu zapisane) | `revealWords()` uz svjež passkey |
+| C-02 | niska (klijent) | `fetchGroup` filtrira grupu preko `args` koje viem tipovi uz više događaja ne predviđaju | stroga provjera tipova (DOM, TS 5.9) | test s tuđom grupom + obrambeni filter |
+| C-03 | niska (klijent) | Web Crypto/WebAuthn tipovi traže `Uint8Array<ArrayBuffer>`; strogi build weba bi pao | stroga provjera tipova | kopija u svjež buffer (i brisanje kopije) |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac

@@ -13,6 +13,7 @@ timeline
   Krug 5 : ovlasti vlasnika : A-07 redizajn prijelaza na V2 : 23/23 mutanta : Chiado redeploy
   Krug 6 : malleabilnost (polje BN254, ECDSA s) : matrica sljedivosti S1–S9 : mutacije u CI-ju
   Krug 7 : keystore (ADR 0001) : 100 % pokrivenost klijenta : K-01 tok izrade, T-01 nestabilan test
+  Krug 8 : stvarni passkey test : revealWords, K-02, K-03 : stroga provjera tipova → C-02, C-03 : vođena test stranica
 ```
 
 ## Krug 0 — redizajn i prvi testovi
@@ -195,3 +196,22 @@ flowchart LR
 - **K-01 (tok izrade):** pri prvom testu sa stvarnim preglednikom izrada passkeyja nije uspjela
   (nefokusiran prozor), a demo je već obrisao tajnu. Pravilo je dodano u ADR, a demo popravljen:
   tajna ostaje do uspjeha ili izbora „samo riječi”.
+
+## Krug 8 — stvarni passkey, ponovni prikaz riječi, strogi tipovi
+
+- **Stvarni test (Matija, Brave + iCloud Keychain):** izrada passkeyja i otključavanje daju
+  isti otisak ključa. Riječi nisu zapisane, a taj stvarni slučaj doveo je do K-03.
+- **K-03:** pravilo „samo jednom” zamijenjeno je ponovnim prikazom uz svjež passkey
+  (`revealWords()`, 2 nova testa). Obrazloženje je u ADR 0001, odluka 3.
+- **K-02:** gumb za izradu ključa neaktivan je dok ključ postoji. Provjereno u pregledniku: drugi
+  klik ne mijenja riječi.
+- **Stroga provjera tipova klijenta** (`npm run typecheck:client`: DOM, `dom.iterable`,
+  `strict`, TS 5.9, u CI-ju) našla je:
+  - **C-02:** `args` uz više događaja u `getLogs`. Test s isprepletenom tuđom grupom na istom
+    Semaphoreu pokazao je da filter radi, pa je zadržan kao regresijski test, uz obrambeni filter.
+  - **C-03:** Web Crypto i WebAuthn traže `Uint8Array<ArrayBuffer>`. Kopije u svjež buffer se
+    nakon upotrebe brišu.
+- **Test stranica** (`npm run demo`) je vođeni tok za laike: 7 koraka, stanja gumba i koraka,
+  „što se događa u pozadini”, rječnik. Automatski provjereni tokovi bez passkeyja: kriva i točna
+  potvrda, K-02, oporavak (23 riječi, nepoznata riječ, točan unos daje „isti ključ ✔”).
+- **Testova:** 88; ugovor i klijent na 100 % naredbi, grana, funkcija i linija.

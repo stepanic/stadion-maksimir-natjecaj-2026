@@ -26,6 +26,8 @@ jobs:
       - run: npx hardhat test
       - name: pokrivenost ugovora 100 % (naredbe, grane, funkcije, linije)
         run: npm run coverage
+      - name: strogi tipovi klijenta (DOM, TS strict)
+        run: npm run typecheck:client
       - name: pokrivenost klijenta 100 % (kriptografija preglednika)
         run: npm run coverage:client
 

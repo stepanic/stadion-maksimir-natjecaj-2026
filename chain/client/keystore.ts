@@ -40,6 +40,9 @@ export const fromB64u = (s: string): Uint8Array => {
 
 const toB64 = (b: Uint8Array) => btoa(String.fromCharCode(...b));
 const hex = (b: Uint8Array) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+/** Kopija u svjež ArrayBuffer — Web Crypto i WebAuthn tipovi traže `Uint8Array<ArrayBuffer>`. */
+const own = (b: Uint8Array): Uint8Array<ArrayBuffer> => new Uint8Array(b);
+
 const bytes = (b: ArrayBuffer | ArrayBufferView): Uint8Array =>
   b instanceof ArrayBuffer ? new Uint8Array(b) : new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
 
@@ -123,7 +126,8 @@ export const prfSalt = (): Promise<Uint8Array> => sha256(PRF_SALT_LABEL);
 /** PRF izlaz → AES-256-GCM ključ (HKDF-SHA-256), ne može se izvesti iz Web Cryptoa. */
 export async function deriveWrapKey(prfOutput: Uint8Array): Promise<CryptoKey> {
   if (prfOutput.length < 32) throw new KeystoreError("PRF izlaz prekratak");
-  const base = await subtle().importKey("raw", prfOutput, "HKDF", false, ["deriveKey"]);
+  const raw = own(prfOutput);
+  const base = await subtle().importKey("raw", raw, "HKDF", false, ["deriveKey"]).finally(() => zeroize(raw));
   return subtle().deriveKey(
     { name: "HKDF", hash: "SHA-256", salt: enc.encode(HKDF_SALT_LABEL), info: enc.encode(HKDF_INFO) },
     base,
@@ -139,7 +143,8 @@ export async function wrapSecret(secret: Uint8Array, credentialId: string, prfOu
   assertSecret(secret);
   const key = await deriveWrapKey(prfOutput);
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await subtle().encrypt({ name: "AES-GCM", iv, additionalData: aad(credentialId) }, key, secret));
+  const pt = own(secret);
+  const ct = new Uint8Array(await subtle().encrypt({ name: "AES-GCM", iv, additionalData: aad(credentialId) }, key, pt).finally(() => zeroize(pt)));
   return { v: KEYSTORE_VERSION, credentialId, iv: b64u(iv), ct: b64u(ct) };
 }
 
@@ -149,7 +154,7 @@ export async function unwrapSecret(blob: WrappedSecret, credentialId: string, pr
   const key = await deriveWrapKey(prfOutput);
   try {
     const pt = new Uint8Array(
-      await subtle().decrypt({ name: "AES-GCM", iv: fromB64u(blob.iv), additionalData: aad(credentialId) }, key, fromB64u(blob.ct))
+      await subtle().decrypt({ name: "AES-GCM", iv: own(fromB64u(blob.iv)), additionalData: aad(credentialId) }, key, own(fromB64u(blob.ct)))
     );
     assertSecret(pt);
     return pt;
@@ -273,7 +278,7 @@ export async function evaluatePrf(opts: PasskeyOpts & { credentialId?: string } 
       rpId: opts.rpId ?? RP_ID,
       challenge: globalThis.crypto.getRandomValues(new Uint8Array(32)),
       userVerification: "required",
-      allowCredentials: opts.credentialId ? [{ type: "public-key", id: fromB64u(opts.credentialId) }] : [],
+      allowCredentials: opts.credentialId ? [{ type: "public-key", id: own(fromB64u(opts.credentialId)) }] : [],
       extensions: { prf: { eval: { first: await prfSalt() } } } as AuthenticationExtensionsClientInputs,
     },
   })) as PublicKeyCredential | null;
@@ -311,5 +316,20 @@ export async function unlockWithPasskey(store: BlobStore, opts: PasskeyOpts & { 
     return { secret: await unwrapSecret(blob, credentialId, prf), credentialId };
   } finally {
     zeroize(prf);
+  }
+}
+
+/**
+ * Ponovni prikaz 24 riječi (ADR 0001, odluka 3, izmjena 26. 9. 2026.). Traži svjež passkey
+ * (Face ID / Touch ID). Ne daje nikome ništa više nego sam passkey — tko ga ima, ionako može
+ * glasati — a vlasniku omogućuje da napravi papirnatu kopiju kad je propustio pri izradi.
+ * Pozivatelj riječi prikazuje kratko i briše ih iz stranice čim korisnik zatvori prikaz.
+ */
+export async function revealWords(store: BlobStore, opts: PasskeyOpts & { credentialId?: string } = {}): Promise<{ words: string[]; credentialId: string }> {
+  const { secret, credentialId } = await unlockWithPasskey(store, opts);
+  try {
+    return { words: secretToWords(secret), credentialId };
+  } finally {
+    zeroize(secret);
   }
 }

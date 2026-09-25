@@ -9,9 +9,10 @@
     "check-frozen": "hardhat compile --quiet && node scripts/check-frozen.mjs",
     "coverage": "SOLIDITY_COVERAGE=true hardhat coverage && node scripts/check-coverage.mjs",
     "mutation": "node scripts/mutation-test.mjs",
-    "coverage:client": "c8 --all --include \"client/**\" --reporter text --reporter json-summary --report-dir coverage-client hardhat test && node scripts/check-client-coverage.mjs",
+    "coverage:client": "c8 --all --include \"client/**\" --exclude \"client/demo/**\" --reporter text --reporter json-summary --report-dir coverage-client hardhat test && node scripts/check-client-coverage.mjs",
     "demo:build": "mkdir -p client/demo/dist && cp client/demo/index.html client/demo/dist/ && esbuild client/demo/demo.ts --bundle --format=esm --target=es2022 --outfile=client/demo/dist/demo.js --log-level=warning",
-    "demo": "npm run demo:build && python3 -m http.server 8788 --bind 127.0.0.1 --directory client/demo/dist"
+    "demo": "npm run demo:build && python3 -m http.server 8788 --bind 127.0.0.1 --directory client/demo/dist",
+    "typecheck:client": "tsc -p client/tsconfig.json"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
