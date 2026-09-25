@@ -115,4 +115,5 @@ na kraju, jer je mali, a svaki sat postaje trajni dokaz stanja (prijedlog korisn
 
 - [glasanje/README.md](../glasanje/README.md): kako radi i kako se provjerava
 - `domovina-api/supabase/migrations/20260925120000_maksimir_voting.sql`: ugovor RPC-eva i formula hasha
+- [2026-09-26-glasanje-ux.md](2026-09-26-glasanje-ux.md): redizajn listića, sigurno povlačenje glasa, `glasanje-ui.mjs`
 - [2026-09-25-rezultati-i-svi-radovi.md](2026-09-25-rezultati-i-svi-radovi.md): prethodni korak (svih 88 radova)

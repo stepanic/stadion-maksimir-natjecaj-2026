@@ -113,6 +113,17 @@ Skripta ne vidi što vidi prijavljeni korisnik. Nakon deploya zato slijedi i pro
 Ključ `maksimir-zk-share` sadrži kodirane podatke objave. Ne otvarati ga radi traženja id-ja objave: `/g/<id>` se
 provjerava izmišljenim id-jem, a stvarnu karticu pokriva provjera 1.
 
+## Listić glasanja: `glasanje-ui.mjs`
+
+`npm run check` samo čita stranice, pa ne klikne ništa na listiću. Za promjene u `glasanjeView.ts` pokreni i
+`node scripts/glasanje-ui.mjs <url>`, lokalno ili na produkciji. Svi pozivi prema `api.domovina.ai` su presretnuti,
+pa ništa ne ide u bazu. Detalji: [`2026-09-26-glasanje-ux.md`](2026-09-26-glasanje-ux.md).
+
+**Trajanje:** produkcijski `npm run check` traje oko 3 minute. Pokreni ga jednom i uzmi izlazni kod iz istog runa
+(`; echo $?`), ne ponovnim pokretanjem. `--baseline dd23a1dd…` je od 26. 9. zastario: dokumenti su se od tada
+mijenjali, pa javlja razlike `BASELINE` i time izlazni kod 1. Za rutinski deploy usporedi s produkcijom prije deploya
+ili izostavi `--baseline`.
+
 ## Zamke otkrivene pri ovoj selidbi
 
 - **`wrangler pages deploy` bez `--branch` na gitovoj grani `main` ide na produkciju.** Wrangler uzima granu iz gita.
