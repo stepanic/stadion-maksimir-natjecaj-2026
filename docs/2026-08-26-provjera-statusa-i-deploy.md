@@ -138,8 +138,8 @@ Ne trošiti vrijeme na to upozorenje.
 
 ## 4. Otvoreno
 
-- Rezultati natječaja — neobjavljeni na 25.8.2026.; realan prozor **rujan 2026.**, izložba
-  vezana uz **≥ 15.9.2026.**
+- ~~Rezultati natječaja — neobjavljeni na 25.8.2026.~~ **Objavljeni 24.9.2026.**, vidi
+  [`2026-09-25-rezultati-i-svi-radovi.md`](2026-09-25-rezultati-i-svi-radovi.md).
 - **Odgovor Grada Zagreba na HKIG-ov dopis** od 17.7.2026. — nema ga javno; presedan
   (Jarunski most) govori da odgovor može doći.
 - DNS CNAME za `stadion-maksimir.domovina.ai` — ručni korak u Cloudflare dashboardu.
@@ -148,6 +148,8 @@ Ne trošiti vrijeme na to upozorenje.
 ---
 
 ## Vezani dokumenti
+
+- [`2026-09-25-rezultati-i-svi-radovi.md`](2026-09-25-rezultati-i-svi-radovi.md) — **nastavak:** rezultati objavljeni, EOJN dokumenti bez prijave, pipeline za `#/radovi`
 
 - [`research/06-status-natjecaja.md`](../research/06-status-natjecaja.md) — stanje natječaja, checklist praćenja
 - [`research/07-kronologija-objava.md`](../research/07-kronologija-objava.md) — kronologija objava 27.5.→25.8.2026.

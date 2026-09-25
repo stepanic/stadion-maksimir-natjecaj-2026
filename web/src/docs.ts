@@ -17,6 +17,7 @@ import research07 from "../../research/07-kronologija-objava.md?raw";
 import research08 from "../../research/08-rezultati-natjecaja.md?raw";
 import research09 from "../../research/09-svi-radovi.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
+import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -216,6 +217,14 @@ export const docs: DocSection[] = [
         subtitle: "Kanali provjere, docs.ts zamka, Cloudflare Pages (26.8.2026.)",
         repoPath: "docs/2026-08-26-provjera-statusa-i-deploy.md",
         raw: ops20260826,
+        section: "docs",
+      },
+      {
+        slug: "ops-rezultati-radovi",
+        title: "Rezultati i svih 88 radova",
+        subtitle: "EOJN bez prijave, build_radovi.py, autorska prava, zamke (25.9.2026.)",
+        repoPath: "docs/2026-09-25-rezultati-i-svi-radovi.md",
+        raw: ops20260925,
         section: "docs",
       },
     ],
