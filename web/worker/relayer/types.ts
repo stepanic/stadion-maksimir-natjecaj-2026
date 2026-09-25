@@ -15,6 +15,8 @@ export type Env = {
   CONTRACT_ADDRESS?: string;
   /** Gornja granica maxFeePerGas u gwei (zadano 5; tipično je Gnosis na ~0,00000001 gwei). */
   MAX_FEE_GWEI?: string;
+  /** Najmanja napojnica validatoru u wei (zadano 0,01 gwei; v. relay.ts withTip). */
+  PRIORITY_FEE_WEI?: string;
   IP_DAILY_LIMIT?: string;
   GLOBAL_DAILY_LIMIT?: string;
 };

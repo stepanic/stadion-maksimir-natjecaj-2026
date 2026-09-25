@@ -75,6 +75,19 @@ async function bump(kv: KV, key: string, limit: number): Promise<boolean> {
 
 export type RelayResult = { status: number; body: Record<string, unknown> };
 
+/**
+ * Napojnica validatoru. estimateFeesPerGas na Gnosisu/Chiadu daje 0, a dio validatora takve
+ * transakcije ne uzima: izmjereno 26. 9. 2026. na Chiadu, napojnica 0 → 47 s do > 120 s,
+ * 0,01 gwei → sljedeći blok (5 s). Trošak uz ~0,5 M gasa: ~0,000005 xDAI po listiću.
+ */
+export const DEFAULT_TIP_WEI = "10000000";
+
+export function withTip(est: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }, floor: bigint) {
+  const tip = (est.maxPriorityFeePerGas ?? 0n) > floor ? est.maxPriorityFeePerGas! : floor;
+  const base = (est.maxFeePerGas ?? 0n) - (est.maxPriorityFeePerGas ?? 0n);
+  return { maxPriorityFeePerGas: tip, maxFeePerGas: base + tip };
+}
+
 export async function relay(env: Env, call: Call, ip: string): Promise<RelayResult> {
   const address = contractAddress(env);
   const pc = publicClient(env);
@@ -95,8 +108,8 @@ export async function relay(env: Env, call: Call, ip: string): Promise<RelayResu
 
   // 2. kočnice troška: gornja granica cijene gasa (zagušenje mreže ne smije isprazniti sponzora)
   const maxFee = BigInt(Math.round(Number(env.MAX_FEE_GWEI ?? 5) * 1e9));
-  const fees = await pc.estimateFeesPerGas();
-  if ((fees.maxFeePerGas ?? 0n) > maxFee) {
+  const fees = withTip(await pc.estimateFeesPerGas(), BigInt(env.PRIORITY_FEE_WEI ?? DEFAULT_TIP_WEI));
+  if (fees.maxFeePerGas > maxFee) {
     return { status: 503, body: { ok: false, error: "gas je trenutno preskup — pokušaj kasnije ili pošalji paket sam" } };
   }
 

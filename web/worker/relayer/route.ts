@@ -24,6 +24,7 @@ export type RelayerWorkerEnv = {
   RELAYER_CHAINS?: string;
   RELAYER_ALLOWED_ORIGINS?: string;
   MAX_FEE_GWEI?: string;
+  PRIORITY_FEE_WEI?: string;
   IP_DAILY_LIMIT?: string;
   GLOBAL_DAILY_LIMIT?: string;
   [secret: `SPONSOR_PRIVATE_KEY_${string}`]: string | undefined;
@@ -47,6 +48,7 @@ export function relayerEnv(w: RelayerWorkerEnv, chainId: string): Env | null {
     GNOSIS_RPC_URL: c.rpc,
     CONTRACT_ADDRESS: c.contract,
     MAX_FEE_GWEI: w.MAX_FEE_GWEI,
+    PRIORITY_FEE_WEI: w.PRIORITY_FEE_WEI,
     IP_DAILY_LIMIT: w.IP_DAILY_LIMIT,
     GLOBAL_DAILY_LIMIT: w.GLOBAL_DAILY_LIMIT,
   };

@@ -3,7 +3,7 @@
 //   - ZK objava: anonimni Semaphore dokaz, koji svaki posjetitelj provjerava u svom pregledniku
 
 import { byCode, esc, tidy } from "./radoviView";
-import { fetchShare, shareUrl, VERIFY_SCRIPT, type PublicCard, type Share, type ZkProof } from "./glasanje";
+import { chainName, fetchChainConfig, fetchShare, shareUrl, VERIFY_SCRIPT, type ChainCfg, type PublicCard, type Share, type ZkProof } from "./glasanje";
 import { link } from "./routes";
 
 export const DOC_SLUG = "glasanje-kako-radi";
@@ -37,6 +37,9 @@ export function publicShareText(c: PublicCard): string {
     .join(", ");
   return `Moj glas za novi Maksimir: ${top}${c.items.length > 3 ? " …" : ""}. Potvrđeno eOsobnom, provjerljivo u lancu hasheva. Raspodijeli i ti svojih 100 bodova:`;
 }
+
+export const CHAIN_SHARE_TEXT =
+  "Glasao/la sam za novi Maksimir, anonimno i na blockchainu: dokaz da sam stvarna osoba potvrđena eOsobnom je na lancu, a tko sam i kako sam glasao/la ne zna nitko. Provjeri i glasaj i ti:";
 
 export const ZK_SHARE_TEXT =
   "Moj glas za novi Maksimir je anoniman: nitko ne zna tko sam ni za koga je glas. Ovaj ZK dokaz potvrđuje samo da ga je predala stvarna osoba provjerena eOsobnom. Provjeri dokaz i glasaj i ti:";
@@ -100,16 +103,22 @@ export function publicCardHtml(c: PublicCard, opts: { compact?: boolean; href?: 
     })
     .join("");
   const name = esc(displayName(c));
+  const chainNote =
+    c.chain && !c.items.length
+      ? `<p class="muted small">Listić je na lancu${opts.href ? ` · <a href="${opts.href}">otvori i provjeri →</a>` : "."}</p>`
+      : "";
   return `<article class="sh-card${opts.compact ? " sh-card--compact" : ""}">
     <header>
       <div class="sh-who">${opts.href ? `<a href="${opts.href}">${name}</a>` : name}</div>
       <div class="sh-badge">✓ identitet potvrđen eOsobnom</div>
     </header>
-    <ol class="sh-items">${items}</ol>
+    ${items ? `<ol class="sh-items">${items}</ol>` : chainNote}
     ${
       opts.compact
         ? ""
-        : `<footer class="muted small">
+        : c.chain
+          ? `<footer class="muted small">Listić je na lancu · nullifier <span class="mono">${short(c.chain.nullifier)}</span></footer>`
+          : `<footer class="muted small">
             Predano ${esc(fmtDate(c.updated_at))}${c.revisions > 1 ? ` · mijenjano ${c.revisions - 1}×` : ""}
             ${c.receipt ? ` · zapis <strong>#${c.receipt.seq}</strong> u lancu · <span class="mono">${short(c.receipt.hash)}</span>` : ""}
           </footer>`
@@ -136,7 +145,10 @@ export async function renderShare(el: HTMLElement, id: string) {
     el.innerHTML = `<div class="notfound"><h1>Objava ne postoji</h1><p><a href="${link("glasanje")}">← Na glasanje</a></p></div>`;
     return;
   }
-  if (share.kind === "public") renderPublic(el, share);
+  if (share.kind === "public") {
+    if (share.card?.chain) await renderPublicChain(el, share, share.card.chain);
+    else renderPublic(el, share);
+  } else if (share.kind === "chain") await renderChainShare(el, share);
   else await renderZk(el, share);
 }
 
@@ -175,6 +187,123 @@ function renderPublic(el: HTMLElement, s: Extract<Share, { kind: "public" }>) {
     <section class="panel"><h2>Podijeli</h2>${shareButtonsHtml(shareUrl(s.id), publicShareText(c))}</section>
     ${cta}`;
   bindShareButtons(el);
+}
+
+// ── objave s lanca ──────────────────────────────────────────────────────────
+
+async function chainCfg(chainId: number, contract: string): Promise<ChainCfg | null> {
+  const cfg = await fetchChainConfig().catch(() => null);
+  return cfg?.chains.find((c) => c.chainId === chainId && c.contract.toLowerCase() === contract.toLowerCase()) ?? null;
+}
+
+const checkRow = (id: string, text: string) => `<li data-check="${id}"><span class="sh-st">…</span> ${text}</li>`;
+
+function setCheck(el: HTMLElement, id: string, ok: boolean, extra = "") {
+  const li = el.querySelector<HTMLElement>(`[data-check="${id}"]`);
+  if (!li) return;
+  li.classList.add(ok ? "ok" : "bad");
+  li.querySelector(".sh-st")!.textContent = ok ? "✓" : "✗";
+  if (extra) li.insertAdjacentHTML("beforeend", ` <span class="muted small">${esc(extra)}</span>`);
+}
+
+const netName = (c: ChainCfg | null) => chainName(c);
+
+/** Javni glas čiji je listić na lancu: ime iz baze, bodovi i dokaz vlasništva provjereni s lanca. */
+async function renderPublicChain(el: HTMLElement, s: Extract<Share, { kind: "public" }>, ch: NonNullable<PublicCard["chain"]>) {
+  const c = s.card!;
+  const cfg = await chainCfg(ch.chainId, ch.contract);
+  const draw = (items: PublicCard["items"]) => {
+    el.innerHTML = `
+    <section class="hero results-hero">
+      <div class="hero-eyebrow">Javni glas na lancu · ${esc(netName(cfg))} · Stadion Maksimir</div>
+      <h1>${esc(displayName(c))}: moj glas za novi Maksimir</h1>
+      <p class="hero-lede">Ova osoba je potvrdila identitet eOsobnom i sama odlučila da joj glas bude javan. Listić je na blockchainu,
+        a tvoj preglednik upravo provjerava da je baš njezin.</p>
+    </section>
+    ${publicCardHtml({ ...c, items })}
+    <section class="panel sh-verify">
+      <h2>Provjera u tvom pregledniku</h2>
+      <ol class="sh-checks">
+        ${checkRow("snark", "Dokaz vlasništva je kriptografski valjan (Semaphore v4, Groth16).")}
+        ${checkRow("message", "Dokaz je izrađen baš za ovu objavu (lanac, ugovor i pseudonim s ove kartice).")}
+        ${checkRow("root", "Autor dokaza je član grupe glasača na lancu.")}
+        ${checkRow("ballot", "Bodovi iznad pročitani su s lanca za taj nullifier.")}
+      </ol>
+      <p class="sh-verdict muted">Provjeravam…</p>
+      <p class="small">Nullifier listića: <span class="mono">${short(ch.nullifier)}</span>${
+        cfg?.explorerUrl ? ` · <a href="${cfg.explorerUrl.replace(/\/$/, "")}/address/${cfg.contract}" target="_blank" rel="noopener">ugovor ↗</a>` : ""
+      }. Ime nikad ne ide na lanac; ovdje ga prikazuje domovina.ai uz glasačev pristanak.</p>
+    </section>
+    <section class="panel"><h2>Podijeli</h2>${shareButtonsHtml(shareUrl(s.id), publicShareText({ ...c, items }))}</section>
+    ${cta}`;
+    bindShareButtons(el);
+  };
+  draw([]);
+  const verdict = () => el.querySelector<HTMLElement>(".sh-verdict")!;
+  if (!cfg) {
+    verdict().className = "sh-verdict gl-msg gl-msg--err";
+    verdict().textContent = "Mreža ove objave nije poznata.";
+    return;
+  }
+  try {
+    const cv = await import("./chainVote");
+    const r = await cv.verifyOwnership(cfg, { pseudonym: c.pseudonym, nullifier: ch.nullifier, proof: ch.proof as unknown as import("./chainVote").ProofJson });
+    const items = Object.entries(r.ballot?.items ?? {})
+      .map(([code, points]) => ({ code, points, lead: byCode[code]?.lead ?? code }))
+      .sort((a, b) => b.points - a.points);
+    if (current !== s.id) return;
+    draw(items);
+    setCheck(el, "snark", r.snark);
+    setCheck(el, "message", r.message && r.scope);
+    setCheck(el, "root", r.root);
+    setCheck(el, "ballot", !!r.ballot && r.ballot.revision > 0, r.ballot?.revision ? `revizija ${r.ballot.revision}` : "listić je povučen");
+    const ok = r.ok && !!r.ballot?.revision;
+    verdict().className = `sh-verdict gl-msg gl-msg--${ok ? "ok" : "err"}`;
+    verdict().textContent = ok ? "Provjereno: ovaj listić na lancu pripada osobi s ove kartice." : "Objava NIJE prošla provjeru.";
+  } catch (e) {
+    verdict().className = "sh-verdict gl-msg gl-msg--err";
+    verdict().textContent = `Provjera nije uspjela: ${(e as Error).message}`;
+  }
+}
+
+/** Anonimna objava na lancu: događaj AnonymousShare u transakciji (dokaz je provjerio ugovor). */
+async function renderChainShare(el: HTMLElement, s: Extract<Share, { kind: "chain" }>) {
+  const cfg = await chainCfg(s.chainId, s.contract);
+  const txLink = cfg?.explorerUrl ? `${cfg.explorerUrl.replace(/\/$/, "")}/tx/${s.txHash}` : null;
+  el.innerHTML = `
+    <section class="hero results-hero">
+      <div class="hero-eyebrow">Anonimni glas na lancu · ${esc(netName(cfg))} · Stadion Maksimir</div>
+      <h1>Anonimni glas za novi Maksimir</h1>
+      <p class="hero-lede">Glas je predala stvarna osoba potvrđena eOsobnom. Dokaz je na blockchainu, pa ga nitko ne može obrisati,
+        a tko je ta osoba i kako je glasala ne zna nitko.</p>
+    </section>
+    <section class="panel sh-verify">
+      <h2>Provjera u tvom pregledniku</h2>
+      <ol class="sh-checks">
+        ${checkRow("tx", "Transakcija postoji i sadrži objavu „glasao sam” ugovora za glasanje.")}
+        ${checkRow("proof", "Ugovor je pri upisu provjerio ZK dokaz da je autor član grupe glasača.")}
+      </ol>
+      <p class="sh-verdict muted">Provjeravam…</p>
+      ${txLink ? `<p class="small"><a href="${txLink}" target="_blank" rel="noopener">Transakcija na lancu ↗</a></p>` : ""}
+    </section>
+    <section class="panel"><h2>Podijeli</h2>${shareButtonsHtml(shareUrl(s.id), CHAIN_SHARE_TEXT)}</section>
+    ${cta}`;
+  bindShareButtons(el);
+  const verdict = el.querySelector<HTMLElement>(".sh-verdict")!;
+  try {
+    if (!cfg) throw new Error("mreža ove objave nije poznata");
+    const cv = await import("./chainVote");
+    const r = await cv.verifyChainShare(cfg, s.txHash as `0x${string}`);
+    setCheck(el, "tx", !!r, r ? `blok ${r.block}` : "");
+    setCheck(el, "proof", !!r, r ? `nullifier ${short(r.nullifier.toString())}` : "");
+    verdict.className = `sh-verdict gl-msg gl-msg--${r ? "ok" : "err"}`;
+    verdict.textContent = r
+      ? "Provjereno na lancu: objavu je predao član grupe glasača potvrđenih eOsobnom."
+      : "Na lancu nema ove objave.";
+  } catch (e) {
+    verdict.className = "sh-verdict gl-msg gl-msg--err";
+    verdict.textContent = `Provjera nije uspjela: ${(e as Error).message}`;
+  }
 }
 
 async function renderZk(el: HTMLElement, s: Extract<Share, { kind: "zk" }>) {

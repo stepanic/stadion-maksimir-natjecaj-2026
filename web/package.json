@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
+    "@scure/bip39": "^1.6.0",
     "@semaphore-protocol/core": "^4.14.3",
     "@supabase/supabase-js": "^2.117.2",
     "highlight.js": "^11.10.0",
