@@ -133,7 +133,7 @@ provjeru. To je dovoljno, jer mutacija ne može proći neprimijećeno.
   bezopasna. Nullifier, poruka i scope su isti, pa je učinak isti kao ponovno slanje (`BadRevision`).
 - **Malleabilnost ECDSA potpisa registrara** (`s → n − s`): OpenZeppelin `ECDSA.recover` odbija
   gornju polovicu `s` (`ECDSAInvalidSignatureS`). Test to potvrđuje.
-- **Mutacije u CI-ju:** na svakom pull requestu koji dira `chain/` (oko 4 min).
+- **Mutacije u CI-ju:** zaseban workflow `chain-mutation`, pokreće se **ručno** (≈ 12 min na runneru; izmjena 26. 9. na Matijin zahtjev, da ne usporava svaki push u PR).
 
 ### Matrica sljedivosti: cilj → zaštita → testovi → mutanti
 

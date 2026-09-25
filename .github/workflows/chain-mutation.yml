@@ -1,0 +1,29 @@
+name: chain-mutation
+
+# Mutacijsko testiranje ugovora (≈ 12 min na GitHubovu runneru): svaki namjerno ubačen propust
+# mora srušiti testove. Pokreće se RUČNO (Actions → chain-mutation → Run workflow), npr. prije
+# deploya nove verzije ugovora ili nakon izmjene u chain/contracts ili chain/test — ne na svaki push.
+# Napomena: workflow_dispatch je vidljiv u Actions tek kad je ova datoteka na default grani (main).
+on:
+  workflow_dispatch:
+    inputs:
+      mutants:
+        description: "Samo neki mutanti, npr. 'M05 M17' (prazno = svi)"
+        required: false
+        default: ""
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: chain/package-lock.json
+      - run: npm ci
+      - run: node scripts/mutation-test.mjs ${{ inputs.mutants }}

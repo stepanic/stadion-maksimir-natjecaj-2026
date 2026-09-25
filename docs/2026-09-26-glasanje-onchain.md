@@ -61,7 +61,7 @@ sesija istodobno selila `web/` na Astro i Workers. Grana ne dira `web/`.
 
 ## Zašto mutacijski test traje dugo (CI, 26. 9.)
 
-Na GitHubovu runneru `npm run mutation` traje **12,5 min**, lokalno oko 4 min.
+Na GitHubovu runneru `npm run mutation` traje **12,5 min**, lokalno oko 4 min. Zato se na CI-ju pokreće **samo ručno** (workflow `chain-mutation`, Actions → Run workflow; opcionalno samo neki mutanti), a ne na svaki push u PR.
 
 | Što | Trajanje |
 |---|---|
