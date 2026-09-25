@@ -206,6 +206,9 @@ stateDiagram-v2
 | Brave (Chromium 153) na macOS-u, `getClientCapabilities()` | `extension:prf: true`, `relatedOrigins: true`, `hybridTransport: true` |
 | WebAuthn iz automatiziranog, nefokusiranog prozora | odbijeno: „page does not have focus”. Preglednik traži da je stranica u prvom planu (ispravno) |
 | Tok izrade nakon te greške | otkrio K-01 (popravljeno) |
+| Izrada passkeyja (Matija potvrdio dijalog) | ✔ passkey „Maksimir TEST (localhost)” u iCloud Keychainu, PRF izlaz dobiven, omot spremljen |
+| Otključavanje passkeyjem | ✔ isti passkey, **isti commitment** kao pri izradi (`3790297512…`) |
+| Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02: gumb treba zaključati dok riječi nisu potvrđene) |
 
 ## Plan implementacije
 
@@ -214,6 +217,6 @@ stateDiagram-v2
       `prfSupported`
 - [x] testovi (Node, 26 testova, 100 % naredbi/grana/funkcija/linija): riječi ↔ tajna ↔ commitment; omot/otomot s lažnim PRF izlazom; krivi
       `credentialId` (AAD) pada; neispravne riječi (kontrolni zbroj) padaju
-- [x] test stranica (`npm run demo`, `chain/client/demo/`); [ ] stvarni passkey u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
+- [x] test stranica (`npm run demo`, `chain/client/demo/`); [x] stvarni passkey (Brave, iCloud Keychain) u Braveu (Mac Mini, iCloud Keychain) i na iPhoneu
 - [ ] `domovina-api`: tablica `maksimir_keystore` + dva javna RPC-a (upiši, čitaj po hashu)
 - [ ] web (nakon Astro migracije): tokovi iz odluke 5
