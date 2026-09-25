@@ -4,7 +4,7 @@ Kako rad funkcionira i kako se provjerava opisano je u [glasanje/README.md](../g
 Ovaj dokument bilježi ono što se iz koda ne vidi: zašto je napravljeno baš ovako,
 što je odbačeno i što je koštalo vremena.
 
-Status: živo na <https://maksimir.domovina.ai/#/glasanje> od 25. 9. 2026. Prvi pravi glas
+Status: živo na <https://maksimir.domovina.ai/glasanje> od 25. 9. 2026. Prvi pravi glas
 (zapis #1, 50/30/20 za tri nagrađena rada) predan je E2E prijavom eOsobnom. Hash potvrde
 poklapa se s neovisnim izračunom u Pythonu. Istog dana na produkciji su prošli i prvi anonimni
 ZK dokaz (sve četiri provjere u pregledniku) i javna objava, koja je nakon testa isključena.

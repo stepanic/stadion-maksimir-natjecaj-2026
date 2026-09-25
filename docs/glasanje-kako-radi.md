@@ -1,7 +1,7 @@
 # Kako tehnički radi glasanje javnosti
 
 Ovaj dokument korak po korak opisuje što se događa od trenutka kad netko otvori stranicu
-[maksimir.domovina.ai/#/glasanje](https://maksimir.domovina.ai/#/glasanje)
+[maksimir.domovina.ai/glasanje](https://maksimir.domovina.ai/glasanje)
 do trenutka kad bilo tko, bez povjerenja u nas, može provjeriti da nitko nije promijenio
 nijedan glas.
 
@@ -49,7 +49,7 @@ flowchart LR
   end
 
   subgraph P["Cloudflare Pages"]
-    PF["Pages Function /g/id<br/>OG kartica za dijeljenje"]
+    PF["Worker /g/id<br/>OG kartica za dijeljenje"]
   end
 
   subgraph S["PSE (javna ceremonija)"]
@@ -99,7 +99,7 @@ flowchart LR
 | Edge funkcija `certilia` | Provjerava potpis `id_tokena`, pretvara identitet u sesiju u bazi. |
 | Postgres | Čuva glasače, listiće i lanac hasheva. Sva pravila glasanja provode se u bazi, ne u pregledniku. |
 | GitHub Action | Svaki sat uzima snapshot stanja (lanac listića i ZK grupa) i žigoše ga u Bitcoinu preko OpenTimestampsa. |
-| Pages Function `/g/<id>` | Za poveznice za dijeljenje daje društvenim mrežama naslov, opis i sliku, a posjetitelja preusmjerava na objavu. |
+| Worker, put `/g/<id>` | Za poveznice za dijeljenje daje društvenim mrežama naslov, opis i sliku, a posjetitelja preusmjerava na objavu. |
 | PSE artefakti | Parametri Semaphore kruga iz javne ceremonije (*trusted setup*). Preglednik ih preuzima samo pri izradi dokaza (oko 2 MB). |
 
 ### Kriptografski algoritmi na jednom mjestu
@@ -420,7 +420,7 @@ sequenceDiagram
   actor U as Glasač
   participant W as Preglednik
   participant DB as Postgres
-  participant PF as Pages Function /g/id
+  participant PF as Worker /g/id
   actor V as Posjetitelj
 
   U->>W: izabere oblik imena i potvrdi privolu
@@ -430,7 +430,7 @@ sequenceDiagram
   U->>V: dijeli https://maksimir.domovina.ai/g/share_id
   V->>PF: GET /g/share_id (ili crawler društvene mreže)
   PF->>DB: maksimir_share(id)
-  PF-->>V: HTML s OG karticom + preusmjeravanje na #/glasanje/g/id
+  PF-->>V: HTML s OG karticom + preusmjeravanje na /glasanje/g/id
   V->>DB: maksimir_share(id)
   DB-->>V: ime, bodovi, zapis iz lanca (ili null ako više nije javno)
 ```
@@ -595,7 +595,7 @@ Napomene za kasnije faze:
 | Brisanje člana grupe uvijek zapisuje `remove` | [`domovina-api`: `supabase/migrations/20260925170000_maksimir_zk_member_removed.sql`](https://github.com/domovinatv/domovina-api/blob/main/supabase/migrations/20260925170000_maksimir_zk_member_removed.sql) |
 | ZK u pregledniku (Semaphore: ključ, dokaz, provjera) | [`web/src/zk.ts`](../web/src/zk.ts) |
 | Stranica objave i gumbi za dijeljenje | [`web/src/shareView.ts`](../web/src/shareView.ts) |
-| OG kartica za `/g/<id>` | [`web/functions/g/[id].ts`](../web/functions/g/%5Bid%5D.ts) |
+| OG kartica za `/g/<id>` | [`web/worker/share.ts`](../web/worker/share.ts) |
 | E2E test ZK toka | [`web/scripts/zk-e2e.mjs`](../web/scripts/zk-e2e.mjs) |
 | Edge funkcija `certilia` | [`domovina-api`: `supabase/functions/certilia/index.ts`](https://github.com/domovinatv/domovina-api/blob/main/supabase/functions/certilia/index.ts) |
 

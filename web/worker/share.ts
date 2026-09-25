@@ -1,4 +1,4 @@
-// /g/<id> — poveznica za dijeljenje glasa (Cloudflare Pages Function).
+// /g/<id> — poveznica za dijeljenje glasa (poziva je worker/index.ts).
 //
 // Objava je SPA ruta (/glasanje/g/<id>) čiji sadržaj crawleri ne vide, pa ovdje
 // poslužujemo mali HTML s OG/Twitter karticom (naslov i opis iz objave), a
@@ -30,9 +30,7 @@ async function fetchShare(id: string): Promise<Share> {
   return res.ok ? ((await res.json()) as Share) : null;
 }
 
-export const onRequestGet = async ({ params, request }: { params: Record<string, string>; request: Request }) => {
-  const id = String(params.id ?? "");
-  const origin = new URL(request.url).origin;
+export async function shareCard(id: string, origin: string): Promise<Response> {
   if (!/^[a-z0-9]{12}$/.test(id)) return Response.redirect(`${origin}/glasanje`, 302);
 
   let title = "Glasanje javnosti za novi Stadion Maksimir";
@@ -83,4 +81,4 @@ export const onRequestGet = async ({ params, request }: { params: Record<string,
   return new Response(html, {
     headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" },
   });
-};
+}

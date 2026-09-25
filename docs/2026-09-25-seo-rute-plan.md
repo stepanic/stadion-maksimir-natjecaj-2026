@@ -2,6 +2,10 @@
 
 *2026-09-25. Plan refaktora `web/`. Glasanje je živo, ali je korisnik jedini glasač, pa refaktor ne čeka zatvaranje.*
 
+> **Status (25. 9. 2026. navečer): sve faze 1–5 su u produkciji.** Faza 4 i 5 napravljene su zajedno: site poslužuje
+> Worker `maksimir` preko ruta zone (DNS nepromijenjen), `stadion-maksimir.domovina.ai` i `*.pages.dev` daju 301 na
+> `maksimir.domovina.ai`. Kako se provjerava i vraća: [`2026-09-25-regresijske-provjere.md`](2026-09-25-regresijske-provjere.md).
+
 ## Cilj
 
 Svaka stranica dobiva pravi URL koji crawler vidi kao zasebnu stranicu, s vlastitim naslovom, opisom,

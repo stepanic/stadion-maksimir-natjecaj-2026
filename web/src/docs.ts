@@ -19,6 +19,7 @@ import research09 from "../../research/09-svi-radovi.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
 import opsSeoPlan from "../../docs/2026-09-25-seo-rute-plan.md?raw";
+import opsRegresija from "../../docs/2026-09-25-regresijske-provjere.md?raw";
 import glasanjeKakoRadi from "../../docs/glasanje-kako-radi.md?raw";
 import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
 import glasanjeReadme from "../../glasanje/README.md?raw";
@@ -267,6 +268,14 @@ export const docs: DocSection[] = [
         subtitle: "Hash rute → pravi URL-ovi + prerender, bez Astra (25.9.2026.)",
         repoPath: "docs/2026-09-25-seo-rute-plan.md",
         raw: opsSeoPlan,
+        section: "docs",
+      },
+      {
+        slug: "ops-regresijske-provjere",
+        title: "Regresijske provjere i Worker",
+        subtitle: "npm run check, baseline, ručna provjera u pregledniku, deploy i povrat (25.9.2026.)",
+        repoPath: "docs/2026-09-25-regresijske-provjere.md",
+        raw: opsRegresija,
         section: "docs",
       },
     ],

@@ -1,0 +1,25 @@
+// Worker sa statičkim datotekama (zamjenjuje Pages projekt stadion-maksimir).
+// Deploy: npm run deploy. Pravila usmjeravanja su u worker/index.ts.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "maksimir",
+  "account_id": "7dc7167b7e2e00923bfa7cd697df14e4", // D.O.M.
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  },
+  // DNS zapisi (CNAME na Pages) ostaju; ruta zone presreće promet prije origina.
+  // Povrat na Pages: ukloni rute i deployaj (ili obriši rute u dashboardu).
+  "routes": [
+    { "pattern": "maksimir.domovina.ai/*", "zone_name": "domovina.ai" },
+    { "pattern": "stadion-maksimir.domovina.ai/*", "zone_name": "domovina.ai" }
+  ],
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true }
+}

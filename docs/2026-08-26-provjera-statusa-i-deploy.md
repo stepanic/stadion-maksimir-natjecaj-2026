@@ -1,5 +1,9 @@
 # Provjera statusa natječaja i deploy dokumentacijske stranice
 
+> **Zastarjelo za hosting (25. 9. 2026.):** site više nije na Cloudflare Pagesu nego na Workeru `maksimir`, na
+> `https://maksimir.domovina.ai`; deploy je `cd web && npm run deploy`. Vidi
+> [`2026-09-25-regresijske-provjere.md`](2026-09-25-regresijske-provjere.md). Dio o `docs.ts` manifestu i dalje vrijedi.
+
 *2026-08-26. Operativno znanje iz sesije u kojoj je repo ažuriran s post-predajnim statusom.*
 
 Ovaj dokument ne ponavlja **što** je otkriveno o natječaju — to je u

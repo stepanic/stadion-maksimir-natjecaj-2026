@@ -7,8 +7,8 @@
 //
 //   node scripts/prerender.mjs [distDir]      (zadano: dist)
 //
-// Izlaz: <ruta>.html (Pages ga poslužuje na /<ruta>), 404.html, _share.html
-// (ljuska za /glasanje/g/<id>), _redirects, sitemap.xml, robots.txt.
+// Izlaz: <ruta>.html (Worker ga poslužuje na /<ruta>), 404.html, _share.html
+// (ljuska za /glasanje/g/<id>, poslužuje je worker/index.ts), sitemap.xml, robots.txt.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -79,8 +79,6 @@ for (const r of routes) {
 write("404.html", await render("/404"));
 write("_share.html", await render("/glasanje/g/000000000000"));
 
-// Objava glasa je samo u pregledniku; Pages Function na /g/<id> ostaje ispred.
-write("_redirects", "/glasanje/g/*  /_share  200\n");
 write(
   "sitemap.xml",
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

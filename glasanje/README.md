@@ -1,6 +1,6 @@
 # Glasanje javnosti — provjerljivi zapis
 
-Neslužbeno glasanje na [#/glasanje](https://maksimir.domovina.ai/#/glasanje). Svaka osoba
+Neslužbeno glasanje na [/glasanje](https://maksimir.domovina.ai/glasanje). Svaka osoba
 potvrđena eOsobnom ili Certilia mobile.ID-jem ima jedan glas od **100 bodova** koje raspoređuje po
 88 natječajnih radova. Listić smije mijenjati do **31. 12. 2027. u 23:59** (Europe/Zagreb).
 Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
@@ -16,7 +16,7 @@ Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
 | Satni snapshot → OpenTimestamps | `scripts/maksimir_checkpoint.py`, pokreće ga `.github/workflows/maksimir-checkpoint.yml` |
 | Neovisna provjera | `scripts/maksimir_verify.py` |
 | Dijeljenje glasa (javno / ZK), zapisnik ZK grupe | `domovina-api`: `supabase/migrations/20260925160000_maksimir_share_zk.sql` |
-| ZK dokaz u pregledniku (Semaphore v4) | `web/src/zk.ts`; stranica objave `web/src/shareView.ts`; OG kartica `web/functions/g/[id].ts` |
+| ZK dokaz u pregledniku (Semaphore v4) | `web/src/zk.ts`; stranica objave `web/src/shareView.ts`; OG kartica `web/worker/share.ts` |
 | Snapshotovi i `.ots` dokazi | `glasanje/checkpoints/` (ova mapa) |
 
 Prijava koristi istu infrastrukturu kao domovina.ai: Certilia proxy `certilia.domovina.ai`, edge funkciju
