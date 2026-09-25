@@ -64,3 +64,7 @@ postoji u bazi). Javni su samo agregati i, po zatvaranju, lanac pod pseudonimima
 - **Lokalni razvoj:** `web/.env.local` s `VITE_SUPABASE_URL=http://127.0.0.1:55321` i lokalnim anon
   ključem (`supabase status -o env` u `domovina-api`). Certilia prijava lokalno ne radi. Za test se
   koristi korisnik s redom u `identity_verifications` i prijava lozinkom.
+
+## Vezani dokumenti
+
+- [docs/2026-09-25-glasanje-javnosti.md](../docs/2026-09-25-glasanje-javnosti.md) — odluke, mjerenja, zamke i otvorene stavke
