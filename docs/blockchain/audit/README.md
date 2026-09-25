@@ -35,6 +35,7 @@ flowchart TD
   E["Pokrivenost<br/>solidity-coverage<br/>prag 100 % u CI-ju"] --> F
   G["Stateful fuzz<br/>nasumični nizovi operacija<br/>prema referentnom modelu"] --> F
   H["E2E na Chiadu<br/>stvarni lanac + kod relayera"] --> F
+  MU["Mutacijsko testiranje<br/>ubaci grešku → testovi MORAJU pasti"] --> F
   F{"Nalaz?"}
   F -- da --> P["Popravak + test koji bi<br/>pao bez popravka"]
   P --> R["Svi testovi + pokrivenost<br/>+ check-frozen"]
@@ -85,6 +86,8 @@ cd chain
 npx hardhat test                 # svi testovi (V1 osnovni, rubni, fuzz)
 npm run coverage                 # 100 % ili pada
 npm run check-frozen             # zamrznuti izvor
+npm run mutation                 # 22 mutanta, svi moraju biti ubijeni
+FUZZ_SEEDS=10 FUZZ_OPS=80 npx hardhat test test/v1/v1.fuzz.test.ts
 slither . --filter-paths "node_modules|contracts/test"
 npx tsx scripts/e2e-chiado.ts    # stvarni lanac
 ```

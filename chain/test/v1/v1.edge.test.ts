@@ -2,15 +2,17 @@
 // Nalazi audita na koje se testovi odnose: docs/blockchain/audit/.
 import { expect } from "chai";
 import hre from "hardhat";
-import { Group, Identity } from "@semaphore-protocol/core";
+import { Group, Identity, generateProof } from "@semaphore-protocol/core";
 import { hashDomain, zeroAddress, type Hex } from "viem";
 import {
+  ballotMessage,
   encodePoints,
   entriesHash,
   proveBallot,
   proveMigrate,
   proveShare,
   registerTypedData,
+  toSolidityProof,
   type SolidityProof,
 } from "../../client/ballot";
 import { deploy, registrar, tally } from "./fixture";
@@ -69,6 +71,21 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       await register(a);
       const [rev, points, proof] = await signedBallot(a, 1, { "6TVJ3MUHR": 100 });
       await expect(asRelayer.write.cast([rev, points, corrupt(proof)])).to.be.rejectedWith("InvalidProof");
+    }).timeout(300_000);
+
+    it("isti glasač s drugim scopeom (= drugi nullifier, drugi listić) → WrongScope", async () => {
+      const { v1, asRelayer, register, group, chainId } = await deploy();
+      const a = new Identity();
+      await register(a);
+      const points = encodePoints({ "6TVJ3MUHR": 100 });
+      const message = ballotMessage({ chainId, contract: v1.address, revision: 1, points });
+      const first = await proveBallot(a, group, { chainId, contract: v1.address, revision: 1, points });
+      await asRelayer.write.cast([1, points, first]);
+      // bez provjere scopea ovo bi bio drugi, neovisan listić iste osobe
+      const other = toSolidityProof(await generateProof(a, group, message, 424242n));
+      expect(other.nullifier).to.not.equal(first.nullifier);
+      await expect(asRelayer.write.cast([1, points, other])).to.be.rejectedWith("WrongScope");
+      expect(await v1.read.voters()).to.equal(1n);
     }).timeout(300_000);
 
     it("listić krive duljine (potpisan takav) → BadBallotLength", async () => {

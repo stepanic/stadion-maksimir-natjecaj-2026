@@ -11,6 +11,7 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | A-02 | srednja (alat) | `check-frozen` lažno prolazi nakon izmjene izvora | test u obrnutom smjeru | popravljeno |
 | A-03 | niska | mrtav uvjet `successor == address(0)` u `migrate` | pokrivenost grana | popravljeno |
 | A-04 | niska | redoslijed provjera → zapis → vanjski poziv u `register`; neinicijaliziran `sum` | Slither | popravljeno |
+| A-06 | srednja (testovi) | provjera scopea listića nije bila izravno testirana; bez nje isti glasač dobiva drugi listić | mutacijsko testiranje (M17) | test + fuzz napad |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac
@@ -96,3 +97,26 @@ V2 nitko ne može zvati migrate”).
 
 Javni `rpc.chiadochain.net` povremeno vraća „gas required exceeds: 999999” za deploy koji
 inače troši 2,13 M. Nije greška ugovora. `DEPLOY_GAS=3000000` u `deploy-v1.ts` zaobilazi procjenu.
+
+## A-06 — rupa u testovima: drugi scope = drugi listić
+
+**Kako je nađen:** mutacijsko testiranje (`scripts/mutation-test.mjs`). Kad se iz `cast` ukloni
+`if (proof.scope != BALLOT_SCOPE) revert WrongScope();` (mutant M17), pao je samo jedan test, i to
+iz pogrešnog razloga: podmetnuti dokaz „glasao sam” ima i drugu poruku, pa ga je odbila provjera
+poruke.
+
+**Zašto je važno:** nullifier = `Poseidon(scope, tajni ključ)`. Kad se scope ne bi provjeravao,
+glasač bi s ispravnom porukom i **bilo kojim drugim scopeom** dobio drugi nullifier, a time i drugi,
+neovisan listić. To je dvostruko glasanje (S3). Ugovor je bio ispravan, ali nijedan test ne bi
+primijetio da netko tu provjeru ukloni.
+
+```mermaid
+flowchart LR
+  K["tajni ključ glasača"] --> N1["Poseidon(scope listića, ključ)<br/>= nullifier A"]
+  K --> N2["Poseidon(424242, ključ)<br/>= nullifier B"]
+  N1 --> L1["listić 1"]
+  N2 --> L2["listić 2 ✘<br/>(bez provjere scopea)"]
+```
+
+**Popravak (testovi):** rubni test „isti glasač s drugim scopeom → WrongScope” (provjerava i da je
+nullifier doista drugi) i fuzz napad „drugi scope” s nasumičnim scopeom.
