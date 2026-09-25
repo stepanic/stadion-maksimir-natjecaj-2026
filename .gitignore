@@ -9,3 +9,6 @@ site/
 
 # Wrangler local state
 .wrangler/
+
+# Slike nenagrađenih radova — autorska prava autora, samo lokalno (vidi research/09)
+sources/prijave-slike/
