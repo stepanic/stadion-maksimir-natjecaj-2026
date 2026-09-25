@@ -78,11 +78,17 @@ Službeni PDF-ovi (po 10 panela, samo slike bez tekstualnog sloja):
 
 ## 8. Jesu li dostupni i nenagrađeni radovi?
 
-**Kratko: zasad ne službeno, ali po Pravilniku moraju biti.** Stanje 25.9.2026.:
+**Da, svih 88.** *(Ispravak 25.9.2026. navečer. Prva verzija ovog odjeljka tvrdila je da nisu službeno objavljeni, jer se na EOJN-u činilo da dokumenti traže prijavu.)*
 
-- Službeno su objavljeni samo podaci i PDF-ovi **5 nagrađenih radova**. To vrijedi za stranicu natječaja, HKA (vijest 6202) i TED (obavijest [661302-2026](https://ted.europa.eu/en/notice/661302-2026/pdf), koja navodi samo nagrađene). DAZ još nema zapis u arhivi rezultata.
-- Popis ostalih **83 šifre i autora ne postoji javno**. Nema ni galerije ni završnog izvješća.
-- Na **EOJN-u** (tender 76778, Dokumentacija o nabavi) je 25.9. u 05:07 dodan dokument **„Zapisnik o pregledu i ocjeni”** (176 KB). Dostupan je samo uz prijavu. Zbog veličine vjerojatno ne sadrži grafičke priloge.
+Naručitelj je **25.9.2026.** na EOJN-u (tender 76778, odluka o rezultatima) javno objavio 34 dokumenta, među kojima su:
+- **Zapisnik o pregledu i ocjeni**: svih 88 radova sa šifrom, podnositeljem, autorima i nositeljima prava, vremenom predaje, rangom 1–85 i obrazloženjem ocjenjivačkog suda. Tri rada su odbijena.
+- **Zapisnik o rangiranju** (xlsx i pdf): šifra, rang i ocjena na hrvatskom i engleskom.
+- **Prilog III. Opisne ocjene i grafički prilozi natječajnih rješenja** (179 str.): po jedna službena slika i opisna ocjena za svaki rad.
+- Završno izvješće, izvješće tehničke komisije, zapisnici sjednica OS-a i mišljenje stručnog savjetnika.
+
+Dokumenti se preuzimaju **bez prijave**. Način je opisan u [09](09-svi-radovi.md). Cijeli popis je u [09 — Svih 88 radova](09-svi-radovi.md), a galerija na stranici **[Svih 88 radova](#/radovi)**.
+
+Na stranici natječaja, HKA-u i DAZ-u sve to još nije objavljeno. Galerija s više panela po radu očekuje se na izložbi i vjerojatno na DAZ-ovoj stranici rezultata (kartica „Ostali radovi”, kao kod Vrbana).
 
 ### Što propisi traže
 
