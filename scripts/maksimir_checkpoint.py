@@ -3,7 +3,8 @@
 
 1. Pročita javni RPC domovina_ai.maksimir_snapshot() (vrh lanca hasheva +
    trenutni rezultati, iz istog snapshota baze).
-2. Ako se vrh lanca promijenio od zadnjeg checkpointa (ili je zadnji stariji
+2. Ako se vrh lanca listića ili vrh zapisnika ZK grupe (snapshot v2) promijenio
+   od zadnjeg checkpointa (ili je zadnji stariji
    od 24 h — dnevni „otkucaj”), zapiše glasanje/checkpoints/<UTC>-seq<N>.json
    i žigoše ga (`ots stamp`). Otkucaj dokazuje da se stanje nije mijenjalo i
    drži repo aktivnim (GitHub gasi cron u javnom repou nakon 60 dana mirovanja).
@@ -78,8 +79,10 @@ def main() -> int:
     index_path = OUT / "index.json"
     index = json.loads(index_path.read_text()) if index_path.exists() else []
     last_hash = index[-1]["hash"] if index else None
+    last_zk = index[-1].get("zk_hash") if index else None
+    zk = snap.get("zk") or {}
     stale = not index or dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(index[-1]["at"]) > dt.timedelta(hours=24)
-    if snap["head"]["hash"] != last_hash or stale or a.force:
+    if snap["head"]["hash"] != last_hash or zk.get("hash") != last_zk or stale or a.force:
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         name = f"{stamp}-seq{snap['head']['seq']}.json"
         path = OUT / name
@@ -94,11 +97,12 @@ def main() -> int:
                 "hash": snap["head"]["hash"],
                 "voters": snap["voters"],
                 "bitcoin": False,
+                **({"zk_seq": zk["seq"], "zk_hash": zk["hash"], "zk_members": zk["members"]} if zk else {}),
             }
         )
         print(f"novi checkpoint {name}: seq {snap['head']['seq']}, {snap['voters']} glasača")
     else:
-        print(f"vrh lanca nepromijenjen (seq {snap['head']['seq']}) — nema novog checkpointa")
+        print(f"vrh lanca nepromijenjen (seq {snap['head']['seq']}, zk {zk.get('seq')}) — nema novog checkpointa")
 
     # 3. nadogradnja na Bitcoin atestaciju
     for item in index:

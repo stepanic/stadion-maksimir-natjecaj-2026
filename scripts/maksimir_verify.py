@@ -7,15 +7,21 @@ svaki hash, ponovno izbroji glasove i usporedi ih sa snapshotovima koji su
 
     python3 scripts/maksimir_verify.py LANAC.json [SNAPSHOT.json ...]
     python3 scripts/maksimir_verify.py LANAC.json --receipt POTVRDA.json
+    python3 scripts/maksimir_verify.py LANAC.json SNAPSHOT.json --zk ZK_GRUPA.json
 
 LANAC.json   — izlaz RPC-a maksimir_log (lista redova), objavljen po zatvaranju
 SNAPSHOT     — checkpoint datoteke; svaka mora odgovarati prefiksu lanca do head.seq
 POTVRDA.json — potvrda koju je glasač preuzeo nakon predaje listića
+ZK_GRUPA.json — izlaz RPC-a maksimir_zk_group (javan uvijek); provjerava se lanac
+               zapisnika grupe i da vrh iz svakog snapshota v2 odgovara prefiksu
 
 Formula (ista kao u migraciji domovina-api 20260925120000_maksimir_voting.sql):
   hash = sha256(prev_hash|seq|pseudonym|revision|ts_ms|items_canon), hex, UTF-8
   genesis prev_hash = '0' * 64
-Samo standardna biblioteka.
+Zapisnik ZK grupe (migracija 20260925160000_maksimir_share_zk.sql):
+  hash = sha256(prev_hash|seq|op|commitment), op = add | remove
+Samo standardna biblioteka. (Korijen Semaphore stabla računa se Poseidonom;
+to radi web stranica objave, ne ova skripta.)
 """
 
 import argparse
@@ -101,22 +107,64 @@ def verify_snapshot(log: list[dict], snap: dict) -> list[str]:
     return errors
 
 
+def verify_zk(zk: dict, snapshots: list[tuple[str, dict]]) -> list[str]:
+    errors = []
+    log = zk["log"]
+    prev = GENESIS
+    members: set[str] = set()
+    for i, r in enumerate(log, start=1):
+        if r["seq"] != i:
+            errors.append(f"zk seq {r['seq']}: očekivan {i}")
+        if r["prev_hash"] != prev:
+            errors.append(f"zk seq {r['seq']}: prev_hash ne odgovara")
+        h = hashlib.sha256(f"{r['prev_hash']}|{r['seq']}|{r['op']}|{r['commitment']}".encode("utf-8")).hexdigest()
+        if h != r["hash"]:
+            errors.append(f"zk seq {r['seq']}: hash ne odgovara sadržaju reda")
+        if r["op"] == "add":
+            members.add(r["commitment"])
+        elif r["op"] == "remove":
+            if r["commitment"] not in members:
+                errors.append(f"zk seq {r['seq']}: uklanja commitment koji nije u grupi")
+            members.discard(r["commitment"])
+        else:
+            errors.append(f"zk seq {r['seq']}: nepoznata operacija {r['op']}")
+        prev = r["hash"]
+    if zk["head"]["hash"] != prev or zk["head"]["members"] != len(members):
+        errors.append("zk: vrh zapisnika ili broj članova ne odgovara")
+    for path, snap in snapshots:
+        z = snap.get("zk")
+        if not z:
+            continue
+        seq = z["seq"]
+        expected = log[seq - 1]["hash"] if 0 < seq <= len(log) else GENESIS if seq == 0 else None
+        if z["hash"] != expected:
+            errors.append(f"snapshot {path}: vrh ZK grupe (seq {seq}) ne odgovara zapisniku — prepisan")
+    print(f"zk grupa: {len(log)} zapisa, {len(members)} članova — {'OK' if not errors else 'PAD'}")
+    return errors
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("log")
     ap.add_argument("snapshots", nargs="*")
     ap.add_argument("--receipt", action="append", default=[])
+    ap.add_argument("--zk", help="izlaz maksimir_zk_group()")
     a = ap.parse_args()
 
     log = json.load(open(a.log, encoding="utf-8"))
     errors = verify_chain(log)
     print(f"lanac: {len(log)} redova, vrh {log[-1]['hash'] if log else GENESIS}")
 
+    snaps = []
     for path in a.snapshots:
         snap = json.load(open(path, encoding="utf-8"))
+        snaps.append((path, snap))
         e = verify_snapshot(log, snap)
         print(f"snapshot {path}: seq {snap['head']['seq']}, {snap['voters']} glasača — {'OK' if not e else 'PAD'}")
         errors += e
+
+    if a.zk:
+        errors += verify_zk(json.load(open(a.zk, encoding="utf-8")), snaps)
 
     by_hash = {r["hash"]: r for r in log}
     for path in a.receipt:
