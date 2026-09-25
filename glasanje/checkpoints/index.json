@@ -5,7 +5,7 @@
     "seq": 0,
     "hash": "0000000000000000000000000000000000000000000000000000000000000000",
     "voters": 0,
-    "bitcoin": false
+    "bitcoin": true
   },
   {
     "file": "20260925T134427Z-seq1.json",
@@ -13,6 +13,17 @@
     "seq": 1,
     "hash": "596d9959a92f1c845272d4d9e1d0df500f7282111e34cec5c8b6b596aea18a9a",
     "voters": 1,
-    "bitcoin": false
+    "bitcoin": true
+  },
+  {
+    "file": "20260925T161324Z-seq1.json",
+    "at": "2026-09-25T16:13:24.702895+00:00",
+    "seq": 1,
+    "hash": "596d9959a92f1c845272d4d9e1d0df500f7282111e34cec5c8b6b596aea18a9a",
+    "voters": 1,
+    "bitcoin": false,
+    "zk_seq": 0,
+    "zk_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "zk_members": 0
   }
 ]
