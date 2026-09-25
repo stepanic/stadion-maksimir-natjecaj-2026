@@ -190,7 +190,6 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       await register(b);
       await asRelayer.write.cast(await signedBallot(b, 1, { "6TVJ3MUHR": 100 }));
       await v1.write.setSuccessor([v2.address]);
-      await v2.write.acceptGroupAdmin();
       const p = await proveMigrate(a, group, { chainId, contract: v1.address, successor: v2.address });
       await v2.write.migrate([p]);
       expect(await v2.read.revisionOf([p.nullifier])).to.equal(0);
@@ -206,11 +205,41 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       await asRelayer.write.cast(await signedBallot(a, 1, { "6TVJ3MUHR": 100 }));
       await asRelayer.write.cast(await signedBallot(a, 2, {}));
       await v1.write.setSuccessor([v2.address]);
-      await v2.write.acceptGroupAdmin();
       const p = await proveMigrate(a, group, { chainId, contract: v1.address, successor: v2.address });
       await v2.write.migrate([p]);
       expect(await v2.read.revisionOf([p.nullifier])).to.equal(2);
       expect(await v1.read.voters()).to.equal(0n);
+    }).timeout(300_000);
+
+    it("A-07: zlonamjeran successor bez glasačeva dokaza ne može ni zaključati ni zaustaviti nikoga", async () => {
+      const { v1, asRelayer, register, signedBallot, stranger, group, chainId } = await withSuccessor();
+      const [a, b] = [new Identity(), new Identity()];
+      await register(a);
+      await asRelayer.write.cast(await signedBallot(a, 1, { "6TVJ3MUHR": 100 }));
+      // vlasnik (ili ukraden Safe) najavi „V2” koji je zapravo običan račun napadača
+      await v1.write.setSuccessor([stranger.account.address]);
+      const asFake = await hre.viem.getContractAt("MaksimirGlasanjeV1", v1.address, { client: { wallet: stranger } });
+      // napadač ima samo dokaze koje je glasač dao za druge svrhe (listić, objava)
+      await expect(asFake.write.migrate([(await signedBallot(a, 2, { GY0F1A9OM: 100 }))[2]])).to.be.rejectedWith("WrongMessage");
+      await expect(asFake.write.migrate([await proveShare(a, group)])).to.be.rejectedWith("WrongScope");
+      // napadač ne može preuzeti ni upravljanje grupom (V1 ga nikad ne predaje)
+      const sem = await hre.viem.getContractAt("Semaphore", await v1.read.semaphore(), { client: { wallet: stranger } });
+      await expect(sem.write.acceptGroupAdmin([await v1.read.groupId()])).to.be.rejected;
+      // V1 i dalje radi za sve: novi član, prvi listić, izmjena
+      await register(b);
+      await asRelayer.write.cast(await signedBallot(b, 1, { GY0F1A9OM: 100 }));
+      await asRelayer.write.cast(await signedBallot(a, 2, { W3YS5VJBZ: 100 }));
+      expect(await tally(v1)).to.deep.equal({ GY0F1A9OM: [100, 1], W3YS5VJBZ: [100, 1] });
+      void chainId;
+    }).timeout(300_000);
+
+    it("zaključan nullifier (selidba bez listića) više ne može glasati u V1", async () => {
+      const { v1, v2, register, group, chainId, asRelayer, signedBallot } = await withSuccessor();
+      const a = new Identity();
+      await register(a);
+      await v1.write.setSuccessor([v2.address]);
+      await v2.write.migrate([await proveMigrate(a, group, { chainId, contract: v1.address, successor: v2.address })]);
+      await expect(asRelayer.write.cast(await signedBallot(a, 1, { "6TVJ3MUHR": 100 }))).to.be.rejectedWith("AlreadyMigrated");
     }).timeout(300_000);
 
     it("dokaz selidbe za drugi successor ne vrijedi", async () => {
@@ -234,14 +263,13 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       await expect(asStranger.write.register([id.commitment, now + 60n, sig])).to.be.rejectedWith("NotRegistrar");
     });
 
-    it("setMerkleTreeDuration: samo vlasnik; nakon najave V2 više ni on (admin je V2)", async () => {
+    it("setMerkleTreeDuration: samo vlasnik; radi i nakon najave V2 (admin ostaje V1)", async () => {
       const { v1, asStranger } = await deploy();
       await expect(asStranger.write.setMerkleTreeDuration([1n])).to.be.rejectedWith("OwnableUnauthorizedAccount");
       await v1.write.setMerkleTreeDuration([7200n]);
       const v2 = await hre.viem.deployContract("MockSuccessorV2", [v1.address]);
       await v1.write.setSuccessor([v2.address]);
-      await v2.write.acceptGroupAdmin();
-      await expect(v1.write.setMerkleTreeDuration([1n])).to.be.rejected;
+      await v1.write.setMerkleTreeDuration([3600n]);
     });
 
     it("vlasništvo se prenosi u dva koraka (Safe mora prihvatiti)", async () => {

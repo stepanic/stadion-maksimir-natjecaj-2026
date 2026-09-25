@@ -156,7 +156,7 @@ describe("MaksimirGlasanjeV1", () => {
   }).timeout(300_000);
 
   describe("prijelaz na V2", () => {
-    it("samo vlasnik najavljuje V2, jednom; listić seli samo glasač svojim dokazom", async () => {
+    it("samo vlasnik najavljuje V2, jednom; listić seli samo glasač svojim dokazom; V1 nastavlja raditi", async () => {
       const { v1, owner, asRelayer, asStranger, register, signedBallot, group, chainId } = await deploy();
       const [a, b, c] = [new Identity(), new Identity(), new Identity()];
       await register(a);
@@ -169,7 +169,6 @@ describe("MaksimirGlasanjeV1", () => {
       await expect(asStranger.write.setSuccessor([v2.address])).to.be.rejectedWith("OwnableUnauthorizedAccount");
       await v1.write.setSuccessor([v2.address]);
       await expect(v1.write.setSuccessor([owner.account.address])).to.be.rejectedWith("SuccessorAlreadySet");
-      await v2.write.acceptGroupAdmin();
 
       // nitko osim V2 ne zove migrate; V2 bez glasačeva dokaza ne može ništa
       const proofA = await proveMigrate(a, group, { chainId, contract: v1.address, successor: v2.address });
@@ -187,17 +186,15 @@ describe("MaksimirGlasanjeV1", () => {
       await expect(asRelayer.write.cast(await signedBallot(a, 2, { "6TVJ3MUHR": 100 }))).to.be.rejectedWith("AlreadyMigrated");
       await expect(v2.write.migrate([proofA])).to.be.rejectedWith("AlreadyMigrated");
 
-      // c je registriran prije najave, ali nije glasao: u V1 više ne može početi (samo u V2)
-      await expect(asRelayer.write.cast(await signedBallot(c, 1, { GY0F1A9OM: 100 }))).to.be.rejectedWith("UseSuccessor");
-      // b ima listić u V1 i smije ga i dalje mijenjati ovdje
+      // A-07: najava V2 nikoga ne zaustavlja u V1 — c prvi put glasa, b mijenja listić
+      await asRelayer.write.cast(await signedBallot(c, 1, { GY0F1A9OM: 100 }));
       await asRelayer.write.cast(await signedBallot(b, 2, { GY0F1A9OM: 100 }));
-      expect(await tally(v1)).to.deep.equal({ GY0F1A9OM: [100, 1] });
+      expect(await tally(v1)).to.deep.equal({ GY0F1A9OM: [200, 2] });
 
-      // nova registracija sad ide kroz V2 (admin grupe), V1 je odbija
+      // A-07: i nova registracija i dalje radi u V1 (admin grupe ostaje V1)
       const late = new Identity();
-      const { now } = { now: (await (await hre.viem.getPublicClient()).getBlock()).timestamp };
-      const sig = await registrar.signTypedData(registerTypedData({ chainId, contract: v1.address, commitment: late.commitment, deadline: now + 3600n }));
-      await expect(asRelayer.write.register([late.commitment, now + 3600n, sig])).to.be.rejected;
+      await register(late);
+      expect(await v1.read.registered()).to.equal(4n);
     }).timeout(300_000);
   });
 

@@ -36,7 +36,7 @@ describe("MaksimirGlasanjeV1 — stateful fuzz", () => {
       const f = await deploy(3600n * 24n * 30n);
       const { v1, asRelayer, chainId, group } = f;
       const voters: Voter[] = [];
-      let successor: { address: Hex; write: { migrate: (a: [never]) => Promise<unknown>; acceptGroupAdmin: () => Promise<unknown> } } | null = null;
+      let successor: { address: Hex; write: { migrate: (a: [never]) => Promise<unknown> } } | null = null;
       const log: string[] = [];
 
       const randomBallot = (): Record<string, number> => {
@@ -90,15 +90,12 @@ describe("MaksimirGlasanjeV1 — stateful fuzz", () => {
         let op = "";
 
         if (voters.length < 2 || roll < 0.15) {
-          // novi glasač (registracija dopuštena samo dok V2 nije najavljen)
+          // novi glasač (A-07: registracija radi i nakon najave V2)
           const v: Voter = { id: new Identity(), registered: false, revision: 0, points: "0x", migrated: false, shared: false, packages: [] };
           voters.push(v);
           op = `register #${voters.length - 1}`;
-          if (successor) await expectRevert(f.register(v.id), "registracija nakon najave V2");
-          else {
-            await f.register(v.id);
-            v.registered = true;
-          }
+          await f.register(v.id);
+          v.registered = true;
         } else if (roll < 0.55 && regs.length) {
           // ispravan listić (ili povlačenje)
           const v = pick(regs);
@@ -106,8 +103,7 @@ describe("MaksimirGlasanjeV1 — stateful fuzz", () => {
           const pkg = await f.signedBallot(v.id, v.revision + 1, items);
           v.nullifier = (pkg[2] as { nullifier: bigint }).nullifier;
           op = `cast #${voters.indexOf(v)} rev ${v.revision + 1} ${JSON.stringify(items)}`;
-          const blocked = v.migrated || (successor && v.revision === 0);
-          if (blocked) await expectRevert(asRelayer.write.cast(pkg as never), "cast nakon selidbe / novi nakon V2");
+          if (v.migrated) await expectRevert(asRelayer.write.cast(pkg as never), "cast nakon selidbe");
           else {
             await asRelayer.write.cast(pkg as never);
             v.revision += 1;
@@ -189,7 +185,6 @@ describe("MaksimirGlasanjeV1 — stateful fuzz", () => {
           // najava V2 (jednom)
           const v2 = await hre.viem.deployContract("MockSuccessorV2", [v1.address]);
           await v1.write.setSuccessor([v2.address]);
-          await v2.write.acceptGroupAdmin();
           successor = v2 as never;
           op = "setSuccessor";
         } else if (successor && regs.length) {

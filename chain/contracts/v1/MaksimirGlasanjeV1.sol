@@ -102,7 +102,6 @@ contract MaksimirGlasanjeV1 is Ownable2Step, EIP712 {
     error AlreadyMigrated();
     error SuccessorAlreadySet();
     error NotSuccessor();
-    error UseSuccessor(address successor);
 
     constructor(
         ISemaphore _semaphore,
@@ -159,10 +158,6 @@ contract MaksimirGlasanjeV1 is Ownable2Step, EIP712 {
 
         Ballot storage b = _ballots[proof.nullifier];
         if (b.migrated) revert AlreadyMigrated();
-        // Nakon najave V2 ovdje se samo mijenjaju postojeći listići; prvi listić ide u V2.
-        // Tako svaki nullifier živi u točno jednoj verziji (V2 odbija nullifier koji ovdje
-        // ima listić, a nije preseljen).
-        if (b.revision == 0 && successor != address(0)) revert UseSuccessor(successor);
         if (revision != b.revision + 1) revert BadRevision(b.revision + 1, revision);
         _validate(points);
 
@@ -212,13 +207,17 @@ contract MaksimirGlasanjeV1 is Ownable2Step, EIP712 {
 
     // ── 4. prijelaz na sljedeću verziju (samo uz glasačev dokaz) ───────────────────────
 
-    /// Vlasnik jednom najavi sljedeću verziju i preda joj admina grupe (nove registracije
-    /// idu tamo). Ovo NE seli ničiji listić: to radi svaki glasač sam, preko `migrate`.
+    /// Vlasnik jednom najavi sljedeću verziju. Ovo samo zapisuje adresu: V1 i dalje radi
+    /// za sve (i nove glasače i registracije), a admin grupe ostaje V1 zauvijek. Tako ni
+    /// neispravan ili zlonamjeran `successor` ne može nikoga zaustaviti (audit A-07).
+    ///
+    /// Svaki nullifier živi u točno jednoj verziji: V2 smije primiti samo nullifier koji je
+    /// glasač ovdje zaključao svojim dokazom (`migrate`, radi i bez listića), a zaključan
+    /// nullifier ovdje više ne može glasati. To svatko provjerava s `ballotOf(n).migrated`.
     function setSuccessor(address next) external onlyOwner {
         if (next == address(0)) revert ZeroAddress();
         if (successor != address(0)) revert SuccessorAlreadySet();
         successor = next;
-        semaphore.updateGroupAdmin(groupId, next);
         emit SuccessorSet(next);
     }
 
@@ -226,9 +225,10 @@ contract MaksimirGlasanjeV1 is Ownable2Step, EIP712 {
         return uint256(keccak256(abi.encode(MIGRATE_TAG, block.chainid, address(this), successor)));
     }
 
-    /// Zove je samo `successor`, s glasačevim dokazom (poruka = `migrateMessage()`).
-    /// Listić se ovdje poništava i vraća sljedećoj verziji, koja ga upisuje pod istim
-    /// nullifierom. Nakon toga glasač ovdje više ne može glasati.
+    /// Zove je samo `successor`, s glasačevim dokazom (poruka = `migrateMessage()`, dakle
+    /// glasač je pristao baš na tu verziju). Listić se ovdje poništava i vraća sljedećoj
+    /// verziji, koja ga upisuje pod istim nullifierom. Nullifier bez listića se samo
+    /// zaključava. Nakon toga glasač ovdje više ne može glasati.
     function migrate(ISemaphore.SemaphoreProof calldata proof) external returns (uint32 revision, bytes memory points) {
         // successor = 0 dok V2 nije najavljen, a msg.sender nikad nije 0, pa je to pokriveno.
         if (msg.sender != successor) revert NotSuccessor();
