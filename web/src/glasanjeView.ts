@@ -346,8 +346,14 @@ async function exportZkKey() {
 async function importZkKey(text: string) {
   await run("Uvozim ZK ključ…", async () => {
     const zk = await import("./zk");
-    const line = text.split(/\s+/).find((w) => /^[A-Za-z0-9+/]{43}=$/.test(w)) ?? text;
-    const id = zk.importIdentity(line);
+    const candidate = zk.parseIdentity(zk.findExportedKey(text) ?? text).commitment.toString();
+    const inGroup = st.my?.zk_commitment ?? null;
+    // Ključ na ovom uređaju već odgovara grupi: drugačiji ključ je gotovo sigurno
+    // pogrešna datoteka, a prepisivanje bi pri sljedećoj izradi zamijenilo ključ u grupi.
+    if (inGroup && st.zkLocal === inGroup && candidate !== inGroup) {
+      throw new VoteError("Taj ključ ne odgovara ključu u grupi, a ključ na ovom uređaju odgovara. Ključ nije promijenjen.");
+    }
+    const id = zk.importIdentity(zk.findExportedKey(text) ?? text);
     st.zkLocal = id.commitment.toString();
     st.zkShare = zkShares()[st.zkLocal] ?? null;
     st.zkImport = false;
@@ -412,7 +418,13 @@ function shareHtml(): string {
          st.zkShare && keyMatches
            ? shareButtonsHtml(shareUrl(st.zkShare), ZK_SHARE_TEXT) +
              `<p class="small"><a href="#/glasanje/g/${st.zkShare}">Otvori svoj dokaz i provjeri ga →</a></p>`
-           : `<button class="btn btn-primary" data-act="zk-make" ${busy}>Izradi anonimni ZK dokaz</button>`
+           : `<button class="btn btn-primary" data-act="zk-make" ${busy}>${
+               keyMatches
+                 ? "Prikaži moj ZK dokaz (ponovno se izračuna, poveznica ostaje ista)"
+                 : inGroup
+                   ? "Zamijeni ključ u grupi ovim s uređaja i izradi novi dokaz"
+                   : "Izradi anonimni ZK dokaz"
+             }</button>`
        }
        ${
          inGroup && !keyMatches

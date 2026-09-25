@@ -65,13 +65,29 @@ export function newIdentity(): Identity {
   return id;
 }
 
-export function importIdentity(exported: string): Identity {
-  let id: Identity;
+/** Izvezeni ključ je base64 od točno 32 bajta (44 znaka, završava s „=”). */
+const KEY_RE = /^[A-Za-z0-9+/]{43}=$/;
+
+/** Iz teksta (npr. cijele datoteke maksimir-zk-kljuc.txt) izvuci redak s ključem. */
+export function findExportedKey(text: string): string | null {
+  return text.split(/\s+/).find((w) => KEY_RE.test(w)) ?? null;
+}
+
+/** Provjeri i pročitaj izvezeni ključ, bez spremanja. */
+export function parseIdentity(exported: string): Identity {
+  // Identity.import prihvaća bilo koji niz i od njega napravi NEKI ključ, pa bi
+  // pogrešno zalijepljen tekst tiho prepisao pravi ključ. Zato stroga provjera.
+  const k = exported.trim();
   try {
-    id = Identity.import(exported.trim());
+    if (!KEY_RE.test(k) || atob(k).length !== 32) throw new Error("oblik");
+    return Identity.import(k);
   } catch {
-    throw new VoteError("To nije ispravan ZK ključ.");
+    throw new VoteError("To nije ispravan ZK ključ. Zalijepi cijeli sadržaj datoteke maksimir-zk-kljuc.txt.");
   }
+}
+
+export function importIdentity(exported: string): Identity {
+  const id = parseIdentity(exported);
   writeKey(id.export());
   return id;
 }
