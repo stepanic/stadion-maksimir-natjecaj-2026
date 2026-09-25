@@ -67,4 +67,5 @@ postoji u bazi). Javni su samo agregati i, po zatvaranju, lanac pod pseudonimima
 
 ## Vezani dokumenti
 
+- [docs/glasanje-kako-radi.md](../docs/glasanje-kako-radi.md) — tehnički proces korak po korak, s dijagramima
 - [docs/2026-09-25-glasanje-javnosti.md](../docs/2026-09-25-glasanje-javnosti.md) — odluke, mjerenja, zamke i otvorene stavke
