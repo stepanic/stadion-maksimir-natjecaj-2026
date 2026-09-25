@@ -1,0 +1,10 @@
+node_modules
+artifacts
+cache
+typechain-types
+.env*
+coverage
+coverage
+coverage.json
+coverage-client
+client/demo/dist

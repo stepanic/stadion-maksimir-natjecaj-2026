@@ -1,0 +1,48 @@
+name: chain
+
+# Ugovori glasanja (chain/): testovi + zabrana izmjene zamrznutih (deployanih) verzija.
+on:
+  push:
+    paths: ["chain/**", ".github/workflows/chain.yml"]
+  pull_request:
+    paths: ["chain/**", ".github/workflows/chain.yml"]
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: chain/package-lock.json
+      - run: npm ci
+      - name: zamrznute verzije nisu mijenjane
+        run: npm run check-frozen
+      - run: npx hardhat test
+      - name: pokrivenost ugovora 100 % (naredbe, grane, funkcije, linije)
+        run: npm run coverage
+      - name: strogi tipovi klijenta (DOM, TS strict)
+        run: npm run typecheck:client
+      - name: pokrivenost klijenta 100 % (kriptografija preglednika)
+        run: npm run coverage:client
+
+  relayer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chain/relayer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: chain/relayer/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

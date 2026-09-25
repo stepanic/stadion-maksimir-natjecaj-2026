@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ključ za glasanje — proba</title>
+  <style>
+    :root {
+      --bg: #f7f7f5; --card: #fff; --fg: #1b1b1b; --muted: #5f6368; --line: #e1e1dc;
+      --accent: #0b5cad; --accent-fg: #fff; --ok: #1b7a36; --ok-bg: #e7f5ea; --err: #b3261e; --err-bg: #fdecea;
+      --warn: #8a5300; --warn-bg: #fff4e0; --now: #0b5cad; --now-bg: #e8f0fb; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111; --card: #1b1b1b; --fg: #eaeaea; --muted: #a0a0a0; --line: #333; --accent: #6fa8ff; --accent-fg: #0b1220;
+        --ok: #6fd28a; --ok-bg: #16301e; --err: #ff8a80; --err-bg: #3a1614; --warn: #ffc56b; --warn-bg: #33250d; --now: #8fbaff; --now-bg: #16233a; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+    h2 { font-size: 1.1rem; margin: 0; }
+    p { margin: 6px 0; }
+    .lead { color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+    .intro { border-left: 4px solid var(--accent); }
+    .progress { display: flex; gap: 4px; margin: 14px 0 4px; }
+    .progress span { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+    .progress span.done { background: var(--ok); }
+    .progress span.now { background: var(--accent); }
+    .step { transition: opacity .2s; }
+    .step.locked { opacity: .5; }
+    .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .num { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--line); color: var(--fg); }
+    .step.now .num { background: var(--accent); color: var(--accent-fg); }
+    .step.done .num { background: var(--ok); color: #fff; }
+    .step.error .num { background: var(--err); color: #fff; }
+    .badge { margin-left: auto; font-size: .78rem; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); white-space: nowrap; }
+    .step.now .badge { background: var(--now-bg); color: var(--now); }
+    .step.done .badge { background: var(--ok-bg); color: var(--ok); }
+    .step.error .badge { background: var(--err-bg); color: var(--err); }
+    button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-fg); cursor: pointer; margin: 6px 6px 0 0; }
+    button.secondary { background: transparent; color: var(--accent); }
+    button:disabled { background: var(--line); border-color: var(--line); color: var(--muted); cursor: not-allowed; }
+    .result { margin-top: 8px; padding: 8px 10px; border-radius: 8px; display: none; }
+    .result.show { display: block; }
+    .result.ok { background: var(--ok-bg); color: var(--ok); }
+    .result.err { background: var(--err-bg); color: var(--err); }
+    .result.info { background: var(--now-bg); color: var(--now); }
+    .warnbox { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-weight: 600; }
+    .words { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; margin: 8px 0; font-family: var(--mono); }
+    .words span { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+    .words b { color: var(--muted); font-weight: 400; margin-right: 4px; }
+    .confirm { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+    .confirm label { display: flex; flex-direction: column; font-size: .85rem; color: var(--muted); }
+    input, textarea { font: inherit; font-family: var(--mono); padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+    textarea { width: 100%; min-height: 84px; }
+    details { margin-top: 8px; color: var(--muted); font-size: .92rem; }
+    summary { cursor: pointer; color: var(--accent); }
+    code, .fp { font-family: var(--mono); font-size: .9em; }
+    .fp { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: var(--fg); }
+    dl { margin: 0; } dt { font-weight: 700; margin-top: 8px; } dd { margin: 2px 0 0; color: var(--muted); }
+    [hidden] { display: none !important; }
+    footer { color: var(--muted); font-size: .85rem; margin: 20px 0 40px; }
+    .tools { display: flex; flex-wrap: wrap; gap: 0; }
+    #print-sheet { display: none; }
+    @media print {
+      body { background: #fff; color: #000; }
+      main { display: none !important; }
+      #print-sheet { display: block !important; font: 14pt/1.5 system-ui, sans-serif; padding: 12mm; }
+      #print-sheet h1 { font-size: 18pt; margin: 0 0 4mm; }
+      #print-sheet ol { columns: 3; column-gap: 10mm; font-family: ui-monospace, Menlo, monospace; font-size: 14pt; padding-left: 8mm; }
+      #print-sheet li { margin: 1.5mm 0; }
+      #print-sheet .note { font-size: 10pt; margin-top: 8mm; border-top: 1px solid #000; padding-top: 3mm; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Tvoj ključ za glasanje</h1>
+  <p class="lead">Probna stranica: kako nastaje, čuva se i vraća ključ kojim glasaš. Ne treba ti nikakvo predznanje.</p>
+
+  <section class="card intro">
+    <h2>Ukratko</h2>
+    <p>Da nitko osim tebe ne može predati ni promijeniti tvoj glas, trebaš <b>tajni ključ</b>. On nastaje
+      ovdje, u tvom pregledniku, i nikad ne ide ni na jedan poslužitelj. Čuvaš ga na dva načina:</p>
+    <p>📝 <b>24 riječi na papiru</b> — za slučaj da izgubiš mobitel ili računalo.<br />
+       🔐 <b>passkey</b> — otključavaš ga licem ili prstom (Face ID, Touch ID), kao što otključavaš mobitel.</p>
+    <p class="lead">Na ovoj probnoj stranici ništa se ne šalje nikamo i ništa ne ide na blockchain. Sve ostaje u ovom pregledniku.</p>
+    <div class="progress" id="progress"></div>
+  </section>
+
+  <!-- 1 -->
+  <section class="card step" id="s1">
+    <div class="step-head"><span class="num">1</span><h2>Provjeri preglednik</h2><span class="badge"></span></div>
+    <p>Provjerit ćemo zna li tvoj preglednik otključati ključ passkeyjem.</p>
+    <button id="b-check">Provjeri</button>
+    <div class="result" id="r1"></div>
+    <details><summary>Što se događa u pozadini?</summary>
+      <p>Passkey je zapis koji tvoj uređaj čuva u iCloud Keychainu, Google upravitelju lozinki ili Windows Hellu i sinkronizira na tvoje ostale uređaje. Za ovo nam treba njegova mogućnost <code>PRF</code>: passkey za zadani ulaz uvijek vrati iste tajne bajtove, ali samo nakon što potvrdiš licem ili prstom. Tim bajtovima zaključavamo tvoj ključ.</p>
+    </details>
+  </section>
+
+  <!-- 2 -->
+  <section class="card step" id="s2">
+    <div class="step-head"><span class="num">2</span><h2>Napravi ključ i zapiši 24 riječi</h2><span class="badge"></span></div>
+    <p>Preglednik će izmisliti tvoj ključ i pokazati ga kao 24 obične engleske riječi. <b>Uzmi papir i olovku prije nego klikneš.</b></p>
+    <button id="b-create">Napravi moj ključ</button>
+    <div id="words-box" hidden>
+      <div class="warnbox">Zapiši ove riječi na papir, točno ovim redom. Ne fotografiraj ih i ne šalji nikome. Tko ima te riječi, može mijenjati tvoj glas.</div>
+      <div class="words" id="words"></div>
+      <div class="tools">
+        <button class="secondary" id="b-copy">Kopiraj riječi</button>
+        <button class="secondary" id="b-print">Ispiši</button>
+      </div>
+      <div class="result" id="r2"></div>
+    </div>
+    <details><summary>Što se događa u pozadini?</summary>
+      <p><b>Kopiraj</b> i <b>Ispiši</b>: riječi možeš kopirati (npr. u upravitelj lozinki) ili ispisati na papir. Kopirane riječi brišemo iz međuspremnika nakon 60 sekundi. Pazi: Apple i neki upravitelji međuspremnika sinkroniziraju ga na tvoje druge uređaje. Najsigurniji je papir.</p>
+      <p>Preglednik uzme 32 nasumična bajta (256 bita, više kombinacija nego atoma u svemiru). To je tvoj ključ. Isti bajtovi zapisani su kao 24 riječi prema standardu BIP-39, istom kakav koriste kripto novčanici. Ovo <b>nije</b> novčanik i u njemu nema novca. Iz ključa se računa njegov javni <b>otisak</b> (commitment), a on je jedino što ikad izađe iz preglednika.</p>
+    </details>
+  </section>
+
+  <!-- 3 -->
+  <section class="card step" id="s3">
+    <div class="step-head"><span class="num">3</span><h2>Potvrdi da si zapisao</h2><span class="badge"></span></div>
+    <p id="confirm-text">Upiši tražene riječi s papira. Kad potvrdiš, riječi nestaju sa stranice.</p>
+    <div class="confirm" id="confirm"></div>
+    <button id="b-confirm">Potvrdi</button>
+    <div class="result" id="r3"></div>
+    <details><summary>Zašto ovo?</summary>
+      <p>Da ne bi kliknuo „zapisao sam” bez stvarnog zapisa. Riječi su tvoja jedina kopija koja ne ovisi ni o nama ni o Appleu ili Googleu. Kasnije ih možeš ponovno vidjeti samo uz passkey (korak 6).</p>
+    </details>
+  </section>
+
+  <!-- 4 -->
+  <section class="card step" id="s4">
+    <div class="step-head"><span class="num">4</span><h2>Zaključaj ključ passkeyjem</h2><span class="badge"></span></div>
+    <p>Preglednik će te pitati da napraviš passkey. Potvrdi licem, prstom ili lozinkom računala. Passkey će se zvati po otisku tvog ključa, npr. <i>Maksimir TEST · ključ 904493…340948</i>, pa ćeš ga u Lozinkama lako prepoznati.</p>
+    <button id="b-protect">Napravi passkey i zaključaj ključ</button>
+    <button id="b-words-only" class="secondary" hidden>Preskoči — koristit ću samo riječi</button>
+    <div class="result" id="r4"></div>
+    <details><summary>Što se događa u pozadini?</summary>
+      <p>Passkey vrati tajne bajtove (PRF). Iz njih se izračuna ključ za šifriranje (HKDF), a njime se tvoj ključ zaključa (AES-256-GCM). Zaključani ključ sprema se u ovaj preglednik, a u pravom glasanju i na naš poslužitelj, kako bi ga našao tvoj novi uređaj. Bez tvog passkeyja ta je datoteka bezvrijedna. Otključani ključ se odmah briše iz memorije.</p>
+      <p>Ime passkeyja sadrži otisak ključa, a njegov interni ID izveden je iz ključa. Zato novi passkey za <b>isti</b> ključ zamijeni stari umjesto da ih se nakupi više (iCloud Keychain, Google upravitelj lozinki).</p>
+      <p>Ako izrada passkeyja ne uspije, ključ ostaje ovdje dok ne pokušaš ponovno. Riječi si već zapisao, pa ključ ne smije nestati.</p>
+    </details>
+  </section>
+
+  <!-- 5 -->
+  <section class="card step" id="s5">
+    <div class="step-head"><span class="num">5</span><h2>Otključaj ključ — ovo radiš svaki put kad glasaš</h2><span class="badge"></span></div>
+    <p>Ovako izgleda glasanje: klikneš, potvrdiš licem ili prstom, i ključ je otključan samo na trenutak.</p>
+    <button id="b-unlock">Otključaj passkeyjem</button>
+    <div class="result" id="r5"></div>
+    <details><summary>Što se događa u pozadini?</summary>
+      <p>Passkey ponovno vrati iste tajne bajtove, zaključani ključ se otvori, a preglednik provjeri da je otisak isti kao u koraku 4. U pravom glasanju ključ bi sad izradio ZK dokaz („jedan sam od registriranih glasača i ovo je moj listić”), a zatim bi se odmah obrisao iz memorije. Na blockchain ide samo dokaz, nikad ključ.</p>
+    </details>
+  </section>
+
+  <!-- 6 -->
+  <section class="card step" id="s6">
+    <div class="step-head"><span class="num">6</span><h2>Nisi zapisao riječi? Prikaži ih ponovno</h2><span class="badge"></span></div>
+    <p>Uz passkey možeš ponovno vidjeti svojih 24 riječi i zapisati ih. Treba ti svježa potvrda licem ili prstom.</p>
+    <button id="b-reveal">Prikaži moje riječi</button>
+    <div id="reveal-box" hidden>
+      <div class="warnbox">Pazi da ti nitko ne gleda u ekran. Riječi nestaju kad klikneš „Sakrij” ili nakon 2 minute.</div>
+      <div class="words" id="reveal-words"></div>
+      <div class="tools">
+        <button class="secondary" id="b-copy2">Kopiraj riječi</button>
+        <button class="secondary" id="b-print2">Ispiši</button>
+        <button id="b-hide" class="secondary">Sakrij</button>
+      </div>
+    </div>
+    <div class="result" id="r6"></div>
+    <details><summary>Je li to sigurno?</summary>
+      <p>Da. Tko ima tvoj passkey, ionako može glasati umjesto tebe, pa mu riječi ne daju ništa više. Tebi omogućuju da napraviš papirnatu kopiju kad si je propustio. Mi riječi ne možemo vidjeti ni vratiti, jer postoje samo zaključane tvojim passkeyjem ili na tvom papiru.</p>
+    </details>
+  </section>
+
+  <!-- 7 -->
+  <section class="card step" id="s7">
+    <div class="step-head"><span class="num">7</span><h2>Novi uređaj ili izgubljen passkey: vrati ključ iz riječi</h2><span class="badge"></span></div>
+    <p>Upiši svojih 24 riječi. Dobit ćeš točno isti ključ, a time i isti glas.</p>
+    <textarea id="recover-words" placeholder="npr. immense act sleep maid … (24 riječi, razmak između)" autocomplete="off" spellcheck="false"></textarea>
+    <button id="b-recover">Vrati ključ</button>
+    <div class="result" id="r7"></div>
+    <details><summary>Što se događa u pozadini?</summary>
+      <p>Riječi se pretvore natrag u istih 32 bajta. Zadnja riječ sadrži kontrolni zbroj, pa se tipfeler ili krivi redoslijed odmah prepozna. Iz bajtova nastane isti otisak kao u koraku 4. U pravom glasanju nakon toga napraviš novi passkey (korak 4), i ključ ostaje isti.</p>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Pojmovi</h2>
+    <dl>
+      <dt>Ključ</dt><dd>32 tajna bajta koja dokazuju da je glas tvoj. Nastaje i ostaje kod tebe.</dd>
+      <dt>24 riječi</dt><dd>Isti ključ zapisan riječima, za papir. Vrijede zauvijek i ne ovise ni o kome.</dd>
+      <dt>Passkey</dt><dd>Zapis na tvom uređaju (iCloud, Google, Windows) koji otključavaš licem ili prstom. Ovdje on samo otključava tvoj ključ.</dd>
+      <dt>Otisak ključa</dt><dd>Javni broj izračunat iz ključa. Po njemu se vidi da je ključ isti, ali se iz njega ključ ne može dobiti natrag.</dd>
+      <dt>Blockchain</dt><dd>Javni zapis koji nitko ne može tajno mijenjati. U pravom glasanju ondje završava tvoj listić s dokazom, bez imena i bez ključa. Na ovoj probi se ne koristi.</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2>Počni ispočetka</h2>
+    <p class="lead">Briše probni ključ iz ovog preglednika. Passkey „Maksimir TEST · ključ …” ostaje u Lozinkama (Postavke → Lozinke → localhost) i ondje ga možeš obrisati. Po otisku u imenu vidiš koji je čiji.</p>
+    <button id="b-reset" class="secondary">Obriši probu i kreni ispočetka</button>
+  </section>
+
+  <footer>Tehnički: <code>chain/client/keystore.ts</code>, odluka u ADR 0001. Riječi i ključ nikad ne napuštaju ovu stranicu.</footer>
+</main>
+<div id="print-sheet" aria-hidden="true"></div>
+<script type="module" src="./demo.js"></script>
+</body>
+</html>
