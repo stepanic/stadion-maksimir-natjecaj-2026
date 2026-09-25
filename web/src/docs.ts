@@ -14,6 +14,7 @@ import research04 from "../../research/04-tehnicki-okvir.md?raw";
 import research05 from "../../research/05-mediji-politika.md?raw";
 import research06 from "../../research/06-status-natjecaja.md?raw";
 import research07 from "../../research/07-kronologija-objava.md?raw";
+import research08 from "../../research/08-rezultati-natjecaja.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
@@ -127,7 +128,7 @@ export const docs: DocSection[] = [
       {
         slug: "research-06-status",
         title: "06 — Status natječaja",
-        subtitle: "Živi log nakon isteka rokova — rezultati još neobjavljeni",
+        subtitle: "Živi log stanja — rezultati objavljeni 24.9.2026.",
         repoPath: "research/06-status-natjecaja.md",
         raw: research06,
         section: "research",
@@ -138,6 +139,14 @@ export const docs: DocSection[] = [
         subtitle: "Sve nove objave 27.5. → 25.8.2026., uklj. HKIG dopis",
         repoPath: "research/07-kronologija-objava.md",
         raw: research07,
+        section: "research",
+      },
+      {
+        slug: "research-08-rezultati",
+        title: "08 — Rezultati natječaja",
+        subtitle: "88 radova, 5 nagrada, VG13 pobjednik — činjenice, izjave, reakcije",
+        repoPath: "research/08-rezultati-natjecaja.md",
+        raw: research08,
         section: "research",
       },
     ],
