@@ -1,0 +1,24 @@
+name = "maksimir-relayer"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+# wrangler kv namespace create RELAY_KV  → upiši id
+[[kv_namespaces]]
+binding = "RELAY_KV"
+id = "TODO"
+
+[vars]
+# Prazno dok se ugovor ne deploya (v. docs/blockchain/03-deploy-runbook.md).
+CONTRACT_ADDRESS = ""
+CHAIN_ID = "100"                       # "10200" za Chiado
+GNOSIS_RPC_URL = "https://rpc.gnosischain.com"
+ALLOWED_ORIGINS = "https://maksimir.domovina.ai,https://stadion-maksimir.domovina.ai,https://stadion-maksimir-8cl.pages.dev,http://localhost:5173,http://localhost:4321"
+IP_DAILY_LIMIT = "50"
+GLOBAL_DAILY_LIMIT = "5000"
+
+# Tajna (wrangler secret put SPONSOR_PRIVATE_KEY): EOA koji plaća gas, bez ikakve
+# uloge u ugovoru. Registrarov ključ NIJE ovdje (v. docs/blockchain/04-web-i-baza.md).
