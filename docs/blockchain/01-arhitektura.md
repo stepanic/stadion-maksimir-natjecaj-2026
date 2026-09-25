@@ -14,7 +14,7 @@ ovdje je *kako* to radi.
 | `share(proof)` | bilo tko | dokaz s `"glasao-sam"` / `"maksimir-2026"` | Semaphore trajno bilježi nullifier; događaj `AnonymousShare` |
 | `migrate(proof)` | samo `successor` (V2) | glasačev dokaz s `migrateMessage()` | poništi listić ovdje i vrati ga V2 |
 | `setRegistrar`, `setMerkleTreeDuration` | vlasnik | — | uprava bez utjecaja na listiće |
-| `setSuccessor(v2)` | vlasnik, **jednom** | — | najava V2 i predaja admina grupe |
+| `setSuccessor(v2)` | vlasnik, **jednom** | — | samo zapis adrese V2; V1 i dalje radi za sve (A-07) |
 | `ballotOf`, `results`, `voters`, `registered` | bilo tko | — | čitanje |
 
 Nema `pause`, `upgrade`, `delete` ni funkcije koja vlasniku ili registraru dopušta pisati po listićima.
@@ -44,7 +44,7 @@ iz samih `BallotCast` događaja. To je zbroj koji svatko može provjeriti bez na
 
 ## Grupa glasača
 
-- Članove dodaje samo ugovor (admin grupe), i to samo uz registrarov potpis.
+- Članove dodaje samo ugovor (admin grupe zauvijek), i to samo uz registrarov potpis.
 - Preglednik gradi stablo **s lanca**: `chain/client/group.ts` čita Semaphore događaje
   (`MemberAdded`…) i provjerava da korijen odgovara `getMerkleTreeRoot`. Ne treba naš poslužitelj.
 - Semaphore uz trenutni prihvaća i korijen star do `merkleTreeDuration` (1 h), pa novi član ne

@@ -7,7 +7,8 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 |---|---|---|---|---|
 | D-01 | visoka (dizajn) | prvi nacrt: operater sam piše na lanac, glasač nema kontrolu | pregled prema zahtjevu „100 % kontrole” | riješeno redizajnom (V1) |
 | D-02 | srednja (dizajn) | LeanIMT `remove` ostavlja nulu, a faza 1 izbacuje člana iz niza | čitanje Semaphore izvora | izbjegnuto: V1 grupa nema `remove` |
-| A-01 | **visoka** | dvostruko glasanje preko verzija nakon najave V2 | ručni pregled pri pisanju V2 checkliste | popravljeno, test |
+| A-01 | **visoka** | dvostruko glasanje preko verzija nakon najave V2 | ručni pregled pri pisanju V2 checkliste | popravljeno, test; popravak zamijenjen boljim u A-07 |
+| A-07 | srednja | popravak A-01 dao je vlasniku polugu: lažnim successorom zaustaviti nove glasače i registracije | krug 5: napadi kroz ovlasti vlasnika | redizajn prijelaza, 3 testa, mutant M23 |
 | A-02 | srednja (alat) | `check-frozen` lažno prolazi nakon izmjene izvora | test u obrnutom smjeru | popravljeno |
 | A-03 | niska | mrtav uvjet `successor == address(0)` u `migrate` | pokrivenost grana | popravljeno |
 | A-04 | niska | redoslijed provjera → zapis → vanjski poziv u `register`; neinicijaliziran `sum` | Slither | popravljeno |
@@ -65,8 +66,10 @@ if (b.revision == 0 && successor != address(0)) revert UseSuccessor(successor);
 Uz pravilo za V2 („odbij nullifier koji u V1 ima reviziju > 0, a nije preseljen”) svaki
 nullifier živi u točno jednoj verziji.
 
-**Dokaz:** test „samo vlasnik najavljuje V2…”: registriran član bez listića nakon najave dobiva
-`UseSuccessor`, a postojeći listić se i dalje smije mijenjati. Chiado nacrt bez popravka
+**Dokaz (tada):** registriran član bez listića nakon najave dobivao je `UseSuccessor`.
+
+> **Zamijenjeno u krugu 5 (A-07).** Pravilo `UseSuccessor` je uklonjeno, jer je vlasniku davalo
+> polugu. Dvostruko glasanje sad sprječava zaključavanje nullifiera u V1 glasačevim dokazom. Chiado nacrt bez popravka
 (`0xD4C4…2692`) je zamijenjen, a manifest je u `deployments/chiado/superseded/`.
 
 ## A-02 — `check-frozen` lažno prolazi
@@ -144,3 +147,62 @@ ugovor, ali bi pao tek u kodiranju viema, s nejasnom greškom. **Popravak:** pro
 lažan korijen. Posljedica je samo da dokaz ne prođe na lancu (pravi korijen je drugačiji), pa
 listić ne bi bio ni prihvaćen ni podmetnut. Ne može se iskoristiti za tuđi glas. **Preporuka za
 web:** korijen provjeriti na drugom neovisnom RPC-u.
+
+## A-07 — lažni successor zaustavlja nove glasače (srednja)
+
+**Kako je nađen:** krug 5, sustavni pregled svake ovlasti vlasnika pitanjem: „što najgore može
+napraviti vlasnik, ili onaj tko ukrade Safe?” Cilj S6 kaže da vlasnik ne smije dirati listiće,
+rok ni zbroj. Ovdje je mogao spriječiti **nove** glasače.
+
+```mermaid
+sequenceDiagram
+  participant O as Vlasnik (ili ukraden Safe)
+  participant V1 as V1 (prije popravka)
+  participant X as „V2” = lažan ugovor
+  actor N as Novi glasač
+
+  O->>V1: setSuccessor(X)
+  V1->>V1: updateGroupAdmin(X)
+  X->>X: acceptGroupAdmin — grupa je sad njegova
+  N->>V1: register(...) ✘ V1 više nije admin grupe
+  N->>V1: cast(rev 1) ✘ UseSuccessor → „glasaj u V2”
+  N->>X: cast ✘ X ne radi ništa
+  Note over N: nitko novi ne može glasati nigdje
+```
+
+**Uzrok:** popravak A-01 riješio je dvostruko glasanje tako da je V1 nakon najave zatvorio vrata
+novim nullifierima. Tako je ispravnost V1 ovisila o tome da je V2 ispravan. Uz to je predaja
+upravljanja grupom značila da nove registracije ovise o V2.
+
+**Popravak (redizajn prijelaza):**
+
+```mermaid
+flowchart LR
+  subgraph V1["V1 — radi zauvijek za sve"]
+    R["register"]
+    C["cast"]
+    M["migrate(glasačev dokaz)<br/>→ zaključa nullifier"]
+  end
+  subgraph V2["V2"]
+    C2["cast: SAMO nullifier<br/>zaključan u V1"]
+  end
+  M -- "listić ili prazno" --> C2
+  C -. "zaključan → AlreadyMigrated" .-x M
+```
+
+- `setSuccessor` **samo zapisuje adresu**. Admin grupe ostaje V1 zauvijek, a `UseSuccessor` je
+  uklonjen.
+- Dvostruko glasanje i dalje nije moguće: V2 prima samo nullifier koji je glasač u V1 zaključao
+  svojim dokazom (`migrate`, radi i bez listića). Zaključan nullifier u V1 više ne može glasati.
+- Pravilo za V2 je **provjerljivo bez povjerenja**: `V1.ballotOf(n).migrated` mora biti `true` za
+  svaki listić u V2. Ni pogrešna ili zlonamjerna V2 ne može dodati glas koji bi pošten zbroj priznao.
+- Zlonamjeran successor bez glasačeva dokaza s porukom baš za njega ne može ništa: ni zaključati,
+  ni preseliti, ni preuzeti grupu.
+
+**Dokaz:** testovi „A-07: zlonamjeran successor (EOA)…” (napadač pokuša `migrate` s tuđim
+dokazima listića i objave te preuzimanje grupe; V1 nakon toga prima novog člana, prvi listić i
+izmjenu), „zaključan nullifier … više ne može glasati” te osnovni test prijelaza. Mutant **M23**
+(vraćena predaja upravljanja grupom) je ubijen.
+
+**Pouka:** popravak sigurnosne greške treba ponovno provjeriti prema **svim** ciljevima, ne samo
+prema onom koji je popravljao. A-01 je popravio S3, a oslabio S6.

@@ -47,7 +47,7 @@ novčanik ni xDAI.
 | Faucet bez preglednika | [`chain/scripts/faucet-chiado.mjs`](../../chain/scripts/faucet-chiado.mjs) | 0,001 xDAI stiglo iz prvog pokušaja |
 | Chiado E2E | [`chain/scripts/e2e-chiado.ts`](../../chain/scripts/e2e-chiado.ts) | registracija, listić, izmjena, objava; tri podmetanja odbijena |
 
-**Chiado V1**: [`0x88BdeE1E404aF25ea29dfAD5Ec67062A36493989`](https://gnosis-chiado.blockscout.com/address/0x88BdeE1E404aF25ea29dfAD5Ec67062A36493989#code)
+**Chiado V1**: [`0xe7903145c8F2401fC16D78d9788D34beE0c3e029`](https://gnosis-chiado.blockscout.com/address/0xe7903145c8F2401fC16D78d9788D34beE0c3e029#code)
 (verificiran izvor). Testni deployer i sponzor:
 [`0x408d…d30C`](https://gnosis-chiado.blockscout.com/address/0x408d1866cda9174A1E1d75bB7cf87ee27561d30C).
 

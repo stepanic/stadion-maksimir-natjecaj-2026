@@ -25,7 +25,7 @@ To je ugovor između verzija i **ne mijenja se nikad**:
 
 | Nepromjenjivo | Vrijednost | Zašto |
 |---|---|---|
-| Semaphore grupa | ista grupa (`groupId` iz V1); admin prelazi na novu verziju | isti ključ glasača vrijedi svugdje |
+| Semaphore grupa V1 | admin je V1 **zauvijek** (V1 nikad ne predaje grupu, audit A-07) | V1 radi za sve dok postoji; V2 dokaze selidbe provjerava nad grupom V1 |
 | `BALLOT_SCOPE` | `"maksimir-2026-listic"` | isti nullifier u svim verzijama, pa jedna osoba ima jedan listić ukupno |
 | `SHARE_MESSAGE`, `SHARE_SCOPE` | `"glasao-sam"`, `"maksimir-2026"` (iz faze 1) | stare objave ostaju valjane |
 | popis radova | 88 šifri, `entriesHash` | isti indeks bajta = isti rad |
@@ -48,27 +48,32 @@ sequenceDiagram
   participant S as Semaphore grupa
   actor G as Glasač
 
-  O->>V2: deploy (zna adresu V1, istu grupu)
-  O->>V1: setSuccessor(V2)  — jednom, zauvijek
-  V1->>S: updateGroupAdmin(V2)
-  V2->>S: acceptGroupAdmin()  — nove registracije idu kroz V2
-  Note over V1: V1 i dalje prima listiće onih koji nisu preselili
+  O->>V2: deploy (zna adresu V1)
+  O->>V1: setSuccessor(V2)  — jednom, zauvijek; SAMO zapis adrese
+  Note over V1: V1 i dalje radi za sve: registracije,<br/>prvi listići, izmjene (A-07)
   G->>G: dokaz s porukom migrateMessage (V1 → V2)
   G->>V2: migrate(dokaz)  (preko relayera ili sam)
   V2->>V1: migrate(dokaz)
-  V1->>V1: provjeri dokaz, poništi listić, oduzmi zbroj
-  V1-->>V2: (revizija, listić)
+  V1->>S: verifyProof (grupa V1)
+  V1->>V1: zaključaj nullifier, poništi listić (ako ga ima), oduzmi zbroj
+  V1-->>V2: (revizija, listić) — prazno ako nije glasao u V1
   V2->>V2: upiši pod ISTIM nullifierom, dodaj u zbroj
+  Note over V2: V2 prima SAMO nullifier zaključan u V1<br/>(i onaj koji u V1 nikad nije glasao)
 ```
 
 - **Ukupni rezultat = zbroj V1 + V2 + …** Svaki nullifier vrijedi u točno jednoj verziji: ili nije
-  preselio (V1), ili je `migrated` u V1 i živi u V2. Klijent i stranica rezultata zbrajaju sve
-  verzije iz `deployments/`.
+  zaključan (V1), ili je `migrated` u V1 i živi u V2. Pravilo „V2 prima samo zaključan nullifier”
+  svatko može provjeriti: za svaki `BallotCast` u V2, `V1.ballotOf(n).migrated` mora biti `true`.
+  Poštena stranica rezultata broji samo takve listiće, pa ni pogrešna V2 ne može dodati glas.
+- **Glasač koji nikad nije glasao u V1**, a želi glasati u V2, najprije zaključa svoj nullifier u
+  V1 (`migrate` bez listića). To je isti dokaz i isti klik u webu.
 - **Nitko ne mora seliti.** Tko ne preseli, i dalje glasa u V1 do roka. V2 smije imati novu
   mogućnost, ali ne smije mijenjati značenje starih listića.
 - **Stari dokazi i potvrde vrijede zauvijek**: V1 i njegovi događaji ostaju na lancu.
 - Prijelaz je testiran s `contracts/test/MockSuccessorV2.sol`: samo vlasnik, jednom; `migrate`
-  bez glasačeva dokaza pada; nakon selidbe V1 odbija listić tog glasača; tuđi listić ostaje.
+  bez glasačeva dokaza pada; nakon selidbe V1 odbija listić tog glasača; tuđi listić ostaje;
+  V1 nakon najave i dalje prima registracije i prve listiće; zlonamjeran successor (običan
+  račun napadača) ne može ni zaključati ni zaustaviti nikoga (A-07).
 
 ## Nepromjenjiv izvor u GitHubu
 
@@ -105,12 +110,13 @@ Pravila:
 ## Kako napraviti V2 (kontrolna lista)
 
 - [ ] `contracts/v2/MaksimirGlasanjeV2.sol`; `v1/` se ne dira
-- [ ] konstruktor prima adresu V1 i koristi `v1.semaphore()`, `v1.groupId()`
-- [ ] `acceptGroupAdmin()` i `migrate(dokaz)` koji zove `V1.migrate` i upisuje pod istim nullifierom
+- [ ] konstruktor prima adresu V1; `migrate(dokaz)` zove `V1.migrate` i upisuje pod istim nullifierom
+- [ ] vlastita Semaphore grupa (ili nova registracija) ako V2 mijenja pravo glasa; isti `BALLOT_SCOPE`
+      daje isti nullifier za isti ključ u bilo kojoj grupi
 - [ ] isti `BALLOT_SCOPE`, `SHARE_*`, `entriesHash`, format listića
 - [ ] EIP-712 `version: "2"`; poruka listića s adresom V2
-- [ ] `cast` u V2 odbija nullifier koji još ima živ listić u V1 (`V1.ballotOf(n)`: revizija > 0 i
-      nije `migrated`). Inače bi ista osoba glasala u dvije verzije.
+- [ ] `cast` u V2 prima **samo** nullifier za koji je `V1.ballotOf(n).migrated == true`
+      (zaključan glasačevim dokazom). Inače bi ista osoba glasala u dvije verzije.
 - [ ] testovi selidbe i ukupnog zbroja V1 + V2
 - [ ] Chiado → Gnosis → `setSuccessor(V2)` sa Safea
 - [ ] klijent: `deployments/` → popis verzija; zbroj i „moj listić” preko svih verzija

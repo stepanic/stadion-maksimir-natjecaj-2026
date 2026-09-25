@@ -31,9 +31,9 @@ npx tsx scripts/e2e-chiado.ts
 `DEPLOY_GAS`: javni Chiado RPC povremeno odbije procjenu gasa porukom „gas required exceeds
 999999”, a izričiti limit to zaobilazi.
 
-Rezultat: [`0x88BdeE1E404aF25ea29dfAD5Ec67062A36493989`](https://gnosis-chiado.blockscout.com/address/0x88BdeE1E404aF25ea29dfAD5Ec67062A36493989#code).
-Prvi nacrt (`0xD4C4…2692`, bez pravila `UseSuccessor`) arhiviran je u
-`deployments/chiado/superseded/`.
+Rezultat: [`0xe7903145c8F2401fC16D78d9788D34beE0c3e029`](https://gnosis-chiado.blockscout.com/address/0xe7903145c8F2401fC16D78d9788D34beE0c3e029#code).
+Raniji nacrti (`0xD4C4…2692` prije A-01, `0x88Bd…3989` prije A-07) arhivirani su u `deployments/chiado/superseded/`
+(vidi [audit](audit/nalazi.md): A-01, A-07).
 
 ## 2. Gnosis mainnet
 

@@ -10,6 +10,7 @@ timeline
   Krug 2 : Slither (A-04) : pokrivenost 76 → 100 % grana (A-03) : prag 100 % u CI-ju
   Krug 3 : stateful fuzz 800 koraka : 22/22 mutanta ubijena : A-06 rupa u testovima
   Krug 4 : klijent (7 testova, otisak popisa radova) : relayer R-01 granica gasa, R-02 raspon : C-01 RPC
+  Krug 5 : ovlasti vlasnika : A-07 redizajn prijelaza na V2 : 23/23 mutanta : Chiado redeploy
 ```
 
 ## Krug 0 — redizajn i prvi testovi
@@ -103,3 +104,18 @@ provjeru. To je dovoljno, jer mutacija ne može proći neprimijećeno.
   EIP-712 domena.
 - **Relayer:** R-01 (granica cijene gasa), R-02 (raspon uint256). Testovi za granice.
 - **C-01:** povjerenje u jedan RPC nije iskoristivo za tuđi glas. Preporuka je dodana za web.
+
+## Krug 5 — ovlasti vlasnika
+
+- **Metoda:** za svaku `onlyOwner` funkciju i svaku posljedicu `setSuccessor` pitanje „što
+  najgore može vlasnik ili kradljivac Safea?”, pa usporedba sa S1–S9.
+- **Nalaz:** A-07 (srednja): popravak A-01 dao je vlasniku mogućnost zaustavljanja novih glasača.
+- **Popravak:** redizajn prijelaza (V1 radi zauvijek, V2 prima samo zaključane nullifiere).
+- **Testovi:** 45 (+3 za A-07), pokrivenost 100 %, **23/23 mutanta ubijena** (M23 novi).
+
+| `onlyOwner` funkcija | Najgori slučaj | Utječe na listiće? |
+|---|---|---|
+| `setRegistrar` | novi registrar izdaje pravo glasa izmišljenim osobama (vidljivo: `Registered`) | ne |
+| `setMerkleTreeDuration` | 0 → dokaz izrađen neposredno prije nove registracije mora se ponoviti; ogromno → dulje vrijedi stari korijen (V1 nema uklanjanja, pa bez posljedica) | ne |
+| `setSuccessor` | lažna V2: **nakon A-07 ništa**, bez glasačeva dokaza | ne |
+| `transferOwnership` | dvostupanjski; novi vlasnik ima iste (male) ovlasti | ne |

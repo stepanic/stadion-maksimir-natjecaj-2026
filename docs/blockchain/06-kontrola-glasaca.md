@@ -126,7 +126,7 @@ preko našeg poslužitelja. Broj registracija i glasača javan je na lancu u sva
 | Može | Ne može |
 |---|---|
 | zamijeniti registrara (npr. ukraden ključ) | mijenjati listiće, zbroj ili rok zatvaranja (`closesAt` je `immutable`) |
-| **jednom** najaviti V2 i predati joj upis novih članova | preseliti ičiji listić u V2 (to traži glasačev dokaz) |
+| **jednom** najaviti V2 (samo zapis adrese) | preseliti ili zaključati ičiji listić (traži glasačev dokaz), zaustaviti nove glasače ili registracije u V1 (audit A-07) |
 | podesiti koliko dugo vrijedi stari korijen grupe | pauzirati ili nadograditi ugovor (nema proxyja ni pauze) |
 
 ### Glasač
@@ -161,7 +161,7 @@ preko našeg poslužitelja. Broj registracija i glasača javan je na lancu u sva
 ## Kako to svatko može provjeriti
 
 - **Izvor ugovora** je verificiran uz adresu:
-  [Chiado](https://gnosis-chiado.blockscout.com/address/0x88BdeE1E404aF25ea29dfAD5Ec67062A36493989#code).
+  [Chiado](https://gnosis-chiado.blockscout.com/address/0xe7903145c8F2401fC16D78d9788D34beE0c3e029#code).
   Za Gnosis će adresa biti ovdje nakon deploya.
 - **Nema proxyja**: kôd na adresi je sam ugovor. `runtimeCodeKeccak256` je u
   [`chain/deployments/`](../../chain/deployments/).
@@ -170,14 +170,14 @@ preko našeg poslužitelja. Broj registracija i glasača javan je na lancu u sva
 - **Testovi**: `cd chain && npx hardhat test` (10 testova), a pravi tok na Chiadu daje
   `npx tsx scripts/e2e-chiado.ts`.
 
-### Chiado, 25.–26. 9. 2026., sve kroz stvarni kod relayera
+### Chiado, 26. 9. 2026. (V1 nakon audita, krug 5), sve kroz stvarni kod relayera
 
 | Korak | Rezultat | Transakcija |
 |---|---|---|
-| registracija (registrarov potpis, relayer šalje) | uspjeh, 152 845 gasa | [0xff48…b05f](https://gnosis-chiado.blockscout.com/tx/0xff48a7d0dd3306bcc53d0cf2cf85ca77411b071c8e6a0a32494833df2b95b05f) |
-| listić 50/30/20 (grupa pročitana s lanca, dokaz u procesu glasača) | uspjeh, 481 440 gasa | [0x1436…568c](https://gnosis-chiado.blockscout.com/tx/0x1436fb305be436e0623ba4c975a5cc5d86e44fb5ffaaf4b24e0bc1332e49568c) |
+| registracija (registrarov potpis, relayer šalje) | uspjeh, 152 833 gasa | [0xda34…13a6](https://gnosis-chiado.blockscout.com/tx/0xda347a1e9bf4c689b64b66602ee78e6f55fb2b653e1ba3256cb74f3d8a6913a6) |
+| listić 50/30/20 (grupa pročitana s lanca, dokaz u procesu glasača) | uspjeh, 479 162 gasa | [0x6564…2990](https://gnosis-chiado.blockscout.com/tx/0x65642704669fe8eb8a4bc92ebb3f75d33d5aa51372301a7eff8eda5012e02990) |
 | relayer mijenja bodove u istom paketu | odbijeno u simulaciji: `WrongMessage` | — |
-| izmjena, revizija 2 (100 jednom radu) | uspjeh, 334 188 gasa; zbroj na lancu se ispravio | [0x4434…996f](https://gnosis-chiado.blockscout.com/tx/0x44347ec2a0774a520cd71e35d2eef4a2f4ae95d776f038bd1a96ba9d50e9996f) |
+| izmjena, revizija 2 (100 jednom radu) | uspjeh, 334 051 gas; zbroj na lancu: `W3YS5VJBZ 100 / 1` | [0x5b6b…544c](https://gnosis-chiado.blockscout.com/tx/0x5b6b5dcd9cdf7dd8c13349477c459329e5c8c76734909e70251c2c4aeb26544c) |
 | relayer ponovno šalje reviziju 1 | odbijeno: `BadRevision` | — |
-| „glasao sam” | uspjeh, 290 751 gas | [0x7c1b…6e14](https://gnosis-chiado.blockscout.com/tx/0x7c1b350698a0f367508bffe93d2c9d5816c996b5478be3c3870b37b5e4546e14) |
+| „glasao sam” | uspjeh, 290 751 gas | [0x393a…6d6](https://gnosis-chiado.blockscout.com/tx/0x393a750d9cac07c49195153cf2545bec69477139824967ebe1796ad40db6cd6d) |
 | „glasao sam” ponovno | odbijeno: `SameNullifierTwice` | — |
