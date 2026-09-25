@@ -16,6 +16,7 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | R-01 | srednja (relayer) | nema gornje granice cijene gasa; pri zagušenju član grupe može isprazniti sponzora | pregled relayera (model troška) | `MAX_FEE_GWEI` (zadano 5) |
 | R-02 | niska (relayer) | parser propušta 78-znamenkaste brojeve > uint256 | test granica | provjera raspona + test |
 | C-01 | info (klijent) | `fetchGroup` vjeruje jednom RPC-u (i događaji i korijen dolaze od njega) | pregled klijenta | preporuka: web provjerava korijen na drugom RPC-u |
+| A-08 | info | malleabilnost nullifiera (+ r) i ECDSA `s` — zaštićeno vanjskim kodom (Semaphore, OZ) | krug 6 | regresijski testovi |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
 
 ## D-01 — operater piše na lanac

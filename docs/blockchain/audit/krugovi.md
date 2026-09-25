@@ -11,6 +11,7 @@ timeline
   Krug 3 : stateful fuzz 800 koraka : 22/22 mutanta ubijena : A-06 rupa u testovima
   Krug 4 : klijent (7 testova, otisak popisa radova) : relayer R-01 granica gasa, R-02 raspon : C-01 RPC
   Krug 5 : ovlasti vlasnika : A-07 redizajn prijelaza na V2 : 23/23 mutanta : Chiado redeploy
+  Krug 6 : malleabilnost (polje BN254, ECDSA s) : matrica sljedivosti S1–S9 : mutacije u CI-ju
 ```
 
 ## Krug 0 — redizajn i prvi testovi
@@ -119,3 +120,42 @@ provjeru. To je dovoljno, jer mutacija ne može proći neprimijećeno.
 | `setMerkleTreeDuration` | 0 → dokaz izrađen neposredno prije nove registracije mora se ponoviti; ogromno → dulje vrijedi stari korijen (V1 nema uklanjanja, pa bez posljedica) | ne |
 | `setSuccessor` | lažna V2: **nakon A-07 ništa**, bez glasačeva dokaza | ne |
 | `transferOwnership` | dvostupanjski; novi vlasnik ima iste (male) ovlasti | ne |
+
+## Krug 6 — malleabilnost i sljedivost
+
+- **Malleabilnost javnih ulaza ZK dokaza:** `nullifier + r` (r = red polja BN254) bio bi isti
+  dokaz s „drugim” nullifierom, dakle drugi listić iste osobe. Semaphore verifier odbija svaki
+  javni ulaz ≥ r (`checkField`), pa `cast` vraća `InvalidProof`. Zaštita je u vanjskom kodu,
+  zato je vezana regresijskim testom.
+- **Re-randomizacija Groth16 dokaza** (drugi `points` za iste javne ulaze): moguća je, ali
+  bezopasna. Nullifier, poruka i scope su isti, pa je učinak isti kao ponovno slanje (`BadRevision`).
+- **Malleabilnost ECDSA potpisa registrara** (`s → n − s`): OpenZeppelin `ECDSA.recover` odbija
+  gornju polovicu `s` (`ECDSAInvalidSignatureS`). Test to potvrđuje.
+- **Mutacije u CI-ju:** na svakom pull requestu koji dira `chain/` (oko 4 min).
+
+### Matrica sljedivosti: cilj → zaštita → testovi → mutanti
+
+```mermaid
+flowchart LR
+  S1["S1 samo glasačev ključ"] --> P1["verifyProof + grupa"]
+  S2["S2 sadržaj nepromjenjiv"] --> P2["poruka = hash listića<br/>+ scope"]
+  S3["S3 jedan živi listić"] --> P3["nullifier + revizija<br/>+ migrated"]
+  S4["S4 zbroj = listići"] --> P4["_apply ± / _validate"]
+  S5["S5 pravo glasa"] --> P5["EIP-712 registrar"]
+  S6["S6 vlasnik bez moći"] --> P6["3 onlyOwner fn<br/>bez pristupa listićima"]
+  S7["S7 rok"] --> P7["closesAt immutable"]
+  S8["S8 nepovezivost"] --> P8["različiti scopeovi"]
+  S9["S9 bez cenzure"] --> P9["cast/register/share<br/>bez dopuštenja"]
+```
+
+| Cilj | Testovi (primjeri) | Mutanti koji ga krše (svi ubijeni) |
+|---|---|---|
+| S1 | pokvaren SNARK, ključ izvan grupe, prazna grupa, nullifier + r; fuzz: outsider, snark | M05 |
+| S2 | relayer mijenja bodove; poruka ovisi o svakom polju (klijent); fuzz: tamper | M04, M17 |
+| S3 | revizija +1, replay, preskakanje; drugi scope; A-01/A-07 selidba; fuzz: replay, skip, scope | M02, M03, M06, M12, M13, M16 |
+| S4 | zbroj uživo, povlačenje, zbroj ≠ 100, duljina; fuzz: model nakon svakog koraka | M01, M07, M08, M19, M20 |
+| S5 | tuđi potpis, istekao, produžen rok, drugi commitment, drugi lanac/ugovor, malleabilan `s` | M09, M11, M22 |
+| S6 | neovlašteni pozivi, dvostupanjsko vlasništvo, lažni successor (A-07) | M14, M15, M21, M23 |
+| S7 | cast i register nakon roka; fuzz: nakon roka ništa se ne mijenja | M10 |
+| S8 | nullifier listića ≠ nullifier objave; objava s scopeom listića | M18 |
+| S9 | bilo tko šalje paket (stranger); Chiado E2E kroz relayer | (nema mutanta: nema provjere pošiljatelja koju bi se moglo ukloniti) |

@@ -56,6 +56,19 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       await expect(asRelayer.write.register([id.commitment, now + 60n, otherChain])).to.be.rejectedWith("NotRegistrar");
     });
 
+    it("malleabilan ECDSA potpis (s → n − s) odbija OpenZeppelin", async () => {
+      const { v1, asRelayer, chainId, now } = await deploy();
+      const id = new Identity();
+      const sig = await registrar.signTypedData(registerTypedData({ chainId, contract: v1.address, commitment: id.commitment, deadline: now + 60n }));
+      const N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+      const r = sig.slice(2, 66);
+      const sHigh = (N - BigInt("0x" + sig.slice(66, 130))).toString(16).padStart(64, "0");
+      const v = parseInt(sig.slice(130, 132), 16) === 27 ? "1c" : "1b";
+      const flipped = `0x${r}${sHigh}${v}` as const;
+      await expect(asRelayer.write.register([id.commitment, now + 60n, flipped])).to.be.rejectedWith("ECDSAInvalidSignatureS");
+      await asRelayer.write.register([id.commitment, now + 60n, sig]);
+    });
+
     it("potpis s produženim rokom ne vrijedi (rok je dio potpisane poruke)", async () => {
       const { v1, asRelayer, chainId, now } = await deploy();
       const id = new Identity();
@@ -85,6 +98,17 @@ describe("MaksimirGlasanjeV1 — rubni slučajevi", () => {
       const other = toSolidityProof(await generateProof(a, group, message, 424242n));
       expect(other.nullifier).to.not.equal(first.nullifier);
       await expect(asRelayer.write.cast([1, points, other])).to.be.rejectedWith("WrongScope");
+      expect(await v1.read.voters()).to.equal(1n);
+    }).timeout(300_000);
+
+    it("malleabilnost: isti dokaz s nullifier + r (modul polja) → InvalidProof, nema drugog listića", async () => {
+      const { v1, asRelayer, register, signedBallot } = await deploy();
+      const a = new Identity();
+      await register(a);
+      const [rev, points, proof] = await signedBallot(a, 1, { "6TVJ3MUHR": 100 });
+      const R = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+      await expect(asRelayer.write.cast([rev, points, { ...proof, nullifier: proof.nullifier + R }])).to.be.rejectedWith("InvalidProof");
+      await asRelayer.write.cast([rev, points, proof]);
       expect(await v1.read.voters()).to.equal(1n);
     }).timeout(300_000);
 
