@@ -1,6 +1,6 @@
 // /g/<id> — poveznica za dijeljenje glasa (Cloudflare Pages Function).
 //
-// Hash rute (#/glasanje/g/<id>) crawleri društvenih mreža ne vide, pa ovdje
+// Objava je SPA ruta (/glasanje/g/<id>) čiji sadržaj crawleri ne vide, pa ovdje
 // poslužujemo mali HTML s OG/Twitter karticom (naslov i opis iz objave), a
 // preglednik JavaScriptom preusmjerava na SPA. Crawleri JS ne izvode, pa ostaju
 // na kartici. URL i anon ključ su javni (isti su u web/.env).
@@ -33,7 +33,7 @@ async function fetchShare(id: string): Promise<Share> {
 export const onRequestGet = async ({ params, request }: { params: Record<string, string>; request: Request }) => {
   const id = String(params.id ?? "");
   const origin = new URL(request.url).origin;
-  if (!/^[a-z0-9]{12}$/.test(id)) return Response.redirect(`${origin}/#/glasanje`, 302);
+  if (!/^[a-z0-9]{12}$/.test(id)) return Response.redirect(`${origin}/glasanje`, 302);
 
   let title = "Glasanje javnosti za novi Stadion Maksimir";
   let desc = "Svaki građanin s eOsobnom ima 100 bodova za 88 natječajnih radova. Provjerljivo do Bitcoina.";
@@ -56,7 +56,7 @@ export const onRequestGet = async ({ params, request }: { params: Record<string,
   }
 
   const url = `${origin}/g/${id}`;
-  const target = `/#/glasanje/g/${id}`;
+  const target = `/glasanje/g/${id}`;
   const img = `${origin}/og-glasanje.png`;
   const html = `<!doctype html>
 <html lang="hr"><head><meta charset="utf-8" />

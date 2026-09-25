@@ -8,13 +8,21 @@ import { renderResultsIndex, renderAward } from "./rezultatiView";
 import { renderRadoviIndex, renderRad } from "./radoviView";
 import { renderGlasanje } from "./glasanjeView";
 import { renderShare } from "./shareView";
-import { link } from "./routes";
+import { link, setRouteHandler } from "./routes";
 
+// Stare hash poveznice (/#/radovi/X, /#/sot#sidro) i dalje kruže, a poslužitelj
+// hash ne vidi, pa ih ovdje prevodimo u pravi put bez novog unosa u povijesti.
+function upgradeLegacyHash(): boolean {
+  if (!location.hash.startsWith("#/")) return false;
+  history.replaceState(null, "", "/" + location.hash.slice(2));
+  return true;
+}
+upgradeLegacyHash();
 // /g/<id> je poveznica za dijeljenje (Pages Function daje OG karticu i preusmjerava).
-// Ako stigne do SPA-a (lokalni razvoj ili bez Functiona), prebaci na hash rutu.
+// Ako stigne do SPA-a (lokalni razvoj ili bez Functiona), prebaci na rutu objave.
 {
   const m = location.pathname.match(/^\/g\/([a-z0-9]{12})\/?$/);
-  if (m) history.replaceState(null, "", `/#/glasanje/g/${m[1]}`);
+  if (m) history.replaceState(null, "", link(`glasanje/g/${m[1]}`));
 }
 
 const navEl = document.getElementById("nav")!;
@@ -97,7 +105,11 @@ async function renderDoc(slug: string, hash: string) {
   ]);
   setActiveNav(slug);
   await renderMermaidIn(contentEl);
-  // Scroll to fragment if any, otherwise top.
+  scrollToHash(hash);
+}
+
+// Scroll to fragment if any, otherwise top.
+function scrollToHash(hash: string) {
   if (hash) {
     const id = decodeURIComponent(hash.replace(/^#/, ""));
     const target = document.getElementById(id);
@@ -159,15 +171,21 @@ function escapeHtml(s: string): string {
 }
 
 function parseRoute(): { slug: string; hash: string } {
-  const raw = location.hash.replace(/^#\/?/, "");
-  // raw is like "sot" or "sot#section-name" or ""
-  const [slug, ...rest] = raw.split("#");
-  return { slug, hash: rest.length ? "#" + rest.join("#") : "" };
+  const slug = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "");
+  return { slug, hash: location.hash };
 }
+
+// Put koji je zadnji iscrtan: promjena samo sidra ne crta stranicu ponovno.
+let renderedPath: string | null = null;
 
 async function route() {
   sidebarEl.classList.remove("open");
   const { slug, hash } = parseRoute();
+  if (renderedPath === location.pathname) {
+    scrollToHash(hash);
+    return;
+  }
+  renderedPath = location.pathname;
   // Mreža svih radova koristi punu širinu ekrana; ostale stranice ostaju u stupcu za čitanje.
   contentEl.classList.toggle("content--wide", slug === "radovi" || slug === "glasanje");
   if (!slug) {
@@ -199,7 +217,32 @@ async function route() {
   await renderDoc(slug, hash);
 }
 
-window.addEventListener("hashchange", route);
+// Interni linkovi mijenjaju rutu bez ponovnog učitavanja stranice. Datoteke
+// (slike, PDF-ovi), novi prozori i klikovi s modifikatorom idu pregledniku.
+document.addEventListener("click", (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
+  if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+  const url = new URL(a.href);
+  if (url.origin !== location.origin || /\.[a-z0-9]+$/i.test(url.pathname)) return;
+  // Isti URL: kao i s hash ruterom, ništa (bez ponovnog učitavanja i novog unosa u povijesti).
+  if (url.href === location.href) {
+    e.preventDefault();
+    return;
+  }
+  // Samo sidro na istoj stranici: preglednik skrola sam.
+  if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+  e.preventDefault();
+  history.pushState(null, "", url.pathname + url.search + url.hash);
+  route();
+});
+
+window.addEventListener("popstate", route);
+// Stari link zalijepljen u adresnu traku otvorene stranice ne učitava je ponovno.
+window.addEventListener("hashchange", () => {
+  if (upgradeLegacyHash()) route();
+});
+setRouteHandler(route);
 
 buildNav();
 route();

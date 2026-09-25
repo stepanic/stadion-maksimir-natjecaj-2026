@@ -1,5 +1,5 @@
-// Stranice "Rezultati natječaja": pregled nagrađenih radova (#/rezultati)
-// i galerija svih panela pojedinog rada (#/rezultati/<rank>) s lightboxom.
+// Stranice "Rezultati natječaja": pregled nagrađenih radova (/rezultati)
+// i galerija svih panela pojedinog rada (/rezultati/<rank>) s lightboxom.
 
 import { awards, coverUrl, pageUrl, thumbUrl, RESULTS_SOURCE, type Award } from "./rezultati";
 import { link } from "./routes";
@@ -65,7 +65,7 @@ export function renderResultsIndex(el: HTMLElement) {
   `;
 }
 
-// Svih 88 radova je na #/radovi (službeni EOJN dokumenti, objava 25.9.2026.).
+// Svih 88 radova je na /radovi (službeni EOJN dokumenti, objava 25.9.2026.).
 const NON_AWARDED_HTML = `
   <p><strong>Svi su javno dostupni.</strong> Naručitelj je 25. 9. 2026. na EOJN-u objavio zapisnik s popisom svih 88 radova (autori, šifre, rang 1–85, obrazloženje ocjenjivačkog suda za svaki rad) i Prilog III sa službenom slikom svakog rješenja.</p>
   <p><a class="btn btn-primary" href="${link("radovi")}">Pogledaj svih 88 radova →</a></p>

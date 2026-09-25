@@ -1,5 +1,5 @@
 // Stranice "Svi radovi": svih 88 natječajnih rješenja iz službenih EOJN
-// dokumenata (#/radovi) i detalj pojedinog rada (#/radovi/<šifra>).
+// dokumenata (/radovi) i detalj pojedinog rada (/radovi/<šifra>).
 // Podaci: sources/radovi.json (gradi scripts/build_radovi.py).
 
 import radoviData from "../../sources/radovi.json";

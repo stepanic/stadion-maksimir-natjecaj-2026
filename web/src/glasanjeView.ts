@@ -1,4 +1,4 @@
-// Stranica #/glasanje: listić od 100 bodova, rezultati uživo i provjerljivost
+// Stranica /glasanje: listić od 100 bodova, rezultati uživo i provjerljivost
 // (potvrda glasača + svakosatni snapshotovi žigosani u Bitcoin).
 
 import { radovi, byCode, esc, tidy, type Rad } from "./radoviView";
@@ -333,7 +333,7 @@ async function exportZkKey() {
     [
       `Tajni ZK ključ za glasanje o Stadionu Maksimir (Semaphore v4).\n` +
         `Nikome ga ne šalji: tko ima ključ, može izraditi dokaz u tvoje ime.\n` +
-        `Na drugom uređaju: #/glasanje → Anonimno (ZK) → Uvezi ključ.\n\n${k}\n`,
+        `Na drugom uređaju: ${location.host}${link("glasanje")} → Anonimno (ZK) → Uvezi ključ.\n\n${k}\n`,
     ],
     { type: "text/plain" }
   );

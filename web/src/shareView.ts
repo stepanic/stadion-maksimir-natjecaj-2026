@@ -1,4 +1,4 @@
-// Objava glasa: #/glasanje/g/<id> (javno: /g/<id>, s OG karticom iz Pages Functiona).
+// Objava glasa: /glasanje/g/<id> (javno: /g/<id>, s OG karticom iz Pages Functiona).
 //   - javna objava: ime iz eOsobne (u obliku koji je glasač izabrao) + bodovi + zapis u lancu
 //   - ZK objava: anonimni Semaphore dokaz, koji svaki posjetitelj provjerava u svom pregledniku
 
