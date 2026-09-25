@@ -1,7 +1,10 @@
 # 8. Integracija s fazom 1: plan spajanja
 
-**Status:** prijedlog od 26. 9. 2026. Čeka Matijino odobrenje. Implementacija počinje tek nakon
-odobrenja, korak po korak, s testovima i commit checkpointom na grani `feat/glasanje-integracija`.
+**Status (26. 9. 2026.):** plan odobren; **implementirano i testirano lokalno i na Chiadu** (grane
+`feat/glasanje-integracija` u ovom repou i `feat/maksimir-chain` u `domovina-api`). Ništa nije
+primijenjeno na produkciju: migracija, edge funkcija, Gnosis deploy, tajne i zastavica čekaju
+Matijin ok ([Put do produkcije](#put-do-produkcije)). Stanje po koracima:
+[Stanje implementacije](#stanje-implementacije).
 
 Ovaj dokument spaja [`MaksimirGlasanjeV1`](01-arhitektura.md) s glasanjem koje radi na produkciji
 od 25. 9. 2026. ([faza 1](../glasanje-kako-radi.md)). Dijelovi su već opisani u
@@ -34,7 +37,7 @@ Action, `maksimir_verify.py --chain`, povratak i E2E.
 | Checkpoint cron | radi, ali neredovito (zakazani runovi 17:56 i 21:33 UTC, ne svaki sat) | `gh run list -w maksimir-checkpoint` |
 | V1 na Chiadu | `0xe790…e029`, verificiran, E2E kroz kod relayera | [`deployments/chiado/v1.json`](../../chain/deployments/chiado/v1.json) |
 | V1 na Gnosisu | nije deployan | — |
-| Relayer | kôd i testovi, nije deployan | [`chain/relayer/`](../../chain/relayer/) |
+| Relayer | kôd i testovi, nije deployan (26. 9. premješten u Worker `maksimir`) | [`web/worker/relayer/`](../../web/worker/relayer/) |
 | Registrar, `maksimir_keystore` | ne postoje | [04](04-web-i-baza.md) |
 | Web | Vite + Worker `maksimir`; Astro je odbačen | [odluka](../2026-09-25-web-nice-to-have.md) |
 
@@ -116,7 +119,7 @@ flowchart TD
 | # | Korak | Repo | Test | Povratak |
 |---|---|---|---|---|
 | 1 | registrar + `maksimir_chain_registrations` + `maksimir_keystore` | `domovina-api` | SQL testovi (kao `supabase/tests/20260925_*`), Deno test edge funkcije | migracija je aditivna; funkcija se ne poziva dok web ne zna za nju |
-| 2 | relayer na Chiadu | ovaj (`chain/relayer`) | postojeći testovi + `/status` na Chiadu | `wrangler delete` |
+| 2 | relayer na Chiadu | ovaj (`web/worker/relayer`) | postojeći testovi + `/status` na Chiadu | `wrangler delete` |
 | 3 | web tok | ovaj (`web/`) | unit (happy-dom), `glasanje-ui.mjs` s presretnutim API-jem, `npm run check` | zastavica isključena = faza 1 nepromijenjena |
 | 4 | `maksimir_verify.py --chain`, snapshot v3 | ovaj (`scripts/`) | fiksture s Chiada, test u suprotnom smjeru | stara provjera radi kao i dosad |
 | 5 | E2E Chiado s eOsobnom | — | [kontrolna lista](#e2e-s-pravom-eosobnom) | — |
@@ -201,14 +204,14 @@ sequenceDiagram
 
 ## 2. Relayer
 
-Kôd se ne mijenja. Mijenja se samo konfiguracija
-([`wrangler.toml`](../../chain/relayer/wrangler.toml)):
+**Izvedeno drukčije od prvog prijedloga** (odluka 10): relayer je ruta `/relayer/<chainId>/…` u
+Workeru `maksimir`, pa se web i relayer deployaju zajedno. Detalji su u
+[02](02-relayer-i-gas.md#relayer-je-ruta-u-workeru-maksimir-26-9-2026):
 
-- dva okruženja: `maksimir-relayer-chiado` i `maksimir-relayer` (Gnosis), svako s vlastitim KV-om i
-  tajnom `SPONSOR_PRIVATE_KEY`;
-- vlastita domena, npr. `relayer.maksimir.domovina.ai` (Chiado: `relayer-chiado.…`);
-- `ALLOWED_ORIGINS` bez `localhost:4321` (Astro nije došao), s `maksimir.domovina.ai` i
-  `localhost:5173`;
+- više mreža u jednom Workeru: `RELAYER_CHAINS` + tajna `SPONSOR_PRIVATE_KEY_<chainId>`; mreža bez
+  tajne vraća 503;
+- isti izvor kao web, pa nema CORS-a;
+- najmanja napojnica 0,01 gwei ([I-05](audit/nalazi.md));
 - sponzor na Gnosisu: novi EOA s 1 xDAI. Uz izmjerenih ~0,5 M gasa po listiću i gornju granicu
   relayera od 5 gwei (`MAX_FEE_GWEI`), 1 xDAI pokriva najmanje 400 listića i u najgorem slučaju. Uz
   stvarnu naknadu od ~10 wei trošak je zanemariv ([02](02-relayer-i-gas.md)).
@@ -553,30 +556,74 @@ Svaka izmjena u `chain/` prolazi `npx hardhat test`, `npm run coverage`, `npm ru
 `npm run typecheck:client` i `npm run check-frozen` (100 % ostaje). Teški procesi idu jedan po
 jedan (Mac nema swap).
 
-## Otvorena pitanja za Matiju
+## Odluke (Matija, 26. 9. 2026.)
 
-1. **Redoslijed:** slažeš li se da Gnosis deploy dođe *nakon* E2E na Chiadu s pravom eOsobnom
-   (umjesto na početku)? Preporuka: da, zbog nepromjenjivosti ugovora.
-2. **Dan D:** što prije (dok faza 1 nema aktivnih listića), ili tek kad sve bude na Gnosisu i
-   testirano? Preporuka: što prije nakon koraka 8, i bez promocije glasanja do tada.
-3. **Prijenos listića faze 1:** pri registraciji (predloženo; jednostavno i provjerljivo iz lanca
-   faze 1, uz rizik „ni ovdje ni ondje” ako predaja na lancu ne uspije) ili tek kad glasač dokaže
-   predaju na lancu (dokaz vlasništva nullifiera koji baza ne može provjeriti, pa ga provjerava
-   tek preglednik posjetitelja)? Preporuka: pri registraciji.
-4. **Ostatak faze 1 u zbroju:** broji se do kraja (31. 12. 2027.) dok ga glasač ne prenese
-   (predloženo), ili se nakon nekog roka „zamrzne” kao zaseban, samo informativan zbroj?
-5. **Anonimna objava na lancu:** kratka poveznica u bazi `(id → tx_hash)` (predloženo; isti oblik
-   `/g/<id>` i OG kartica) ili poveznica bez baze, npr. `/g/0x<tx>`?
-6. **`ts_ms` zaokružen na sat** u javnom lancu faze 1 za zapise „prijenos”? Traži izmjenu formata
-   izvoza, pa i `maksimir_verify.py`. Preporuka: ne, dovoljno je navesti rizik u uvjetima v2.
-7. **Relayer u serijama** (jednom na sat) ili odmah? Preporuka: odmah, uz mogućnost „pošalji
-   kasnije”; serije kvare iskustvo izmjene listića.
-8. **Vlasnik na Gnosisu:** novi Safe 2/3 s istim potpisnicima kao MPT Safe? Kompajler: ostati na
-   0.8.28 (Chiado je testiran s njim) ili prijeći na 0.8.37 (novi Chiado deploy i audit krug)?
-   Preporuka: ostati na 0.8.28.
-9. **Tuđi rad na UI-ju glasanja:** je li redizajn listića (commit `dd15f1f`) gotov? Grananje u
-   `glasanjeView.ts` (korak I5) bi se inače sudaralo s njim.
-10. **Domena relayera:** `relayer.maksimir.domovina.ai` ili put na istoj domeni
-    (`maksimir.domovina.ai/relayer/*`, bez CORS-a, ali kroz Worker `maksimir`)?
-11. **Stari worktree** `../stadion-maksimir-onchain`: `.env.chiado` je kopiran u novi worktree.
-    Smijem li ga obrisati?
+| # | Pitanje | Odluka |
+|---|---|---|
+| 1 | Gnosis deploy nakon E2E na Chiadu | da |
+| 2 | Dan D što prije, bez promocije do tada | da |
+| 3 | Prijenos listića faze 1 pri registraciji | da, rizik „ni ovdje ni ondje” prihvaćen (ublažen nalazom I-07) |
+| 4 | Ostatak faze 1 broji se do kraja | da; kompatibilnost unatrag nije potrebna (na produkciji nema listića) |
+| 5 | Anonimna objava na lancu: kratka poveznica u bazi | da |
+| 6 | `ts_ms` se ne zaokružuje | da |
+| 7 | Relayer šalje odmah, bez serija | da |
+| 8 | Safe 2/3, solc 0.8.28 | da; na Chiadu isprobano s 3 lokalna EOA-a ([03](03-deploy-runbook.md#vlasnik-safe-23)) |
+| 9 | Tuđi rad na `glasanjeView.ts` | nema ga |
+| 10 | Relayer kao podruta istog Workera | da (jedan, atomičan deploy) |
+| 11 | Brisanje starog worktreea `../stadion-maksimir-onchain` | obrisan (`.env.chiado` prije toga kopiran i uspoređen) |
+
+## Stanje implementacije
+
+| # | Korak | Gdje | Provjera | Commit |
+|---|---|---|---|---|
+| I1 | migracija `20260926120000_maksimir_chain.sql` | `domovina-api` | `supabase/tests/20260926_maksimir_chain.sql` (15 provjera); stari testovi faze 1 prolaze | `f6ad74d`, `106f205` |
+| I2 | edge funkcija `maksimir-register` | `domovina-api` | 7 Deno testova + fiksni vektor potpisa (isti test u `chain/test/client`) | `6b6ad33` |
+| — | klijent: dokaz vlasništva, čitanje s lanca, korijeni grupe | `chain/client/` | 99 testova, `chain/client` i ugovor 100 %, `check-frozen` | `178a2c2` |
+| I3 | relayer u Workeru | `web/worker/relayer/` | 8 testova; `scripts/e2e-chiado.ts` na pravom Chiadu | `ef4c5d8` |
+| I4–I6 | web: tok, rezultati, objave, OG kartica | `web/src/chainVote*.ts` | `scripts/glasanje-chain-e2e.mjs`: **33/33** (pravi Chiado); `npm run check`; `glasanje-ui.mjs` | `7f83aaf` |
+| I7 | snapshot v3 + `maksimir_verify.py --chain` | `scripts/` | 9 testova bez mreže + živi Chiado; checkpoint → verify od kraja do kraja | `382d046` |
+| 8 | vlasnik V1 na Chiadu = Safe 2/3 | `chain/scripts/safe-chiado.ts` | 1 potpis odbijen, stari vlasnik odbijen, 2 potpisa rade | `eafde60` |
+
+Nalazi iz integracije (I-01 … I-08) su u [dnevniku nalaza](audit/nalazi.md).
+
+### Što E2E provjerava (33 provjere, pravi ugovor na Chiadu)
+
+```mermaid
+flowchart LR
+  A1["A1 listić faze 1<br/>→ prijenos na lanac<br/>(novi ključ, 24 riječi, passkey)"] --> A2["A2 izmjena<br/>(passkey)"]
+  A2 --> A3["A3 javna objava<br/>+ podmetnut nullifier"]
+  A3 --> A4["A4 anonimna<br/>objava"]
+  A4 --> A5["A5 povlačenje"]
+  A5 --> B["B novi uređaj:<br/>24 riječi"]
+  B --> C["C ZK ključ faze 1<br/>= isti commitment"]
+  C --> D["D zbroj na stranici<br/>= lanac + faza 1"]
+```
+
+### Lokalni stack
+
+| Dio | Naredba | Port |
+|---|---|---|
+| baza | `domovina-api$ supabase start`; migracija ručno: `psql … -1 -f supabase/migrations/20260926120000_maksimir_chain.sql` | 55321/55322 |
+| registrar | `domovina-api$ SUPABASE_URL=… SUPABASE_ANON_KEY=… SUPABASE_SERVICE_ROLE_KEY=… MAKSIMIR_REGISTRAR_KEY_10200=<iz chain/.env.chiado> deno run --allow-net --allow-env --allow-read supabase/functions/maksimir-register/index.ts` | 8000 |
+| relayer + web build | `web$ npm run build && npx wrangler dev --port 8787` (tajna u `web/.dev.vars`: `SPONSOR_PRIVATE_KEY_10200`) | 8787 |
+| web (razvoj) | `web$ npx vite --port 5173 --mode e2e` (`web/.env.e2e.local`: lokalni Supabase + `VITE_MAKSIMIR_REGISTER_URL`) | 5173 |
+| E2E | `web$ SUPABASE_SERVICE_ROLE_KEY=… node scripts/glasanje-chain-e2e.mjs [--headed]` | — |
+
+`.env.e2e.local`, a ne `.env.local`: Vite `.env.local` učitava i u produkcijskom buildu ([I-06](audit/nalazi.md)).
+Na produkcijskoj domeni tok se isprobava s `?lanac=chiado` (samo kad u bazi postoji redak `chiado`).
+
+## Put do produkcije
+
+Redoslijed, svaki korak uz Matijin ok. Web je siguran i prije koraka 1 ([I-04](audit/nalazi.md)).
+
+1. **Baza:** ručno primijeniti `20260926120000_maksimir_chain.sql` (backup sheme, kao 25. 9.).
+   Testni redak `chiado` u `maksimir_chains` s `counts = false` (za `?lanac=chiado` na produkciji).
+2. **Registrar:** deploy edge funkcije `maksimir-register`; tajne `MAKSIMIR_REGISTRAR_KEY_10200`
+   (Chiado, testni) i kasnije `_100`.
+3. **Web + relayer:** `npm run check`, `npm run deploy`, `wrangler secret put SPONSOR_PRIVATE_KEY_10200`.
+4. **E2E s pravom eOsobnom na Chiadu** (Brave, Matija klikne passkey) po [kontrolnoj listi](#e2e-s-pravom-eosobnom).
+5. **Gnosis:** Safe 2/3, novi ključ registrara, deploy V1 s `OWNER=<Safe>` ([03](03-deploy-runbook.md)),
+   `deployments/gnosis/v1.json`, tag; redak `gnosis` s `counts = true`; `RELAYER_CHAINS` + `SPONSOR_PRIVATE_KEY_100`.
+6. **E2E na Gnosisu** s Matijinim pravim ključem.
+7. **Dan D:** `update maksimir_settings set active_chain_id = 100, active_contract = '<adresa>', chain_from = now()`
+   pa [runbook dana D](#dan-d-prijelaz). Checkpoint Action od tada sam dodaje stanje lanca (manifest Gnosisa postoji).

@@ -98,19 +98,16 @@ i sponzor relayera, `0x408d…d30C`, te registrar `0x3bbe…2137`.
 
 ## Otvoreno
 
-- [ ] **Plan spajanja s fazom 1 (offchain)** kao jedan uređen dokument (`docs/blockchain/08-…`).
-      Dijelovi već postoje: [04-web-i-baza.md](blockchain/04-web-i-baza.md) (registrar, web tok,
-      baza, zatvaranje faze 1) i [01 „Prijelaz s faze 1”](blockchain/01-arhitektura.md#prijelaz-s-faze-1).
-      Nedostaju redoslijed, zastavice, rezultati iz dva izvora, `/g/<id>` objave, checkpoint Action
-      nakon prelaska, `maksimir_verify.py --chain` i plan povratka.
+- [x] **Spajanje s fazom 1**: plan i implementacija u [08](blockchain/08-integracija-s-fazom-1.md)
+      (lokalno + Chiado, E2E 33/33). Produkcija: [put do produkcije](blockchain/08-integracija-s-fazom-1.md#put-do-produkcije).
 - [ ] **Ubrzati mutacijski test** (vidi gore).
 
 - [ ] **Merge u `main`**: bez konflikata s `origin/main` na dan 26. 9. (provjereno `git merge-tree`).
 - [ ] **Gnosis deploy**: novi Safe 2/3 kao vlasnik, ključ registrara, commitan izvor, git tag
       `glasanje-v1-gnosis` ([03-deploy-runbook.md](blockchain/03-deploy-runbook.md)).
 - [ ] **Kompajler**: ostati na solc 0.8.28 ili prije mainneta prijeći na 0.8.37 (novi Chiado deploy).
-- [ ] **Registrar** u `domovina-api` i tablica `maksimir_keystore` ([04](blockchain/04-web-i-baza.md)).
-- [ ] **Web** nakon Astro migracije: tok iz demo stranice, relayer, rezultati s lanca, `docs.ts` manifest.
+- [x] **Registrar** i `maksimir_keystore` (`domovina-api`, grana `feat/maksimir-chain`; nije na produkciji).
+- [x] **Web**: tok, relayer (ruta u Workeru), rezultati s lanca, `docs.ts` manifest (iza zastavice).
 - [ ] **Passkey na drugim platformama**: iPhone (Safari), Android (Chrome + Google), Windows Hello.
 - [ ] **CI na GitHubu** još nije vidio granu; prvi push će pokazati prolaze li `coverage`,
       `coverage:client`, `typecheck:client` i `mutation` na Ubuntu runneru.

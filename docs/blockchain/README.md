@@ -5,7 +5,7 @@
 Status 26. 9. 2026.: **`MaksimirGlasanjeV1` je prošao 6 krugova audita (47 testova, 100 % pokrivenosti,
 23/23 mutanta ubijena, 800 fuzz koraka), radi na Chiadu (testnet) i prošao je E2E kroz stvarni
 kod relayera.** Na Gnosis mainnet još nije deployan. Web još nije spojen; plan spajanja s fazom 1
-je u [08](08-integracija-s-fazom-1.md). Web ostaje Vite + Worker (Astro je odbačen,
+je u [08](08-integracija-s-fazom-1.md) i **implementiran je** (lokalno + Chiado, 26. 9.; produkcija čeka ok). Web ostaje Vite + Worker (Astro je odbačen,
 [odluka](../2026-09-25-web-nice-to-have.md)).
 
 Faza 1 ([glasanje-kako-radi.md](../glasanje-kako-radi.md)) drži listiće u Postgresu, a operater
@@ -48,7 +48,9 @@ novčanik ni xDAI.
 |---|---|---|
 | Ugovor V1 | [`chain/contracts/v1/MaksimirGlasanjeV1.sol`](../../chain/contracts/v1/MaksimirGlasanjeV1.sol) | 47 testova s pravim Groth16 dokazima; 100 % naredbi, grana, funkcija i linija; 23/23 mutanta ubijena; [audit](audit/README.md) |
 | Klijent (kripto u pregledniku) | [`chain/client/`](../../chain/client/) | isti hash poruke kao ugovor (test); grupa s lanca uz provjeru korijena |
-| Relayer | [`chain/relayer/`](../../chain/relayer/) | typecheck, 3 testa, pravi tok na Chiadu |
+| Relayer | [`web/worker/relayer/`](../../web/worker/relayer/) (ruta `/relayer/<chainId>/…` Workera `maksimir`) | 8 testova, pravi tok na Chiadu |
+| Spajanje s fazom 1 | [08](08-integracija-s-fazom-1.md): baza i registrar (`domovina-api`), web tok, snapshot v3, `verify --chain` | E2E u pregledniku 33/33 na Chiadu; SQL 15, Deno 7, Python 9 testova |
+| Vlasnik na Chiadu | Safe 2/3 [`0x2B7C…64e9`](https://gnosis-chiado.blockscout.com/address/0x2B7Cd4B94747a1f1FE49FA351aa14CD5a3cf64e9) | 1 potpis i stari vlasnik odbijeni, 2 potpisa rade |
 | Deploy + manifest | [`chain/scripts/deploy-v1.ts`](../../chain/scripts/deploy-v1.ts) | [`deployments/chiado/v1.json`](../../chain/deployments/chiado/v1.json) |
 | Zamrznut izvor | [`chain/scripts/check-frozen.mjs`](../../chain/scripts/check-frozen.mjs), [`.github/workflows/chain.yml`](../../.github/workflows/chain.yml) | isprobano u oba smjera: nepromijenjen izvor prolazi, jedna promjena pada |
 | Faucet bez preglednika | [`chain/scripts/faucet-chiado.mjs`](../../chain/scripts/faucet-chiado.mjs) | 0,001 xDAI stiglo iz prvog pokušaja |

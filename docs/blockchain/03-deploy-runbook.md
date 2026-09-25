@@ -63,16 +63,26 @@ git tag glasanje-v1-gnosis && git push --follow-tags
 Provjera: `npm run check-frozen` prolazi, izvor je verificiran uz adresu, a `groupId` i `closesAt`
 su u manifestu. Nakon toga deployer se isprazni.
 
-### Relayer
+### Vlasnik: Safe 2/3
+
+Na Chiadu isprobano 26. 9. 2026. ([`scripts/safe-chiado.ts`](../../chain/scripts/safe-chiado.ts),
+[`deployments/chiado/owner.json`](../../chain/deployments/chiado/owner.json)): Safe v1.3.0 L2
+(kanonski, ista adresa na Gnosisu), prag 2/3, `transferOwnership` + `acceptOwnership` iz Safea.
+Provjereno: 1 potpis → GS020, stari vlasnik → `OwnableUnauthorizedAccount`, 2 potpisa → uspjeh.
+Na Gnosisu se V1 deploya **izravno** s `OWNER=<Safe>`, pa drugi korak nije potreban.
+
+### Relayer (dio Workera `maksimir`)
 
 ```sh
-cd chain/relayer
-npx wrangler kv namespace create RELAY_KV        # id u wrangler.toml
-# wrangler.toml: CONTRACT_ADDRESS = <adresa>, CHAIN_ID = "100"
-npx wrangler secret put SPONSOR_PRIVATE_KEY
-npx wrangler deploy
-curl https://maksimir-relayer.<račun>.workers.dev/status
+cd web
+# wrangler.jsonc → vars.RELAYER_CHAINS: dodaj "100": {"contract": "<adresa>", "rpc": "https://rpc.gnosischain.com"}
+npx wrangler secret put SPONSOR_PRIVATE_KEY_100      # EOA sponzora, 1 xDAI
+npm run check -- http://localhost:8787               # prije deploya (docs/2026-09-25-regresijske-provjere.md)
+npm run deploy
+curl https://maksimir.domovina.ai/relayer/100/status
 ```
+
+KV `maksimir-relay` (kvote) već postoji i vezan je u `wrangler.jsonc`.
 
 ## Alati
 
@@ -93,8 +103,8 @@ Blockscout i Gnosisscan rade.
 ## Nakon deploya
 
 - [ ] adresa u ovu mapu (README) i u `docs/glasanje-kako-radi.md`
-- [ ] registrar u `domovina-api` ([04](04-web-i-baza.md))
-- [ ] web nakon Astro migracije ([04](04-web-i-baza.md))
+- [ ] registrar u `domovina-api` i redak u `maksimir_chains` ([08](08-integracija-s-fazom-1.md#put-do-produkcije))
+- [ ] web: zastavica `chain_from` ([08](08-integracija-s-fazom-1.md#put-do-produkcije))
 - [ ] uzbuna kad saldo sponzora padne ispod 0,2 xDAI (`/status`)
 
 ## Oporavak

@@ -26,6 +26,14 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | K-04 | info (UX) | kopiranje riječi otvara rizik međuspremnika (sinkronizacija, druge aplikacije) | pregled pri dodavanju „Kopiraj” | brisanje nakon 60 s + upozorenje; ispis kao preporučen put |
 | K-05 | niska (UX) | svi passkeyji istog imena, nasumičan `user.id` → gomilanje i zabuna pri izboru | stvarni test (Matija) | ime s otiskom ključa, `user.id` iz ključa (zamjena umjesto gomilanja), izravno otključavanje |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
+| I-07 | **visoka** (integracija) | registrar bi prenio (povukao) listić faze 1 i kad ključ registrara ne odgovara ugovoru: glas ni u fazi 1 ni na lancu | pregled toka pri pisanju edge funkcije | provjera `registrar()` na lancu **prije** upisa u bazu; 2 Deno testa |
+| I-01 | srednja (web) | neprenesen listić faze 1 izgleda „predan”, gumb „Prenesi glas na lanac” je onemogućen | E2E u pregledniku (A1) | `needsTransfer()`; E2E provjera gumba |
+| I-02 | srednja (baza) | promjena oblika imena za listić s lanca vraća `no_ballot` (tražio se listić faze 1) | pisanje integracije | `_maksimir_set_public_for` prihvaća i javni listić s lanca; SQL test |
+| I-04 | srednja (ops) | nova verzija weba nad bazom bez migracije: 404 u konzoli na svakoj stranici rada | `npm run check` | `wantsChain()`: konfiguracija lanca samo uz `chain_from` ili `?lanac=` |
+| I-05 | srednja (relayer) | napojnica 0 (procjena na Gnosisu/Chiadu): transakcija čeka 47 s do > 120 s, web istekne | E2E + mjerenje na Chiadu | `PRIORITY_FEE_WEI` (zadano 0,01 gwei); test `withTip` |
+| I-03 | niska (web) | dokaz vlasništva šalje `merkleTreeDepth` kao string, baza ga odbija (`invalid_proof`) | E2E u pregledniku (A3) | broj u JSON-u; E2E |
+| I-06 | niska (ops) | `web/.env.local` (lokalni Supabase) Vite učitava i u produkcijskom buildu | provjera bundlea prije `npm run check` | E2E postavke u `.env.e2e.local` + `vite --mode e2e` |
+| I-08 | niska (testovi) | utrka u E2E: stanje lanca pročitano prije nego što je učitano | ponovljeno pokretanje E2E | zastavica `ready` |
 
 ## D-01 — operater piše na lanac
 
@@ -215,3 +223,20 @@ izmjenu), „zaključan nullifier … više ne može glasati” te osnovni test 
 
 **Pouka:** popravak sigurnosne greške treba ponovno provjeriti prema **svim** ciljevima, ne samo
 prema onom koji je popravljao. A-01 je popravio S3, a oslabio S6.
+
+## I-01 … I-08 — integracija s fazom 1 (26. 9. 2026.)
+
+Nađeno pri spajanju V1 s fazom 1 ([08](../08-integracija-s-fazom-1.md)). Alat koji je nalaze
+uhvatio je `web/scripts/glasanje-chain-e2e.mjs`: pravi preglednik (Playwright), virtualni passkey
+s PRF-om, lokalni Supabase, registrar i relayer, a ugovor je pravi V1 na Chiadu. Na kraju: 33/33.
+
+- **I-07 (visoka).** Registrar u istoj transakciji upisuje registraciju i povlači listić faze 1.
+  Kad bi potpis bio izrađen krivim ključem (pogrešna tajna, promijenjen registrar u ugovoru), baza
+  bi listić povukla, a lanac bi potpis odbio. Glasač bi ostao bez glasa. Popravak: edge funkcija
+  najprije pročita `registrar()` s lanca i usporedi ga sa svojim ključem; tek tada zove bazu.
+  Test: „nema ključa ili se ne slaže s ugovorom → 503, baza se ne zove”.
+- **I-05.** `estimateFeesPerGas` na Gnosisu i Chiadu daje napojnicu 0. Mjerenje 26. 9. na Chiadu
+  (prijenos samom sebi): napojnica 0 → 47 s (u E2E i > 120 s), 0,01 gwei → sljedeći blok (5 s),
+  0,1 gwei → 5 s. Trošak uz 0,01 gwei i ~0,5 M gasa: ~0,000005 xDAI po listiću.
+- **I-04.** Web s novim kodom mora raditi i nad bazom bez migracije (redoslijed deploya ne smije
+  biti važan). Prvi pokušaj je na svakoj stranici zvao novi RPC i dobivao 404.

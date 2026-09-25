@@ -81,8 +81,15 @@ pokušaja ([tx](https://gnosis-chiado.blockscout.com/tx/0x56518c27f92588eea23e89
 Rezervne opcije: [ETHGlobal](https://ethglobal.com/faucet/gnosis-chiado-10200) (0,05 xDAI dnevno
 uz prijavu) i [thirdweb](https://thirdweb.com/gnosis-chiado-testnet) (0,01 xDAI dnevno).
 
-## Zašto zaseban Worker, a ne ruta u `web/`
+## Relayer je ruta u Workeru `maksimir` (26. 9. 2026.)
 
-- `web/` se seli s Vite + Pages na Astro + Workers. `chain/relayer/` ne ulazi u taj refaktor.
-- Relayer ima svoju tajnu i svoj proračun. Kad web prijeđe na Workers, relayer se može spojiti
-  kao ruta, ali ne mora.
+Prvotno je relayer bio zaseban Worker (`chain/relayer/`), jer se `web/` trebao seliti na Astro.
+Astro je odbačen, a Matija je htio da se sve deploya zajedno i atomično. Relayer je zato u
+[`web/worker/relayer/`](../../web/worker/relayer/), na putu `/relayer/<chainId>/…` istog hosta:
+
+- isti izvor kao web, pa nema CORS-a (osim za lokalni razvoj, `RELAYER_ALLOWED_ORIGINS`);
+- više mreža u jednom Workeru: `RELAYER_CHAINS` (JSON) + tajna `SPONSOR_PRIVATE_KEY_<chainId>`;
+  mreža bez tajne vraća 503, a web tada nudi „preuzmi paket i pošalji sam”;
+- dnevne kvote po mreži u KV `maksimir-relay`;
+- najmanja napojnica validatoru `PRIORITY_FEE_WEI` (zadano 0,01 gwei), jer napojnica 0 zna čekati
+  minutama ([I-05](audit/nalazi.md)).
