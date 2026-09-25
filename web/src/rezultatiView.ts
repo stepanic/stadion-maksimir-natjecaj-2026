@@ -2,6 +2,7 @@
 // i galerija svih panela pojedinog rada (#/rezultati/<rank>) s lightboxom.
 
 import { awards, coverUrl, pageUrl, thumbUrl, RESULTS_SOURCE, type Award } from "./rezultati";
+import { link } from "./routes";
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
@@ -15,7 +16,7 @@ export function renderResultsIndex(el: HTMLElement) {
   const cards = awards
     .map(
       (a) => `
-      <a class="award-card${a.rank === 1 ? " award-card--winner" : ""}" href="#/rezultati/${a.rank}">
+      <a class="award-card${a.rank === 1 ? " award-card--winner" : ""}" href="${link(`rezultati/${a.rank}`)}">
         <div class="award-cover">
           <img src="${coverUrl(a.rank)}" alt="${esc(a.studio)} — render natječajnog rada" loading="${a.rank <= 2 ? "eager" : "lazy"}" />
           <span class="award-rank">${a.rank}.</span>
@@ -59,7 +60,7 @@ export function renderResultsIndex(el: HTMLElement) {
       Izvor: <a href="${RESULTS_SOURCE}" target="_blank" rel="noopener">službena objava rezultata ↗</a>.
       Slike su stranice službenih PDF-ova nagrađenih radova, prikazane radi informiranja javnosti;
       autorska prava pripadaju autorima. Pozadina i reakcije:
-      <a href="#/research-08-rezultati">research 08 — Rezultati natječaja</a>.
+      <a href="${link("research-08-rezultati")}">research 08 — Rezultati natječaja</a>.
     </p>
   `;
 }
@@ -67,14 +68,14 @@ export function renderResultsIndex(el: HTMLElement) {
 // Svih 88 radova je na #/radovi (službeni EOJN dokumenti, objava 25.9.2026.).
 const NON_AWARDED_HTML = `
   <p><strong>Svi su javno dostupni.</strong> Naručitelj je 25. 9. 2026. na EOJN-u objavio zapisnik s popisom svih 88 radova (autori, šifre, rang 1–85, obrazloženje ocjenjivačkog suda za svaki rad) i Prilog III sa službenom slikom svakog rješenja.</p>
-  <p><a class="btn btn-primary" href="#/radovi">Pogledaj svih 88 radova →</a></p>
+  <p><a class="btn btn-primary" href="${link("radovi")}">Pogledaj svih 88 radova →</a></p>
   <p class="muted small">Nagrađeni radovi imaju po 10 panela (gore), a za ostale je službeno objavljena po jedna slika. Izložba svih radova s maketama najavljena je „za otprilike mjesec dana”.</p>
 `;
 
 export function renderAward(el: HTMLElement, rank: number): boolean {
   const a = awards.find((x) => x.rank === rank);
   if (!a) {
-    el.innerHTML = `<div class="notfound"><h1>Rad nije pronađen</h1><p><a href="#/rezultati">← Svi nagrađeni radovi</a></p></div>`;
+    el.innerHTML = `<div class="notfound"><h1>Rad nije pronađen</h1><p><a href="${link("rezultati")}">← Svi nagrađeni radovi</a></p></div>`;
     return false;
   }
   const prev = awards.find((x) => x.rank === rank - 1);
@@ -126,9 +127,9 @@ export function renderAward(el: HTMLElement, rank: number): boolean {
     </div>
 
     <nav class="award-nav">
-      ${prev ? `<a class="btn" href="#/rezultati/${prev.rank}">← ${prev.rank}. ${esc(prev.studio)}</a>` : `<span></span>`}
-      <a class="btn" href="#/rezultati">Svi radovi</a>
-      ${next ? `<a class="btn" href="#/rezultati/${next.rank}">${next.rank}. ${esc(next.studio)} →</a>` : `<span></span>`}
+      ${prev ? `<a class="btn" href="${link(`rezultati/${prev.rank}`)}">← ${prev.rank}. ${esc(prev.studio)}</a>` : `<span></span>`}
+      <a class="btn" href="${link("rezultati")}">Svi radovi</a>
+      ${next ? `<a class="btn" href="${link(`rezultati/${next.rank}`)}">${next.rank}. ${esc(next.studio)} →</a>` : `<span></span>`}
     </nav>
   `;
 

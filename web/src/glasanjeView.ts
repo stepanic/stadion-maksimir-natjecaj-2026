@@ -41,6 +41,7 @@ import {
   publicShareText,
   shareButtonsHtml,
 } from "./shareView";
+import { link, navigate } from "./routes";
 
 const ZK_SHARE_KEY = "maksimir-zk-share"; // {commitment: shareId} — zadnji anonimni dokaz na ovom uređaju
 
@@ -262,7 +263,7 @@ function downloadReceipt() {
   if (!my?.receipt) return;
   const doc = {
     vrsta: "Potvrda o glasu — Stadion Maksimir, glasanje javnosti",
-    stranica: location.origin + "/#/glasanje",
+    stranica: new URL(link("glasanje"), location.origin + "/").href,
     bodovi: my.items,
     receipt: my.receipt,
     provjera: {
@@ -393,7 +394,7 @@ function shareHtml(): string {
     .join("");
 
   const pub = my!.public_mode
-    ? `${st.myCard ? publicCardHtml(st.myCard, { compact: true, href: `#/glasanje/g/${my!.share_id}` }) : ""}
+    ? `${st.myCard ? publicCardHtml(st.myCard, { compact: true, href: link(`glasanje/g/${my!.share_id}`) }) : ""}
        ${st.myCard && my!.share_id ? shareButtonsHtml(shareUrl(my!.share_id), publicShareText(st.myCard)) : ""}
        <div class="sh-modes">${radios}</div>
        <div class="gl-actions">
@@ -417,7 +418,7 @@ function shareHtml(): string {
        ${
          st.zkShare && keyMatches
            ? shareButtonsHtml(shareUrl(st.zkShare), ZK_SHARE_TEXT) +
-             `<p class="small"><a href="#/glasanje/g/${st.zkShare}">Otvori svoj dokaz i provjeri ga →</a></p>`
+             `<p class="small"><a href="${link(`glasanje/g/${st.zkShare}`)}">Otvori svoj dokaz i provjeri ga →</a></p>`
            : `<button class="btn btn-primary" data-act="zk-make" ${busy}>${
                keyMatches
                  ? "Prikaži moj ZK dokaz (ponovno se izračuna, poveznica ostaje ista)"
@@ -443,7 +444,7 @@ function shareHtml(): string {
            : ""
        }
        <p class="muted small">Anonimnost raste s veličinom grupe. U fazi 1 operater baze zna koji je glasač upisao koji commitment, a javnost ne zna.
-         <a href="#/${DOC_SLUG}">Detalji i plan →</a></p>`;
+         <a href="${link(DOC_SLUG)}">Detalji i plan →</a></p>`;
 
   return `<section class="panel sh-panel">
     <h2>Podijeli svoj glas</h2>
@@ -464,7 +465,7 @@ function publicListHtml(): string {
     <h2>Javni glasovi <span class="muted small">· ${p.count} ${plural(p.count, "javni", "javna", "javnih")} ·
       ${p.zk_shares} ${plural(p.zk_shares, "anonimni ZK dokaz", "anonimna ZK dokaza", "anonimnih ZK dokaza")}</span></h2>
     <p class="muted small">Glasači koji su sami izabrali da im glas bude javan. Klik na ime otvara objavu koju se može podijeliti.</p>
-    <div class="sh-grid">${shown.map((c) => publicCardHtml(c, { compact: true, href: `#/glasanje/g/${c.id}` })).join("")}</div>
+    <div class="sh-grid">${shown.map((c) => publicCardHtml(c, { compact: true, href: link(`glasanje/g/${c.id}`) })).join("")}</div>
     ${p.ballots.length > 6 ? `<button class="btn btn-sm" data-act="pub-all">${st.pubAll ? "Prikaži manje" : `Prikaži sve (${p.ballots.length})`}</button>` : ""}
   </section>`;
 }
@@ -497,7 +498,7 @@ function ballotHtml(): string {
       if (!r) return "";
       return `<div class="gl-row" data-code="${code}">
         ${r.image ? `<img src="/radovi/${code}-t.jpg" alt="" loading="lazy" />` : `<span class="gl-noimg"></span>`}
-        <a class="gl-name" href="#/radovi/${code}">${esc(label(r))}<span class="muted small"> · <code>${code}</code></span></a>
+        <a class="gl-name" href="${link(`radovi/${code}`)}">${esc(label(r))}<span class="muted small"> · <code>${code}</code></span></a>
         <div class="gl-points">
           <button class="btn btn-sm" data-act="dec" aria-label="Manje bodova">−</button>
           <input type="number" min="0" max="100" step="1" value="${pts}" aria-label="Bodovi za ${esc(label(r))}" />
@@ -593,7 +594,7 @@ function resultsHtml(): string {
                 if (!r) return "";
                 const mine = row.code in st.draft;
                 return `<li>
-                  <a class="gl-name" href="#/radovi/${row.code}">${esc(label(r))}</a>
+                  <a class="gl-name" href="${link(`radovi/${row.code}`)}">${esc(label(r))}</a>
                   <div class="gl-bar gl-bar--result"><span style="width:${Math.min(100, row.share)}%"></span></div>
                   <span class="gl-share">${pct(row.share)}</span>
                   <span class="muted small">${row.backers} podupiratelja</span>
@@ -613,7 +614,7 @@ function integrityHtml(): string {
   return `
     <section class="panel gl-integrity">
       <h2>Kako znaš da nitko nije dirao glasove</h2>
-      <p class="small">Cijeli postupak s dijagramima: <a href="#/${DOC_SLUG}">tehnički opis korak po korak</a>
+      <p class="small">Cijeli postupak s dijagramima: <a href="${link(DOC_SLUG)}">tehnički opis korak po korak</a>
         (<a href="${DOC_GITHUB}" target="_blank" rel="noopener">GitHub ↗</a>).</p>
       <ol>
         <li><strong>Lanac hasheva.</strong> Svaka predaja, izmjena ili povlačenje listića dodaje zapis u lanac u kojem svaki zapis sadrži hash prethodnog.
@@ -696,14 +697,14 @@ function draw() {
         Svaki građanin s eOsobnom ima jedan glas: 100 bodova koje raspoređuješ po 88 natječajnih radova kako hoćeš.
         Sve na jedan rad ili npr. 40 / 30 / 20 / 10. Listić smiješ mijenjati do zatvaranja.
       </p>
-      <p class="small"><a href="#/${DOC_SLUG}">Kako tehnički radi, korak po korak →</a> ·
+      <p class="small"><a href="${link(DOC_SLUG)}">Kako tehnički radi, korak po korak →</a> ·
         <a href="${DOC_GITHUB}" target="_blank" rel="noopener">isti dokument na GitHubu ↗</a></p>
     </section>
 
     <section class="card-grid">
       <div class="kpi"><div class="kpi-label">Glasača</div><div class="kpi-value">${res?.voters ?? "—"}</div><div class="kpi-meta">potvrđenih eOsobnom</div></div>
       <div class="kpi"><div class="kpi-label">Glasanje</div><div class="kpi-value">${res ? (res.open ? "otvoreno" : "zatvoreno") : "—"}</div><div class="kpi-meta">do ${esc(fmtDate(res?.closes_at ?? null))}</div></div>
-      <div class="kpi"><div class="kpi-label">Radova</div><div class="kpi-value">88</div><div class="kpi-meta"><a href="#/radovi">pregledaj sve →</a></div></div>
+      <div class="kpi"><div class="kpi-label">Radova</div><div class="kpi-value">88</div><div class="kpi-meta"><a href="${link("radovi")}">pregledaj sve →</a></div></div>
     </section>
 
     ${st.msg ? `<div class="gl-msg gl-msg--${st.msg.kind}">${esc(st.msg.text)}</div>` : ""}
@@ -870,12 +871,12 @@ export async function renderRadVotePanel(el: HTMLElement, code: string) {
     }
     ${
       onDraft !== null
-        ? `<p>Na tvom listiću: <strong>${onDraft}</strong> bodova. <a class="btn btn-sm" href="#/glasanje">Uredi listić →</a></p>`
+        ? `<p>Na tvom listiću: <strong>${onDraft}</strong> bodova. <a class="btn btn-sm" href="${link("glasanje")}">Uredi listić →</a></p>`
         : `<button class="btn btn-primary" data-act="add">+ Dodaj na moj listić</button>
            <span class="muted small">Imaš 100 bodova za sve radove zajedno. Glasa se eOsobnom.</span>`
     }`;
   el.querySelector('[data-act="add"]')?.addEventListener("click", () => {
     addToDraft(code);
-    location.hash = "#/glasanje";
+    navigate("glasanje");
   });
 }

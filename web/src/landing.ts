@@ -1,8 +1,10 @@
 // Landing page (slug "/") rendered as HTML, not markdown.
 // Surfaces the most important info: deadlines, key facts, submission steps.
 
+import { link } from "./routes";
+
 export const landingHtml = /* html */ `
-<a class="results-banner" href="#/rezultati">
+<a class="results-banner" href="${link("rezultati")}">
   <img src="/rezultati/1/cover.jpg" alt="Pobjednički rad VG13 — render stadiona" />
   <div>
     <div class="hero-eyebrow">Novo · 24. 9. 2026.</div>
@@ -19,9 +21,9 @@ export const landingHtml = /* html */ `
     istraživanja i operativni plan na jednom mjestu, od koncepta do predaje.
   </p>
   <div class="hero-cta">
-    <a class="btn btn-primary" href="#/sot">Otvori SOT →</a>
-    <a class="btn" href="#/roadmap">Roadmap</a>
-    <a class="btn" href="#/todo">TODO checklist</a>
+    <a class="btn btn-primary" href="${link("sot")}">Otvori SOT →</a>
+    <a class="btn" href="${link("roadmap")}">Roadmap</a>
+    <a class="btn" href="${link("todo")}">TODO checklist</a>
   </div>
 </section>
 
@@ -79,7 +81,7 @@ export const landingHtml = /* html */ `
         <strong>Razvoj rješenja</strong>
         <p>
           Tri zone — <strong>C realizacija</strong> (stadion), <strong>A + D anketni</strong> (SRC Svetice + Borongaj).
-          Vidi <a href="#/roadmap">ROADMAP</a> za sve faze i <a href="#/todo">TODO</a> za sedmične isporuke.
+          Vidi <a href="${link("roadmap")}">ROADMAP</a> za sve faze i <a href="${link("todo")}">TODO</a> za sedmične isporuke.
           Kritični paketi: koncept (do tjedna 9), arhitektura (10–14), tehnika i ekonomika (15–17),
           finalizacija (18–19).
         </p>
@@ -91,7 +93,7 @@ export const landingHtml = /* html */ `
         <strong>Predaja digitalnih elaborata kroz EOJN</strong>
         <p>
           Rok: <strong>17. 7. 2026.</strong> Sva grafička, tekstualna i prilozna dokumentacija u zadanim
-          formatima (vidi <a href="#/src-uvjeti">Uvjete natječaja</a>, t. 1.6 i 2.1). Šifra rada, anonimizacija
+          formatima (vidi <a href="${link("src-uvjeti")}">Uvjete natječaja</a>, t. 1.6 i 2.1). Šifra rada, anonimizacija
           metapodataka, jedan PDF po prilogu, table u zadanoj predaji.
         </p>
       </div>
@@ -113,7 +115,7 @@ export const landingHtml = /* html */ `
         <p>
           Ocjenjivački sud (predsjednik <strong>Toma Plejić</strong>, Studio UP) donosi odluku
           do <strong>kraja srpnja 2026.</strong> Javno predstavljanje i izložba: <strong>od 15. 9. 2026.</strong>
-          Vidi <a href="#/research-01-sud">istraživanje 01 — Ocjenjivački sud</a>.
+          Vidi <a href="${link("research-01-sud")}">istraživanje 01 — Ocjenjivački sud</a>.
         </p>
       </div>
     </li>
@@ -147,8 +149,8 @@ export const landingHtml = /* html */ `
       <li><strong>D.</strong> Doprinos vrsnoći građenja — javni prostori, održivost, energetska učinkovitost.</li>
     </ul>
     <p class="muted small">
-      Detaljna razrada težišta: <a href="#/sot">SOT §1</a> · biografije i sklonosti suda:
-      <a href="#/research-01-sud">research 01</a>.
+      Detaljna razrada težišta: <a href="${link("sot")}">SOT §1</a> · biografije i sklonosti suda:
+      <a href="${link("research-01-sud")}">research 01</a>.
     </p>
   </div>
 </section>
@@ -158,7 +160,7 @@ export const landingHtml = /* html */ `
   <p>
     Lijevi sidebar je puna karta svih dokumenata. Sve datoteke su renderirane iz repozitorija
     <code>stadion-maksimir-natjecaj-2026</code> u trenutku builda — što vidiš ovdje jednako je tome
-    što stoji na disku. Mermaid dijagrami (Gantt u <a href="#/roadmap">ROADMAP-u</a>) renderiraju se
+    što stoji na disku. Mermaid dijagrami (Gantt u <a href="${link("roadmap")}">ROADMAP-u</a>) renderiraju se
     automatski, a sve interne reference između dokumenata su klikabilne.
   </p>
   <p class="muted small">

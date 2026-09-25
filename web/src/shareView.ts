@@ -4,6 +4,7 @@
 
 import { byCode, esc, tidy } from "./radoviView";
 import { fetchShare, shareUrl, VERIFY_SCRIPT, type PublicCard, type Share, type ZkProof } from "./glasanje";
+import { link } from "./routes";
 
 export const DOC_SLUG = "glasanje-kako-radi";
 export const DOC_GITHUB =
@@ -92,7 +93,7 @@ export function publicCardHtml(c: PublicCard, opts: { compact?: boolean; href?: 
       const r = byCode[i.code];
       return `<li>
         ${r?.image ? `<img src="/radovi/${i.code}-t.jpg" alt="" loading="lazy" />` : `<span class="gl-noimg"></span>`}
-        <a class="gl-name" href="#/radovi/${i.code}">${esc(entryLabel(i.code, i.lead))}</a>
+        <a class="gl-name" href="${link(`radovi/${i.code}`)}">${esc(entryLabel(i.code, i.lead))}</a>
         <strong class="sh-pts">${i.points}</strong>
         <div class="gl-bar"><span style="width:${Math.min(100, i.points)}%"></span></div>
       </li>`;
@@ -132,7 +133,7 @@ export async function renderShare(el: HTMLElement, id: string) {
   }
   if (current !== id) return;
   if (!share) {
-    el.innerHTML = `<div class="notfound"><h1>Objava ne postoji</h1><p><a href="#/glasanje">← Na glasanje</a></p></div>`;
+    el.innerHTML = `<div class="notfound"><h1>Objava ne postoji</h1><p><a href="${link("glasanje")}">← Na glasanje</a></p></div>`;
     return;
   }
   if (share.kind === "public") renderPublic(el, share);
@@ -142,8 +143,8 @@ export async function renderShare(el: HTMLElement, id: string) {
 const cta = `<section class="sh-cta">
   <h2>Imaš eOsobnu? Raspodijeli i ti svojih 100 bodova.</h2>
   <p>88 natječajnih radova za novi Stadion Maksimir. Jedna osoba, jedan glas, provjerljivo do Bitcoina.</p>
-  <a class="btn btn-primary" href="#/glasanje">Glasaj →</a>
-  <a class="btn" href="#/${DOC_SLUG}">Kako tehnički radi</a>
+  <a class="btn btn-primary" href="${link("glasanje")}">Glasaj →</a>
+  <a class="btn" href="${link(DOC_SLUG)}">Kako tehnički radi</a>
 </section>`;
 
 function renderPublic(el: HTMLElement, s: Extract<Share, { kind: "public" }>) {
@@ -202,7 +203,7 @@ async function renderZk(el: HTMLElement, s: Extract<Share, { kind: "zk" }>) {
         <li><strong>Ne govori:</strong> tko je ta osoba ni kako je glasala. Nullifier <span class="mono">${short(p.nullifier)}</span>
           je isti za svaki dokaz iste osobe, pa se jedna osoba ne može predstaviti kao više njih.</li>
         <li><strong>Granica faze 1:</strong> operater baze zna koji je glasač upisao koji ključ u grupu. Javnost to ne zna.
-          Plan da se i to ukloni opisan je u <a href="#/${DOC_SLUG}">tehničkom opisu</a>.</li>
+          Plan da se i to ukloni opisan je u <a href="${link(DOC_SLUG)}">tehničkom opisu</a>.</li>
       </ul>
       <details><summary>Dokaz (JSON)</summary><pre class="mono small">${esc(JSON.stringify({ zk_seq: s.zk_seq, ...p }, null, 2))}</pre></details>
       <p class="muted small">Izrađen ${esc(fmtDate(s.created_at))}, nad stanjem grupe nakon zapisa #${s.zk_seq}.</p>

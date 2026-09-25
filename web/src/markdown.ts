@@ -2,6 +2,7 @@ import MarkdownIt from "markdown-it";
 import anchor from "markdown-it-anchor";
 import hljs from "highlight.js";
 import { pathToSlug } from "./docs";
+import { link } from "./routes";
 
 // Lazy-loaded mermaid; only needed when a `mermaid` fence is present.
 let mermaidPromise: Promise<typeof import("mermaid").default> | null = null;
@@ -21,12 +22,12 @@ function loadMermaid() {
   return mermaidPromise;
 }
 
-const md = new MarkdownIt({
+const md: MarkdownIt = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: false,
   breaks: false,
-  highlight(code, lang) {
+  highlight(code: string, lang: string): string {
     if (lang === "mermaid") {
       // Pass through; renderer-side hook converts to <div class="mermaid">.
       const esc = md.utils.escapeHtml(code);
@@ -68,7 +69,7 @@ md.use(anchor, {
   slugify,
 });
 
-// Rewrite internal links: relative .md paths -> hash routes when known.
+// Rewrite internal links: relative .md paths -> site routes when known.
 const defaultLinkRender =
   md.renderer.rules.link_open ||
   function (tokens, idx, options, _env, self) {
@@ -99,12 +100,12 @@ function rewriteHref(href: string, docPath?: string): string {
   if (!href) return href;
   // External, mailto — leave alone.
   if (/^(https?:|mailto:)/.test(href)) return href;
-  // Sidro unutar dokumenta: hash ruter treba `#/<slug>#<sidro>`, inače bi `#sidro` postao nepoznat slug.
+  // Sidro unutar dokumenta vodi na istu stranicu dokumenta (link() zna oblik rute).
   if (href.startsWith("#")) {
     const slug = docPath ? pathToSlug[normalizePath(docPath)] : undefined;
     // GitHub sidra zadržavaju dijakritike (#tko-što-vidi); ovdje ih slugify skida kao i u naslovima.
     const id = slugify(decodeURIComponent(href.slice(1)));
-    return slug ? `#/${slug}#${id}` : `#${id}`;
+    return slug ? link(`${slug}#${id}`) : `#${id}`;
   }
 
   // Strip URL fragment, remember it for re-appending.
@@ -121,7 +122,7 @@ function rewriteHref(href: string, docPath?: string): string {
 
   if (pathToSlug[pathPart]) {
     const h = hashPart ? `#${hashPart}` : "";
-    return `#/${pathToSlug[pathPart]}${h}`;
+    return link(`${pathToSlug[pathPart]}${h}`);
   }
   // Nije u manifestu (skripta, JSON, mapa…): pokaži datoteku u javnom repou.
   if (docPath && !pathPart.startsWith("..")) {

@@ -8,6 +8,7 @@ import { renderResultsIndex, renderAward } from "./rezultatiView";
 import { renderRadoviIndex, renderRad } from "./radoviView";
 import { renderGlasanje } from "./glasanjeView";
 import { renderShare } from "./shareView";
+import { link } from "./routes";
 
 // /g/<id> je poveznica za dijeljenje (Pages Function daje OG karticu i preusmjerava).
 // Ako stigne do SPA-a (lokalni razvoj ili bez Functiona), prebaci na hash rutu.
@@ -28,17 +29,17 @@ menuToggle.addEventListener("click", () => {
 
 function buildNav() {
   const html: string[] = [];
-  html.push(`<a class="nav-home" href="#/" data-slug="__home__">Naslovnica</a>`);
-  html.push(`<a class="nav-home nav-results" href="#/rezultati" data-slug="rezultati">Rezultati natječaja · 5 nagrađenih radova</a>`);
-  html.push(`<a class="nav-home nav-results" href="#/radovi" data-slug="radovi">Svih 88 natječajnih radova</a>`);
-  html.push(`<a class="nav-home nav-results" href="#/glasanje" data-slug="glasanje">Glasanje javnosti · tvojih 100 bodova</a>`);
+  html.push(`<a class="nav-home" href="${link("")}" data-slug="__home__">Naslovnica</a>`);
+  html.push(`<a class="nav-home nav-results" href="${link("rezultati")}" data-slug="rezultati">Rezultati natječaja · 5 nagrađenih radova</a>`);
+  html.push(`<a class="nav-home nav-results" href="${link("radovi")}" data-slug="radovi">Svih 88 natječajnih radova</a>`);
+  html.push(`<a class="nav-home nav-results" href="${link("glasanje")}" data-slug="glasanje">Glasanje javnosti · tvojih 100 bodova</a>`);
   for (const section of docs) {
     html.push(`<div class="nav-section">`);
     html.push(`<div class="nav-section-title">${section.title}</div>`);
     html.push(`<ul class="nav-list">`);
     for (const item of section.items) {
       html.push(
-        `<li><a href="#/${item.slug}" data-slug="${item.slug}">` +
+        `<li><a href="${link(item.slug)}" data-slug="${item.slug}">` +
           `<span class="nav-title">${item.title}</span>` +
           (item.subtitle ? `<span class="nav-sub">${item.subtitle}</span>` : "") +
           `</a></li>`
@@ -71,9 +72,9 @@ async function renderDoc(slug: string, hash: string) {
       <div class="notfound">
         <h1>Dokument nije pronađen</h1>
         <p>Nepoznat slug: <code>${escapeHtml(slug)}</code></p>
-        <p><a href="#/">← Natrag na naslovnicu</a></p>
+        <p><a href="${link("")}">← Natrag na naslovnicu</a></p>
       </div>`;
-    setCrumbs([{ label: "Naslovnica", href: "#/" }, { label: "404" }]);
+    setCrumbs([{ label: "Naslovnica", href: link("") }, { label: "404" }]);
     setActiveNav("");
     return;
   }
@@ -90,7 +91,7 @@ async function renderDoc(slug: string, hash: string) {
     <div class="doc-body markdown-body">${html}</div>
   `;
   setCrumbs([
-    { label: "Naslovnica", href: "#/" },
+    { label: "Naslovnica", href: link("") },
     { label: sectionTitle(doc.section) },
     { label: doc.title },
   ]);
@@ -117,13 +118,13 @@ function renderHome() {
 
 function renderResults(slug: string) {
   const rank = Number(slug.split("/")[1]);
-  const base = [{ label: "Naslovnica", href: "#/" }];
+  const base = [{ label: "Naslovnica", href: link("") }];
   if (rank) {
     const ok = renderAward(contentEl, rank);
     setCrumbs(
       ok
-        ? [...base, { label: "Rezultati", href: "#/rezultati" }, { label: `${rank}. nagrada` }]
-        : [...base, { label: "Rezultati", href: "#/rezultati" }, { label: "404" }]
+        ? [...base, { label: "Rezultati", href: link("rezultati") }, { label: `${rank}. nagrada` }]
+        : [...base, { label: "Rezultati", href: link("rezultati") }, { label: "404" }]
     );
   } else {
     renderResultsIndex(contentEl);
@@ -135,10 +136,10 @@ function renderResults(slug: string) {
 
 function renderRadovi(slug: string) {
   const code = slug.split("/")[1];
-  const base = [{ label: "Naslovnica", href: "#/" }];
+  const base = [{ label: "Naslovnica", href: link("") }];
   if (code) {
     const r = renderRad(contentEl, code);
-    setCrumbs([...base, { label: "Svi radovi", href: "#/radovi" }, { label: r ? r.code : "404" }]);
+    setCrumbs([...base, { label: "Svi radovi", href: link("radovi") }, { label: r ? r.code : "404" }]);
   } else {
     renderRadoviIndex(contentEl);
     setCrumbs([...base, { label: "Svih 88 radova" }]);
@@ -178,14 +179,14 @@ async function route() {
     return;
   }
   if (slug.startsWith("glasanje/g/")) {
-    setCrumbs([{ label: "Naslovnica", href: "#/" }, { label: "Glasanje javnosti", href: "#/glasanje" }, { label: "Objava glasa" }]);
+    setCrumbs([{ label: "Naslovnica", href: link("") }, { label: "Glasanje javnosti", href: link("glasanje") }, { label: "Objava glasa" }]);
     setActiveNav("glasanje");
     window.scrollTo({ top: 0 });
     await renderShare(contentEl, slug.slice("glasanje/g/".length));
     return;
   }
   if (slug === "glasanje") {
-    setCrumbs([{ label: "Naslovnica", href: "#/" }, { label: "Glasanje javnosti" }]);
+    setCrumbs([{ label: "Naslovnica", href: link("") }, { label: "Glasanje javnosti" }]);
     setActiveNav("glasanje");
     window.scrollTo({ top: 0 });
     await renderGlasanje(contentEl);

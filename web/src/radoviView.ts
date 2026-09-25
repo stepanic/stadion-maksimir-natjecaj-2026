@@ -4,6 +4,7 @@
 
 import radoviData from "../../sources/radovi.json";
 import { renderRadVotePanel } from "./glasanjeView";
+import { link } from "./routes";
 
 type Role = { name: string; role: string };
 export type Rad = {
@@ -77,7 +78,7 @@ function matches(r: Rad): boolean {
 
 function card(r: Rad): string {
   return `
-    <a class="rad-card${r.award ? " rad-card--award" : ""}${r.status === "rejected" ? " rad-card--rejected" : ""}" href="#/radovi/${r.code}">
+    <a class="rad-card${r.award ? " rad-card--award" : ""}${r.status === "rejected" ? " rad-card--rejected" : ""}" href="${link(`radovi/${r.code}`)}">
       <div class="rad-thumb">
         ${r.image ? `<img src="/radovi/${r.code}-t.jpg" alt="${esc(r.lead)} — natječajni rad" loading="lazy" />` : ""}
         <span class="rad-rank">${r.status === "rejected" ? "✕" : r.award ? `${r.award}. nagrada` : `#${r.rank}`}</span>
@@ -102,14 +103,14 @@ export function renderRadoviIndex(el: HTMLElement) {
         Svaki predani rad sa službenom slikom, autorima, rangom (1–85) i obrazloženjem
         ocjenjivačkog suda. Tri rada su odbijena iz formalnih razloga.
       </p>
-      <p class="hero-cta"><a class="btn btn-primary" href="#/glasanje">Glasaj: raspodijeli svojih 100 bodova →</a></p>
+      <p class="hero-cta"><a class="btn btn-primary" href="${link("glasanje")}">Glasaj: raspodijeli svojih 100 bodova →</a></p>
     </section>
 
     <section class="card-grid">
       <div class="kpi"><div class="kpi-label">Radova</div><div class="kpi-value">88</div><div class="kpi-meta">85 rangirano · 3 odbijena</div></div>
       <div class="kpi"><div class="kpi-label">Zemalja u timovima</div><div class="kpi-value">${countries.size}</div><div class="kpi-meta">uklj. partnere u timu</div></div>
       <div class="kpi"><div class="kpi-label">S hrvatskim sudionikom</div><div class="kpi-value">${hr}</div><div class="kpi-meta">barem jedan član tima iz HR</div></div>
-      <div class="kpi"><div class="kpi-label">Nagrade</div><div class="kpi-value">5</div><div class="kpi-meta"><a href="#/rezultati">svi paneli nagrađenih →</a></div></div>
+      <div class="kpi"><div class="kpi-label">Nagrade</div><div class="kpi-value">5</div><div class="kpi-meta"><a href="${link("rezultati")}">svi paneli nagrađenih →</a></div></div>
     </section>
     </div>
 
@@ -173,7 +174,7 @@ const LINK_LABEL: Record<string, string> = {
 export function renderRad(el: HTMLElement, code: string): Rad | null {
   const r = byCode[code];
   if (!r) {
-    el.innerHTML = `<div class="notfound"><h1>Rad nije pronađen</h1><p><a href="#/radovi">← Svi radovi</a></p></div>`;
+    el.innerHTML = `<div class="notfound"><h1>Rad nije pronađen</h1><p><a href="${link("radovi")}">← Svi radovi</a></p></div>`;
     return null;
   }
   const i = radovi.indexOf(r);
@@ -199,7 +200,7 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
 
     ${
       r.award
-        ? `<p><a class="btn btn-primary" href="#/rezultati/${r.award}">Pogledaj svih 10 panela ovog rada →</a></p>`
+        ? `<p><a class="btn btn-primary" href="${link(`rezultati/${r.award}`)}">Pogledaj svih 10 panela ovog rada →</a></p>`
         : ""
     }
 
@@ -240,9 +241,9 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
     </div>
 
     <nav class="award-nav">
-      ${prev ? `<a class="btn" href="#/radovi/${prev.code}">← ${esc(rankLabel(prev))}</a>` : `<span></span>`}
-      <a class="btn" href="#/radovi">Svi radovi</a>
-      ${next ? `<a class="btn" href="#/radovi/${next.code}">${esc(rankLabel(next))} →</a>` : `<span></span>`}
+      ${prev ? `<a class="btn" href="${link(`radovi/${prev.code}`)}">← ${esc(rankLabel(prev))}</a>` : `<span></span>`}
+      <a class="btn" href="${link("radovi")}">Svi radovi</a>
+      ${next ? `<a class="btn" href="${link(`radovi/${next.code}`)}">${esc(rankLabel(next))} →</a>` : `<span></span>`}
     </nav>
   `;
   void renderRadVotePanel(el.querySelector<HTMLElement>("#gl-rad-panel")!, r.code);
