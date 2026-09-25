@@ -18,6 +18,7 @@ import research08 from "../../research/08-rezultati-natjecaja.md?raw";
 import research09 from "../../research/09-svi-radovi.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
+import opsSeoPlan from "../../docs/2026-09-25-seo-rute-plan.md?raw";
 import glasanjeKakoRadi from "../../docs/glasanje-kako-radi.md?raw";
 import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
 import glasanjeReadme from "../../glasanje/README.md?raw";
@@ -258,6 +259,14 @@ export const docs: DocSection[] = [
         subtitle: "EOJN bez prijave, build_radovi.py, autorska prava, zamke (25.9.2026.)",
         repoPath: "docs/2026-09-25-rezultati-i-svi-radovi.md",
         raw: ops20260925,
+        section: "docs",
+      },
+      {
+        slug: "ops-seo-rute-plan",
+        title: "Plan: prave SEO rute",
+        subtitle: "Hash rute → pravi URL-ovi + prerender, bez Astra (25.9.2026.)",
+        repoPath: "docs/2026-09-25-seo-rute-plan.md",
+        raw: opsSeoPlan,
         section: "docs",
       },
     ],
