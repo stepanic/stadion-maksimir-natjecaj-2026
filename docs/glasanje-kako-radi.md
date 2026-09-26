@@ -14,9 +14,16 @@ Glasanje je **neslužbeno** i nema utjecaja na odluku ocjenjivačkog suda. Pravi
 - rezultati su javni uživo;
 - svoj glas glasač može podijeliti **javno** (s imenom iz eOsobne) ili **anonimno** (sa ZK dokazom).
 
-Sve u fazi 1 radi **offchain**: bez pametnih ugovora i bez novčanika, ali s istim kriptografskim
+> **Od 26. 9. 2026. u 03:20 (01:20:41 UTC) glasanje se nastavlja na Gnosis Chainu.** Faza 1 opisana
+> u ovom dokumentu je zatvorena: više ne prima listiće ni ZK upise, njezin lanac listića je javan
+> ([`glasanje/faza1/`](../glasanje/faza1/lanac.json)), a završni snapshot je u Bitcoinu. Listići predani
+> u fazi 1 i dalje se broje dok ih glasač ne prenese na lanac. Novi tok (ključ glasača, listić na
+> lancu, relayer, rezultat = lanac + ostatak faze 1) opisan je u
+> [08 — integracija s fazom 1](blockchain/08-integracija-s-fazom-1.md).
+
+Faza 1 je radila **offchain**: bez pametnih ugovora i bez novčanika, ali s istim kriptografskim
 alatima koji se koriste i na blockchainu (SHA-256 lanci, OpenTimestamps u Bitcoinu, Semaphore ZK
-dokazi). Što bi u sljedećim fazama trebalo preseliti na blockchain opisano je u poglavlju
+dokazi). Što se preselilo na blockchain opisano je u poglavlju
 [Sljedeće faze](#sljedeće-faze-što-preseliti-onchain).
 
 ## Sadržaj
@@ -567,8 +574,9 @@ idu osobni podaci**, nego samo hashevi, commitmenti i dokazi.
 
 > **Stanje 26. 9. 2026.:** koraci 1–3 i ključ glasača (passkey + 24 riječi) implementirani su
 > (`MaksimirGlasanjeV1`, audit, relayer), a spajanje s ovom fazom 1 izvedeno je i testirano na
-> Chiadu: [plan i stanje](blockchain/08-integracija-s-fazom-1.md). Na produkciji se uključuje
-> jednom zastavicom, nakon čega faza 1 prestaje primati listiće i ostaje provjerljiva.
+> Chiadu: [plan i stanje](blockchain/08-integracija-s-fazom-1.md). **Uključeno na produkciji
+> 26. 9. 2026. (dan D):** `MaksimirGlasanjeV1` na Gnosisu `0x812960FA1120121DEd82A8806aECE93dcf49E869`;
+> faza 1 više ne prima listiće i ostaje provjerljiva.
 
 Napomene za kasnije faze:
 

@@ -1,10 +1,10 @@
 # 8. Integracija s fazom 1: plan spajanja
 
-**Status (26. 9. 2026.):** plan odobren; **implementirano i testirano lokalno i na Chiadu** (grane
-`feat/glasanje-integracija` u ovom repou i `feat/maksimir-chain` u `domovina-api`). Ništa nije
-primijenjeno na produkciju: migracija, edge funkcija, Gnosis deploy, tajne i zastavica čekaju
-Matijin ok ([Put do produkcije](#put-do-produkcije)). Stanje po koracima:
-[Stanje implementacije](#stanje-implementacije).
+**Status (26. 9. 2026.): dan D je napravljen.** Faza 1 je zatvorena u **01:20:41 UTC** (03:20 po
+zagrebačkom vremenu), a glasanje se nastavlja na Gnosis Chainu (`MaksimirGlasanjeV1`
+`0x812960FA1120121DEd82A8806aECE93dcf49E869`). Sve iz ovog plana je na produkciji i u `main`
+(PR #2, `domovina-api` PR #4). Tijek i hashevi: [Put do produkcije, korak 7](#put-do-produkcije).
+Povijest implementacije: [Stanje implementacije](#stanje-implementacije).
 
 Ovaj dokument spaja [`MaksimirGlasanjeV1`](01-arhitektura.md) s glasanjem koje radi na produkciji
 od 25. 9. 2026. ([faza 1](../glasanje-kako-radi.md)). Dijelovi su već opisani u
@@ -641,8 +641,32 @@ Matija, 26. 9.: **najprije Gnosis (korak 5), zatim offchain dio** (registrar, we
    pravim ključem iz faze 1 (24 riječi, commitment `157304732939…`) prošao:
    [tx](https://gnosisscan.io/tx/0x372ab375281bf384a05dd01790680811830b8b98a359aa3b7aa3c09e31df906a),
    `ballotOf` = listić (100 bodova, 5 radova), 1 registracija, 1 glasač.
-7. **Dan D:** `update maksimir_settings set active_chain_id = 100, active_contract = '<adresa>', chain_from = now()`
-   pa [runbook dana D](#dan-d-prijelaz). Checkpoint Action od tada sam dodaje stanje lanca (manifest Gnosisa postoji).
+7. ✅ **Dan D** (26. 9. 2026., Matijin ok; izveo Claude Opus 5.5):
+   - **Prije:** `npm run check` na produkciji prošao; backup
+     `domovina-api/backups/pre-dan-d-20260926-011924-{schema,maksimir-data}.sql`. Stanje: lanac faze 1
+     `seq 2` (listić 25. 9. 13:36 UTC i povlačenje 22:15 UTC, **bez** zapisa „prijenos”), 0 aktivnih
+     listića, ZK grupa 1 član, na Gnosisu 1 registracija i 1 glasač.
+   - **Zastavica:** `update maksimir_settings set active_chain_id = 100, active_contract = '0x8129…e869',
+     chain_from = now()` u jednoj transakciji s assertima prije `commit` (dva pokušaja su se sama
+     poništila zbog krivih pretpostavki u assertima, ne u bazi). **`chain_from = 2026-09-26 01:20:41.770077+00`.**
+     Provjereno u transakciji i zatim izvana kao `anon`: `maksimir_results()` `phase1_open = false`,
+     `chain_open = true`; `maksimir_chain_config().active` = Gnosis V1 (groupId 249, blok deploya 48440122);
+     `_maksimir_cast_ballot_for` (verificiran korisnik), `maksimir_zk_register`, `maksimir_zk_share` →
+     `voting_closed`; `maksimir_log()` javan (2 retka).
+   - **Završni OTS snapshot:** run [36208126330](https://github.com/stepanic/stadion-maksimir-natjecaj-2026/actions/runs/36208126330),
+     commit `dfab6ff`, `glasanje/checkpoints/20260926T012117Z-seq2.json`: `maksimir-snapshot/3`,
+     `phase1_final: true`, vrh faze 1 `b3b94377…9de16`, ZK vrh `433a3c8a…a48e`, `chain` = Gnosis blok
+     48440478 (`0x0ae8fdf5…cbe3`), 1 registracija, 1 glasač.
+   - **Izvoz:** [`glasanje/faza1/lanac.json`](../../glasanje/faza1/lanac.json) i
+     [`zk_grupa.json`](../../glasanje/faza1/zk_grupa.json) (`92982e9`). `maksimir_verify.py … --chain
+     chain/deployments/gnosis/v1.json` → **SVE PROVJERE PROŠLE** (6 snapshotova, ZK grupa, zbroj iz
+     događaja = `results()`, `blockHash` snapshota = lanac; ukupno 1 glasač). Usput popravljeno: skripta je
+     pucala na `checkpoints/index.json` koji hvata glob iz dokumentacije; sada ga preskače (test + mutacija).
+   - **Web nakon prijelaza** (bez novog deploya): `npm run check` na produkciji prošao; u Braveu, bez
+     `?lanac=`, `/glasanje` prikazuje tok na lancu („Glas na lancu · revizija 1”, anonimna objava na lancu),
+     1 glasača, bez trake „testna mreža”; `/radovi/NONDB5MRF` prikazuje rezultat s lanca (24 %,
+     1 podupiratelj). Nijedna greška u konzoli; ništa nije kliknuto ni predano.
+   - **Povratak** (ako zatreba): razina 4 iz [Povratak](#povratak), `update maksimir_settings set chain_from = null`.
 
 ## Otvoreno nakon sesije 26. 9. 2026.
 
@@ -661,6 +685,17 @@ ugovor koji se broji, prije dana D), F-20 (veza commitment ↔ nullifier u `loca
 `__chainVote`), F-21 (checkpoint pada kad RPC Gnosisa ne odgovori). Redoslijed koji review predlaže
 je u njegovu sažetku.
 
-**Ostalo:** merge obiju grana u `main` (uz zeleni CI i Matijin ok), testni passkey „Maksimir glasanje ·
-ključ …” za `localhost` može se obrisati iz Lozinki.
+**Odluka za dan D (Matija, 26. 9. 2026.):** otvoreni nalazi reviewa **ne blokiraju** dan D i izrijekom
+su prihvaćeni kao poznati rizik do popravka. Nijedan ne dira integritet zbroja (to je review i sam
+potvrdio); tiču se privatnosti prema operateru (F-01, F-13, F-06, F-20), anonimnih točaka pisanja
+(F-02, F-14, F-16), lanca opskrbe ZK artefakata (F-04), griefinga registracije (F-15) i rubova relayera
+(F-17: 500 i dalje vraća poruku viema, `workers_dev`/`preview_urls` uključeni). F-18/F-21 (`?lanac=` prije
+dana D) nakon prijelaza više nisu relevantni; F-21 (checkpoint i pad RPC-a) popravljen je u `b2a9d0f`,
+F-22 u `f9b2dfe`. Stanje na dan D: prema F-13, zapis „prijenos” nije nastao ni za koga (Matijin listić
+faze 1 povučen je prije registracije), pa javni lanac faze 1 nikoga ne povezuje s lancem. Satni cron
+(F-05) i dalje preskače runove; rezervni okidač nije napravljen.
+
+**Ostalo:** obje grane mergane u `main` (PR #2 `49c362c`, `domovina-api` PR #4 `346fd63`). Testni passkey
+„Maksimir glasanje · ključ …” za `localhost` može se obrisati iz Lozinki. Ostatak xDAI-ja deployera može
+ići sponzoru relayera Gnosisa kad zatreba.
 

@@ -5,6 +5,25 @@ potvrđena eOsobnom ili Certilia mobile.ID-jem ima jedan glas od **100 bodova** 
 88 natječajnih radova. Listić smije mijenjati do **31. 12. 2027. u 23:59** (Europe/Zagreb).
 Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
 
+> **Faza 1 zatvorena 26. 9. 2026. u 01:20:41 UTC (dan D).** Glasanje se nastavlja na Gnosis Chainu
+> (`MaksimirGlasanjeV1` [`0x812960FA1120121DEd82A8806aECE93dcf49E869`](https://gnosisscan.io/address/0x812960FA1120121DEd82A8806aECE93dcf49E869),
+> manifest [`chain/deployments/gnosis/v1.json`](../chain/deployments/gnosis/v1.json)). Ovdje opisani
+> offchain dio više ne prima listiće; listići faze 1 koji nisu preneseni na lanac i dalje se broje.
+> Detalji prijelaza: [docs/blockchain/08](../docs/blockchain/08-integracija-s-fazom-1.md).
+
+## Provjera nakon dana D
+
+Zatvoreni lanac faze 1 i zapisnik ZK grupe su u [`faza1/`](faza1/). Završni snapshot faze 1 je
+`checkpoints/20260926T012117Z-seq2.json` (`phase1_final: true`). Ukupan rezultat (ostatak faze 1 + lanac):
+
+```sh
+python3 scripts/maksimir_verify.py glasanje/faza1/lanac.json glasanje/checkpoints/*.json \
+  --zk glasanje/faza1/zk_grupa.json --chain chain/deployments/gnosis/v1.json
+```
+
+Skripta treba samo Python (standardna biblioteka) i javni RPC Gnosisa (`--rpc` za drugi). Od dana D
+satni snapshot (`maksimir-snapshot/3`) uz vrh faze 1 bilježi i stanje ugovora na Gnosisu u istom bloku.
+
 ## Gdje je što
 
 | Dio | Mjesto |
@@ -41,7 +60,7 @@ otvaranje računa ne daje drugi listić.
    trenutni rezultati, pročitani u istoj transakciji. Ako se vrh promijenio, Action zapiše
    `checkpoints/<UTC>-seq<N>.json` i žigoše ga (`ots stamp`). Ranije dokaze nadograđuje
    (`ots upgrade`) dok ne dobiju Bitcoin atestaciju.
-4. **Po zatvaranju** RPC `maksimir_log()` vraća cijeli lanac. Svatko ga može provjeriti:
+4. **Po zatvaranju** (za fazu 1: od dana D) RPC `maksimir_log()` vraća cijeli lanac. Svatko ga može provjeriti:
 
    ```sh
    python3 scripts/maksimir_verify.py lanac.json glasanje/checkpoints/*.json --receipt moja-potvrda.json
