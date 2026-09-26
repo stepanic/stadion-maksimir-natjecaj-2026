@@ -298,6 +298,24 @@ sequenceDiagram
   Note over GA: .ots dobiva Bitcoin atestaciju za nekoliko sati,<br/>prijelaz ne čeka na to
 ```
 
+### Zamke pri izvođenju (26. 9. 2026.)
+
+Vrijede i za povratak (razina 4) i za svaki budući prijelaz, npr. na V2.
+
+- **Zastavica ide s assertima u istoj transakciji.** `update` + `do $$ … raise exception … $$` + `commit`
+  kroz `psql -v ON_ERROR_STOP=1`: svaka neočekivana vrijednost poništi cijelu transakciju. Tako su se dva
+  pokušaja s krivim assertom poništila bez ikakve promjene u bazi.
+- **`_maksimir_cast_ballot_for` prvo provjerava identitet** (`not_verified`), tek onda `voting_closed`.
+  Za provjeru zatvaranja treba stvarni `user_id` iz `public.identity_verifications`; poziv ništa ne piše
+  jer `voting_closed` pada prije upisa.
+- **`maksimir_log()` vraća jedan `jsonb` niz**, ne redove: broji se `jsonb_array_length(...)`.
+- **`maksimir_zk_register` kao `anon`** vraća `permission denied` (grant samo `authenticated`); izvana se
+  zatvaranje provjerava preko `maksimir_zk_share` (`anon`, vraća `voting_closed`).
+- **`maksimir_verify.py … glasanje/checkpoints/*.json`** hvata i `index.json`; od `92982e9` skripta ga
+  preskače. Starija kopija skripte na njemu puca s `TypeError`.
+- **Web ne treba deploy** za prijelaz: `maksimir_chain_config().active` i `chain_from` web čita pri
+  učitavanju. Stranice s dokumentacijom trebaju deploy (markdown je u bundleu).
+
 ### Zatvaranje `maksimir_cast_ballot`
 
 Zatvara se preko `chain_from`, ne brisanjem funkcije. Staro sučelje (stari JS u predmemoriji
