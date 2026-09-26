@@ -624,9 +624,13 @@ Matija, 26. 9.: **najprije Gnosis (korak 5), zatim offchain dio** (registrar, we
    `maksimir_log` i dalje zatvoren, `npm run check` na produkciji prošao. Redak `chiado` još nije
    dodan (dolazi s deployem weba). Zamka: `scripts/lib/db-env.sh` `detect_db_container` pojede stdin
    (ssh bez `-n`), pa se uz `--stdin` zadaje `COOLIFY_DB_CONTAINER`.
-2. **Registrar:** deploy edge funkcije `maksimir-register`; tajne `MAKSIMIR_REGISTRAR_KEY_10200`
-   (Chiado, testni) i kasnije `_100`.
-3. **Web + relayer:** `npm run check`, `npm run deploy`, `wrangler secret put SPONSOR_PRIVATE_KEY_10200`.
+2. ✅ **Registrar** (26. 9. 2026.): `maksimir-register` deployana (`scripts/deploy-functions.sh --only=maksimir-register -y`),
+   tajne `MAKSIMIR_REGISTRAR_KEY_100` i `_10200` (`coolify-env-set.sh … --recreate-service=supabase-edge-functions`);
+   bez sesije vraća 401 `not_signed_in`, `certilia` nepromijenjena. Retci `gnosis` (counts) i `chiado` (test) u `maksimir_chains`.
+3. ✅ **Web + relayer** (26. 9. 2026., Worker verzija `10ee0cf4`): `RELAYER_CHAINS` s obje mreže, tajne
+   `SPONSOR_PRIVATE_KEY_100` i `_10200`; sponzor Gnosisa dobio 0,25 xDAI od deployera
+   ([tx](https://gnosisscan.io/tx/0x50d52c4edb08163920dac014ae533a347abc85b11a3d3e14474f05a2a614f2e0)).
+   `npm run check` na produkciji prošao; bez `?lanac=` web je i dalje faza 1.
 4. **E2E s pravom eOsobnom na Chiadu** (Brave, Matija klikne passkey) po [kontrolnoj listi](#e2e-s-pravom-eosobnom).
 5. ✅ **Gnosis** (26. 9. 2026.): Safe 2/3 `0xfb1b…c576`, V1 `0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`
    (Sourcify exact_match, tag `glasanje-v1-gnosis`, [03](03-deploy-runbook.md#gnosis-26-9-2026-napravljeno)).
