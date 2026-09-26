@@ -101,7 +101,12 @@ def main() -> int:
 
     # 1–2. novi checkpoint
     snap = fetch_snapshot()
-    chain = chain_part()
+    # RPC lanca ne smije srušiti checkpoint faze 1 (nalaz F-21, docs/review/2026-09-26-neovisni-review-wiring.md)
+    try:
+        chain = chain_part()
+    except Exception as e:  # noqa: BLE001
+        print(f"UPOZORENJE: stanje lanca nije pročitano ({e}); snapshot bez `chain`", file=sys.stderr)
+        chain = None
     if chain:
         snap["chain"] = chain
     index_path = OUT / "index.json"

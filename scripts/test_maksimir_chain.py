@@ -123,6 +123,13 @@ class VerifyChain(unittest.TestCase):
         self.assertTrue(mv.compare_chain_tally(ev, bad2["chain"], "snapshot"))
 
 
+class Finality(unittest.TestCase):
+    def test_deploy_jos_nije_finaliziran(self):
+        m = {"block": "100"}
+        self.assertTrue(mc.not_final_yet({"number": 99}, m))
+        self.assertFalse(mc.not_final_yet({"number": 100}, m))
+
+
 @unittest.skipUnless(os.environ.get("MAKSIMIR_LIVE"), "MAKSIMIR_LIVE=1 za pravi Chiado")
 class Live(unittest.TestCase):
     def test_chiado_dogadaji_jednaki_ugovoru(self):

@@ -186,12 +186,20 @@ def tally_events(rpc: Rpc, contract: str, from_block: int, to_block: int, step: 
     }
 
 
-def chain_snapshot(rpc_url: str, manifest: dict, tag: str | int = "finalized") -> dict:
+def not_final_yet(b: dict, manifest: dict) -> bool:
+    """Finalized blok kasni nekoliko minuta; odmah nakon deploya ugovor na njemu još ne postoji."""
+    return b["number"] < int(manifest["block"])
+
+
+def chain_snapshot(rpc_url: str, manifest: dict, tag: str | int = "finalized") -> dict | None:
+    """Stanje ugovora na finalized bloku, ili None dok deploy još nije finaliziran."""
     rpc = Rpc(rpc_url)
     chain_id = int(rpc("eth_chainId", []), 16)
     if chain_id != manifest["chainId"]:
         raise RuntimeError(f"RPC je na lancu {chain_id}, manifest traži {manifest['chainId']}")
     b = block(rpc, tag)
+    if not_final_yet(b, manifest):
+        return None
     return {
         "chainId": chain_id,
         "contract": manifest["address"],

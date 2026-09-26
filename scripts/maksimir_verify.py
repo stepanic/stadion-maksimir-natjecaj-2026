@@ -172,6 +172,9 @@ def verify_onchain(manifest_path: str, rpc_url: str | None, snapshots: list[tupl
     if "0x" + mc.keccak256(bytes.fromhex(code[2:])).hex() != m["runtimeCodeKeccak256"]:
         errors.append("kôd na adresi ugovora nije izvor iz repoa (runtimeCodeKeccak256)")
     b = mc.block(rpc, "finalized")
+    if mc.not_final_yet(b, m):
+        print(f"lanac {m['network']}: deploy (blok {m['block']}) još nije finaliziran (finalized {b['number']}) — preskačem")
+        return errors, None
     state = mc.read_state(rpc, m["address"], b["number"])
     deploy = int(m["block"])
     ev = mc.tally_events(rpc, m["address"], deploy, b["number"])
