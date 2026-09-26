@@ -615,9 +615,15 @@ Na produkcijskoj domeni tok se isprobava s `?lanac=chiado` (samo kad u bazi post
 ## Put do produkcije
 
 Redoslijed, svaki korak uz Matijin ok. Web je siguran i prije koraka 1 ([I-04](audit/nalazi.md)).
+Matija, 26. 9.: **najprije Gnosis (korak 5), zatim offchain dio** (registrar, web); migracija baze može odmah.
 
-1. **Baza:** ručno primijeniti `20260926120000_maksimir_chain.sql` (backup sheme, kao 25. 9.).
-   Testni redak `chiado` u `maksimir_chains` s `counts = false` (za `?lanac=chiado` na produkciji).
+1. ✅ **Baza** (26. 9. 2026., 23:59 UTC): `20260926120000_maksimir_chain.sql` primijenjena ručno, u jednoj
+   transakciji s upisom u `schema_migrations` (tuđe `20260903*` nisu dirane). Backup:
+   `domovina-api/backups/pre-maksimir-chain-20260925-235856-{schema,maksimir-data}.sql`. Provjera:
+   faza 1 netaknuta (0 listića, lanac seq 2, ZK seq 1, otvorena), `maksimir_chain_config` prazan,
+   `maksimir_log` i dalje zatvoren, `npm run check` na produkciji prošao. Redak `chiado` još nije
+   dodan (dolazi s deployem weba). Zamka: `scripts/lib/db-env.sh` `detect_db_container` pojede stdin
+   (ssh bez `-n`), pa se uz `--stdin` zadaje `COOLIFY_DB_CONTAINER`.
 2. **Registrar:** deploy edge funkcije `maksimir-register`; tajne `MAKSIMIR_REGISTRAR_KEY_10200`
    (Chiado, testni) i kasnije `_100`.
 3. **Web + relayer:** `npm run check`, `npm run deploy`, `wrangler secret put SPONSOR_PRIVATE_KEY_10200`.
