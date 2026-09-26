@@ -24,7 +24,7 @@
   // Lokalno: tajne u web/.dev.vars (gitignorirano).
   "kv_namespaces": [{ "binding": "RELAY_KV", "id": "31e439f4ff6e42238fd94ed372f0cf2b" }], // maksimir-relay
   "vars": {
-    "RELAYER_CHAINS": "{\"100\":{\"contract\":\"0xC9E6bB402293645C99d32cb41d125fEbB9F7507B\",\"rpc\":\"https://rpc.gnosischain.com\"},\"10200\":{\"contract\":\"0xe7903145c8F2401fC16D78d9788D34beE0c3e029\",\"rpc\":\"https://rpc.chiadochain.net\"}}",
+    "RELAYER_CHAINS": "{\"100\":{\"contract\":\"0x812960FA1120121DEd82A8806aECE93dcf49E869\",\"rpc\":\"https://rpc.gnosischain.com\"},\"10200\":{\"contract\":\"0xe7903145c8F2401fC16D78d9788D34beE0c3e029\",\"rpc\":\"https://rpc.chiadochain.net\"}}",
     // Isti izvor (maksimir.domovina.ai) ne treba CORS; lokalni razvoj ga dobiva iz web/.dev.vars (F-17).
     "RELAYER_ALLOWED_ORIGINS": "",
     "MAX_FEE_GWEI": "5",
