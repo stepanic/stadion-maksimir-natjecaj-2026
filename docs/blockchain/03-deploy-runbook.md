@@ -84,6 +84,30 @@ curl https://maksimir.domovina.ai/relayer/100/status
 
 KV `maksimir-relay` (kvote) već postoji i vezan je u `wrangler.jsonc`.
 
+### Gnosis, 26. 9. 2026. (napravljeno)
+
+| Što | Vrijednost |
+|---|---|
+| V1 | [`0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`](https://gnosisscan.io/address/0xC9E6bB402293645C99d32cb41d125fEbB9F7507B), blok 48439703, `groupId` 248 |
+| vlasnik | Safe 2/3 [`0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576`](https://app.safe.global/home?safe=gno:0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576) (potpisnici kao MPT Safe; `scripts/safe-gnosis.ts`, `deployments/gnosis/safe.json`) |
+| registrar | `0x0F81daa9A724eAe838BE22dd446fcdB7Fbfa5374` (ključ u `chain/.env.gnosis`, gitignorirano) |
+| izvor | Sourcify **exact_match** (creation + runtime); tag `glasanje-v1-gnosis` |
+
+Zamke tog dana:
+
+- **`gnosis.blockscout.com` sada preusmjerava (301) na Gnosisscan**, koji traži Etherscan API ključ
+  (v2). Bez ključa verifikacija ide izravno preko Sourcify API-ja v2 (hardhat plugin za Sourcify pada):
+
+  ```sh
+  # standardni JSON ulaz iz build-infoa (artifacts/…/MaksimirGlasanjeV1.dbg.json → buildInfo)
+  curl -X POST https://sourcify.dev/server/v2/verify/100/<adresa> -H 'Content-Type: application/json' \
+    -d '{"stdJsonInput": <input>, "compilerVersion": "0.8.28+commit.7893614a",
+         "contractIdentifier": "contracts/v1/MaksimirGlasanjeV1.sol:MaksimirGlasanjeV1"}'
+  curl https://sourcify.dev/server/v2/verify/<verificationId>      # čekaj isJobCompleted
+  ```
+- **Finalized blok kasni ~2 min**; odmah nakon deploya `verify --chain` i checkpoint lanac preskaču.
+- Deploy skripta šalje napojnicu 0,01 gwei (procjena daje 0, [I-05](audit/nalazi.md)).
+
 ## Alati
 
 Stanje 25. 9. 2026.:

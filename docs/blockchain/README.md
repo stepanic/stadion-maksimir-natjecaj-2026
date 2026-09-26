@@ -56,6 +56,9 @@ novčanik ni xDAI.
 | Faucet bez preglednika | [`chain/scripts/faucet-chiado.mjs`](../../chain/scripts/faucet-chiado.mjs) | 0,001 xDAI stiglo iz prvog pokušaja |
 | Chiado E2E | [`chain/scripts/e2e-chiado.ts`](../../chain/scripts/e2e-chiado.ts) | registracija, listić, izmjena, objava; tri podmetanja odbijena |
 
+**Gnosis V1** (26. 9. 2026.): [`0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`](https://gnosisscan.io/address/0xC9E6bB402293645C99d32cb41d125fEbB9F7507B),
+vlasnik Safe 2/3 `0xfb1b…c576`, izvor Sourcify exact_match, tag `glasanje-v1-gnosis`.
+
 **Chiado V1**: [`0xe7903145c8F2401fC16D78d9788D34beE0c3e029`](https://gnosis-chiado.blockscout.com/address/0xe7903145c8F2401fC16D78d9788D34beE0c3e029#code)
 (verificiran izvor). Testni deployer i sponzor:
 [`0x408d…d30C`](https://gnosis-chiado.blockscout.com/address/0x408d1866cda9174A1E1d75bB7cf87ee27561d30C).
