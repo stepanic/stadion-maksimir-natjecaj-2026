@@ -140,6 +140,33 @@ ili izostavi `--baseline`.
   kroz `link()`. Radio je samo zato što ga prevoditelj starih linkova pretvori u `/`. Provjera 2c sad to hvata.
 - **PNG bajtovi dva ista screenshota se razlikuju.** Usporedba ide pixelmatchom, ne `Buffer.equals`.
 
+## Mermaid „Syntax error” prolazi kroz `npm run check` (26. 9. 2026.)
+
+Na `/glasanje-odluke`, `/lanac-adr-kljuc`, `/lanac-verzije` i `/lanac-integracija` dijagram se prikazivao kao
+mermaidova bomba „Syntax error”, a `npm run check` je prošao. Za to postoje dva razloga:
+
+- **I poruka o grešci je `<svg>`.** Provjera broji `#content svg` samo na `/glasanje-kako-radi`, pa ni neispravan
+  dijagram ni ostale stranice ne pogađa.
+- **U `sequenceDiagram` je `;` kraj naredbe.** Poruka `A->>B: sesija; poziv()` puca na dijelu iza `;`
+  („Expecting … SOLID_ARROW, got NEWLINE”). U tekstu poruke treba pisati zarez ili `#59;`. Popravljeno u `8710f44`.
+
+Brza provjera svih dijagrama bez preglednika: mermaid iz `web/node_modules` i `jsdom` (jer flowcharti trebaju
+DOMPurify, a bez `window` parse pada s „DOMPurify.addHook is not a function”, što je lažna greška):
+
+```js
+// node check-mermaid.mjs $(grep -rl '```mermaid' docs research *.md)   — jsdom instaliraj u privremenu mapu
+import fs from "fs"; import { JSDOM } from "jsdom";
+const w = new JSDOM("").window; globalThis.window = w; globalThis.document = w.document;
+const { default: mermaid } = await import("<repo>/web/node_modules/mermaid/dist/mermaid.core.mjs");
+for (const f of process.argv.slice(2))
+  for (const [i, b] of [...fs.readFileSync(f, "utf8").matchAll(/```mermaid\n([\s\S]*?)```/g)].entries())
+    await mermaid.parse(b[1]).catch((e) => console.log(f, i, e.message.split("\n")[0]));
+```
+
+Na stanju prije popravka ovo je uhvatilo sve četiri greške, a nakon njega su svi dijagrami u repou prošli.
+Otvoreno: dodati ovaj korak u `regression.mjs` (ili u build), i u pregledniku tražiti tekst „Syntax error” na svim
+rutama, a ne samo brojati SVG-ove.
+
 ## Vezani dokumenti
 
 - [`2026-09-25-seo-rute-plan.md`](2026-09-25-seo-rute-plan.md): plan i odluke (hash → prave rute, zašto bez Astra)
