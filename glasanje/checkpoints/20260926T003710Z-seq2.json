@@ -1,0 +1,553 @@
+{
+  "at": "2026-09-26T00:37:10.789316+00:00",
+  "chain_from": null,
+  "chain_open": true,
+  "closes_at": "2027-12-31T22:59:59+00:00",
+  "head": {
+    "hash": "b3b94377339bba2bd04c3fb978bda52b3150b65dec1646fe44a561105b49de16",
+    "seq": 2,
+    "ts_ms": 1790374522854
+  },
+  "open": true,
+  "opens_at": null,
+  "phase1_final": false,
+  "phase1_open": true,
+  "public_voters": 0,
+  "results": [
+    {
+      "backers": 0,
+      "code": "MJY2USY2W",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "X8G5VVECK",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "6PPWVBBBZ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "JFHSTDJMQ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "DPZC5ZDGB",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WDYQY56G6",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "PPWTPROZF",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "G2CPLFGEK",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "KPEEULHEN",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "I6PSUQ0QD",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "JGLUCNGVP",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "OYPODSV1H",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "MJ76JGHEI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "SS9MPMWOY",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "Q1BIEWBQI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "6TVJ3MUHR",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "HSQMCGBCH",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "HV4FFIHDN",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "PJ7KODKT5",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WGBJHGUL5",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "SS6SBB19I",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "LOUOR2NOD",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "M6ILWNLRB",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "I4EEQIWWW",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "1EEPNNDDB",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "JYXGFPAWY",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "YJEKYQPFE",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "ZDWBDEPPE",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WWUUTZSNC",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "GJLXCWWPR",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "FQORKZEN0",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "UXADSRW1U",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "CYFXC7LIM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "CGCSJW79U",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "K1THJGC7W",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "9TZIJAPW4",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "W3YS5VJBZ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "UO5YMEAMR",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "SIAWCHRWI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "OUEE4GMGC",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "K2MEDVFXI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "72ECW1UD7",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "SVFGQA8HM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "G8UJEOMVM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "TJML1KADC",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "BPKNHCZ5Y",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "9B9EEI64G",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "J8B0FD4Q0",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "2AAVTUGWB",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "Y1AYSU2BI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "2OXZFNNDT",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "KRQEHDKDD",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "TVHRJYYJT",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "KLHI95BLM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "QTHYEBYMC",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "0ZUFNG8CC",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "H66BNHW0U",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "IN6KISUJT",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "HTKIZRN8V",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "PWC6XWGWN",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "CIXSLMQWW",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "GY0F1A9OM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "NONDB5MRF",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WP6WKTZ3Z",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "HKJS1WQOK",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WYYB64CFR",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "GGWUGWAZB",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "QK1YMPGVJ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "WWZGJZ9EO",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "EEADH5IWW",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "82WWCRXWE",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "RYX76HLBI",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "Y7CWWEEP5",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "LPMLOBLZN",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "XTCOLQ2HZ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "7ITCHBTWU",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "KEQYRXFPS",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "X5Z6CZDRU",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "LV4YKMRVD",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "AXAHFUYJP",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "TCG3ZSILM",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "Y7ZXWDDBL",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "FSFJLMC2K",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "EKQ6QK4AJ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "ATQ1VGDWW",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "S7EE9DARZ",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "AV3DOWDM4",
+      "points": 0,
+      "share": 0
+    },
+    {
+      "backers": 0,
+      "code": "E5WW92OVA",
+      "points": 0,
+      "share": 0
+    }
+  ],
+  "schema": "maksimir-snapshot/3",
+  "voters": 0,
+  "zk": {
+    "hash": "433a3c8abad42ffe03d406f91c378881a8bb63ec0aa33ba43347ff16ffada48e",
+    "members": 1,
+    "seq": 1
+  }
+}
