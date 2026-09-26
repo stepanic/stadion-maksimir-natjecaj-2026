@@ -56,5 +56,10 @@
     "@semaphore-protocol/contracts/interfaces/ISemaphore.sol": "0x7fa819aad67408b85647f8fc783788912a961c38631384cf3ab7bd6360fe8ffe",
     "contracts/v1/MaksimirGlasanjeV1.sol": "0xcb3b0c97d369c8f1e1e00d4532959070c01464077d983e2a337c32fbce00baec"
   },
-  "runtimeCodeKeccak256": "0x23fc6cb36181ee51e1e73fbfb6f5b02d770fba9bc647fa4d4a3e4b6f1522a543"
+  "runtimeCodeKeccak256": "0x23fc6cb36181ee51e1e73fbfb6f5b02d770fba9bc647fa4d4a3e4b6f1522a543",
+  "povucen": {
+    "datum": "2026-09-26",
+    "razlog": "I-09: registriran javno poznat klju\u010d (tajna od samih nula) za Matiju; V1 nema uklanjanja \u010dlana, pa je ugovor napu\u0161ten i ponovno deployan. Nitko drugi nije glasao.",
+    "nalaz": "docs/blockchain/audit/nalazi.md#i-09"
+  }
 }
