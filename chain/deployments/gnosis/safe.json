@@ -1,0 +1,15 @@
+{
+  "network": "gnosis",
+  "safe": "0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576",
+  "safeVersion": "1.3.0 (L2)",
+  "owners": [
+    "0xEC415de022436B31e2ed5499D63087bbcb123cf3",
+    "0x58904CB648dfa75E5993aa5c4E2203bdEa29CD4F",
+    "0x7f7Aa26823Ca561513088eB1890B7144C15aF792"
+  ],
+  "threshold": 2,
+  "sameOwnersAs": "0x449aBCEf4e29a7Dd8d98dB451AF2c463561BAf2e",
+  "deployTx": "0x7be1c63c8d97b752cccf500d955eeaf18fe0f77baf741805d63726b671c6779c",
+  "block": "48439699",
+  "at": "2026-09-26T00:11:57.146Z"
+}
