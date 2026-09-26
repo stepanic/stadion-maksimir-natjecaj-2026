@@ -8,12 +8,17 @@ svaki hash, ponovno izbroji glasove i usporedi ih sa snapshotovima koji su
     python3 scripts/maksimir_verify.py LANAC.json [SNAPSHOT.json ...]
     python3 scripts/maksimir_verify.py LANAC.json --receipt POTVRDA.json
     python3 scripts/maksimir_verify.py LANAC.json SNAPSHOT.json --zk ZK_GRUPA.json
+    python3 scripts/maksimir_verify.py LANAC.json SNAPSHOT.json --chain chain/deployments/gnosis/v1.json [--rpc URL]
 
 LANAC.json   — izlaz RPC-a maksimir_log (lista redova), objavljen po zatvaranju
 SNAPSHOT     — checkpoint datoteke; svaka mora odgovarati prefiksu lanca do head.seq
 POTVRDA.json — potvrda koju je glasač preuzeo nakon predaje listića
 ZK_GRUPA.json — izlaz RPC-a maksimir_zk_group (javan uvijek); provjerava se lanac
                zapisnika grupe i da vrh iz svakog snapshota v2 odgovara prefiksu
+--chain      — manifest ugovora MaksimirGlasanjeV1 (chain/deployments/<mreža>/v1.json):
+               kôd na adresi = izvor iz repoa (keccak256), zbroj iz događaja BallotCast/Migrated
+               = results() ugovora, svaki snapshot v3 s poljem `chain` = događaji do njegova
+               bloka; ukupno = lanac + ostatak faze 1 (docs/blockchain/08-integracija-s-fazom-1.md)
 
 Formula (ista kao u migraciji domovina-api 20260925120000_maksimir_voting.sql):
   hash = sha256(prev_hash|seq|pseudonym|revision|ts_ms|items_canon), hex, UTF-8
@@ -29,6 +34,8 @@ import hashlib
 import json
 import sys
 from collections import defaultdict
+
+import maksimir_chain as mc
 
 GENESIS = "0" * 64
 
@@ -143,12 +150,58 @@ def verify_zk(zk: dict, snapshots: list[tuple[str, dict]]) -> list[str]:
     return errors
 
 
+def compare_chain_tally(ev: dict, state: dict, what: str) -> list[str]:
+    """Zbroj iz događaja mora biti jednak onome što tvrdi ugovor ili snapshot."""
+    errors = []
+    if ev["voters"] != state["voters"]:
+        errors.append(f"{what}: glasača {state['voters']}, događaji daju {ev['voters']}")
+    got = {r["code"]: (r["points"], r["backers"]) for r in ev["results"]}
+    for r in state["results"]:
+        if got.get(r["code"], (0, 0)) != (r["points"], r["backers"]):
+            errors.append(f"{what}: {r['code']} ima {r['points']}/{r['backers']}, događaji daju {got.get(r['code'], (0, 0))}")
+    return errors
+
+
+def verify_onchain(manifest_path: str, rpc_url: str | None, snapshots: list[tuple[str, dict]]) -> tuple[list[str], dict | None]:
+    m = mc.load_manifest(manifest_path)
+    rpc = mc.Rpc(rpc_url or {100: "https://rpc.gnosischain.com", 10200: "https://rpc.chiadochain.net"}[m["chainId"]])
+    errors: list[str] = []
+    if int(rpc("eth_chainId", []), 16) != m["chainId"]:
+        return [f"RPC nije na lancu {m['chainId']}"], None
+    code = rpc("eth_getCode", [m["address"], "latest"])
+    if "0x" + mc.keccak256(bytes.fromhex(code[2:])).hex() != m["runtimeCodeKeccak256"]:
+        errors.append("kôd na adresi ugovora nije izvor iz repoa (runtimeCodeKeccak256)")
+    b = mc.block(rpc, "finalized")
+    if mc.not_final_yet(b, m):
+        print(f"lanac {m['network']}: deploy (blok {m['block']}) još nije finaliziran (finalized {b['number']}) — preskačem")
+        return errors, None
+    state = mc.read_state(rpc, m["address"], b["number"])
+    deploy = int(m["block"])
+    ev = mc.tally_events(rpc, m["address"], deploy, b["number"])
+    errors += compare_chain_tally(ev, state, f"ugovor na bloku {b['number']}")
+    print(f"lanac {m['network']}: {m['address']}, blok {b['number']}, {ev['events']} događaja, {ev['voters']} glasača — "
+          f"{'OK' if not errors else 'PAD'}")
+    for path, snap in snapshots:
+        ch = snap.get("chain")
+        if not ch or ch.get("contract", "").lower() != m["address"].lower():
+            continue
+        blk = mc.block(rpc, ch["block"])
+        if blk["hash"] != ch["blockHash"]:
+            errors.append(f"snapshot {path}: blok {ch['block']} ima drugi hash nego u snapshotu")
+        e = compare_chain_tally(mc.tally_events(rpc, m["address"], deploy, ch["block"]), ch, f"snapshot {path}")
+        print(f"snapshot {path}: lanac do bloka {ch['block']}, {ch['voters']} glasača — {'OK' if not e else 'PAD'}")
+        errors += e
+    return errors, ev
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("log")
     ap.add_argument("snapshots", nargs="*")
     ap.add_argument("--receipt", action="append", default=[])
     ap.add_argument("--zk", help="izlaz maksimir_zk_group()")
+    ap.add_argument("--chain", help="manifest ugovora (chain/deployments/<mreža>/v1.json)")
+    ap.add_argument("--rpc", help="JSON-RPC mreže (zadano javni RPC Gnosisa/Chiada)")
     a = ap.parse_args()
 
     log = json.load(open(a.log, encoding="utf-8"))
@@ -179,7 +232,15 @@ def main() -> int:
             errors.append(f"potvrda {path}: hash ne odgovara sadržaju potvrde")
 
     voters, points, _ = tally(log, len(log))
-    top = sorted(points.items(), key=lambda kv: -kv[1])[:5]
+    if a.chain:
+        e, ev = verify_onchain(a.chain, a.rpc, snaps)
+        errors += e
+        if ev:
+            print(f"faza 1 (ostatak): {voters} glasača; lanac: {ev['voters']} glasača")
+            voters += ev["voters"]
+            for r in ev["results"]:
+                points[r["code"]] += r["points"]
+    top = sorted(((c, p) for c, p in points.items() if p), key=lambda kv: -kv[1])[:5]
     print(f"konačno: {voters} glasača; vodeći: " + ", ".join(f"{c} {p / voters:.2f} %" for c, p in top) if voters else "konačno: 0 glasača")
 
     for e in errors:

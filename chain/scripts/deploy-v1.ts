@@ -52,7 +52,12 @@ async function main() {
   }
 
   const args = [semaphore, getAddress(owner), getAddress(registrar), CLOSES_AT, entriesHash(), MERKLE_TREE_DURATION] as const;
+  // Napojnica validatoru: procjena na Gnosisu/Chiadu daje 0, a takva transakcija zna čekati minutama
+  // (nalaz I-05, docs/blockchain/audit/nalazi.md). Zadano 0,01 gwei; maxFee = 2 × bazna + napojnica.
+  const tip = local ? undefined : BigInt(process.env.PRIORITY_FEE_WEI ?? 10_000_000);
+  const base = local ? 0n : ((await pc.getBlock()).baseFeePerGas ?? 0n);
   const { deploymentTransaction, contract } = await hre.viem.sendDeploymentTransaction("MaksimirGlasanjeV1", [...args], {
+    ...(tip !== undefined ? { maxPriorityFeePerGas: tip, maxFeePerGas: base * 2n + tip } : {}),
     // javni Chiado RPC zna odbiti procjenu gasa ("exceeds 999999"); tada DEPLOY_GAS=3000000
     ...(process.env.DEPLOY_GAS ? { gas: BigInt(process.env.DEPLOY_GAS) } : {}),
   });

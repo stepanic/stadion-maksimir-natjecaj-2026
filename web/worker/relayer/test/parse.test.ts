@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BadRequest, parseCall } from "../src/relay.ts";
+import { BadRequest, parseCall } from "../relay.ts";
 
 const proof = { merkleTreeDepth: "1", merkleTreeRoot: "2", nullifier: "3", message: "4", scope: "5", points: ["1", "2", "3", "4", "5", "6", "7", "8"] };
 
@@ -30,4 +30,12 @@ test("odbija krive oblike prije ikakvog poziva lanca", () => {
   assert.throws(() => parseCall("share", { proof: { ...proof, nullifier: "9".repeat(79) } }), BadRequest);
   assert.throws(() => parseCall("share", { proof: { ...proof, nullifier: "9".repeat(78) } }), BadRequest); // 78 znamenki > uint256
   assert.doesNotThrow(() => parseCall("share", { proof: { ...proof, nullifier: ((1n << 256n) - 1n).toString() } }));
+});
+
+import { withTip } from "../relay.ts";
+
+test("napojnica: najmanje zadani prag; veća procjena ostaje; maxFee = baza + napojnica", () => {
+  assert.deepEqual(withTip({ maxFeePerGas: 8n, maxPriorityFeePerGas: 0n }, 10_000_000n), { maxPriorityFeePerGas: 10_000_000n, maxFeePerGas: 10_000_008n });
+  assert.deepEqual(withTip({ maxFeePerGas: 3_000_000_000n, maxPriorityFeePerGas: 2_000_000_000n }, 10_000_000n), { maxPriorityFeePerGas: 2_000_000_000n, maxFeePerGas: 3_000_000_000n });
+  assert.deepEqual(withTip({}, 5n), { maxPriorityFeePerGas: 5n, maxFeePerGas: 5n });
 });

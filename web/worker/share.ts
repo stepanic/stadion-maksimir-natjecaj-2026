@@ -9,8 +9,8 @@ const API = "https://api.domovina.ai";
 const ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3OTExMTcxMywiZXhwIjo0OTMyNzExNzEzLCJyb2xlIjoiYW5vbiJ9.Q4Ef7xMc2dmjMyfJebPDyqNirnARZzMxTWe7i0dASPI";
 
-type Card = { name: string | null; items: { code: string; points: number; lead: string }[] } | null;
-type Share = { kind: "public"; card: Card } | { kind: "zk"; zk_seq: number } | null;
+type Card = { name: string | null; items: { code: string; points: number; lead: string }[]; chain?: unknown } | null;
+type Share = { kind: "public"; card: Card } | { kind: "zk"; zk_seq: number } | { kind: "chain" } | null;
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -37,13 +37,21 @@ export async function shareCard(id: string, origin: string): Promise<Response> {
   let desc = "Svaki građanin s eOsobnom ima 100 bodova za 88 natječajnih radova. Provjerljivo do Bitcoina.";
   try {
     const s = await fetchShare(id);
-    if (s?.kind === "public" && s.card) {
+    if (s?.kind === "public" && s.card && !s.card.items.length && s.card.chain) {
+      // listić je na lancu; bodove čita stranica objave izravno s lanca
+      title = `${s.card.name ?? "Potvrđeni glasač"}: moj glas za novi Maksimir`;
+      desc = "Glas je na blockchainu, a identitet potvrđen eOsobnom. Provjeri ga u svom pregledniku i raspodijeli i ti svojih 100 bodova.";
+    } else if (s?.kind === "public" && s.card) {
       title = `${s.card.name ?? "Potvrđeni glasač"}: moj glas za novi Maksimir`;
       desc =
         s.card.items
           .slice(0, 3)
           .map((i) => `${i.points} bodova: ${i.lead}`)
           .join(" · ") + ". Identitet potvrđen eOsobnom. Raspodijeli i ti svojih 100 bodova.";
+    } else if (s?.kind === "chain") {
+      title = "Anonimni glas za novi Maksimir, na blockchainu";
+      desc =
+        "Glas je predala stvarna osoba potvrđena eOsobnom, a dokaz je na lancu, pa ga nitko ne može obrisati. Tko je i kako je glasala ne zna nitko. Glasaj i ti.";
     } else if (s?.kind === "zk") {
       title = "Anonimni glas za novi Maksimir, sa ZK dokazom";
       desc =

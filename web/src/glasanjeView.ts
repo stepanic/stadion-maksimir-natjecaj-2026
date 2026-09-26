@@ -23,6 +23,7 @@ import {
   fetchShare,
   fetchPublicBallots,
   shareUrl,
+  fetchChainConfig,
   type Items,
   type PublicMode,
   type PublicCard,
@@ -35,6 +36,7 @@ import {
   DOC_GITHUB,
   DOC_SLUG,
   ZK_SHARE_TEXT,
+  CHAIN_SHARE_TEXT,
   bindShareButtons,
   plural,
   publicCardHtml,
@@ -42,6 +44,7 @@ import {
   shareButtonsHtml,
 } from "./shareView";
 import { link, navigate } from "./routes";
+import * as CVV from "./chainVoteView";
 
 const ZK_SHARE_KEY = "maksimir-zk-share"; // {commitment: shareId} — zadnji anonimni dokaz na ovom uređaju
 
@@ -127,6 +130,27 @@ export function draftHas(code: string): number | null {
 
 // ── učitavanje ──────────────────────────────────────────────────────────────
 
+// Glasanje na lancu (chainVoteView): uključuje se zastavicom u bazi ili ?lanac=<testna mreža>.
+let phase1: Results | null = null; // rezultati faze 1 (ostatak koji se zbraja s lancem)
+const host: CVV.Host = {
+  draw: () => draw(),
+  signIn: () => signIn(),
+  signedIn: () => st.signedIn,
+  my: () => st.my,
+  setMy: (m) => void (st.my = m),
+  draft: () => st.draft,
+  saveDraft: (items) => saveDraft(items),
+  phase1Results: () => phase1,
+  setResults: (r) => void (st.results = r),
+  refreshMy: async () => {
+    st.my = await fetchMyBallot();
+  },
+  msg: (kind, text) => void (st.msg = { kind, text }),
+};
+const onChain = () => !!CVV.active();
+/** Listić koji se trenutno broji za mene (na lancu ili u fazi 1). */
+const counted = (): Items => (onChain() ? CVV.serverItems(st.my) : st.my?.items ?? {});
+
 async function load() {
   st.draft = getDraft();
   const [session, results, checkpoints] = await Promise.all([
@@ -134,14 +158,22 @@ async function load() {
     fetchResults().catch(() => null),
     fetchCheckpoints(),
   ]);
+  const cfg = CVV.wantsChain(results) ? await fetchChainConfig().catch(() => null) : null;
+  phase1 = results;
   st.results = results;
   st.checkpoints = checkpoints;
   st.signedIn = !!session;
   st.my = session ? await fetchMyBallot().catch(() => null) : null;
   st.pub = await fetchPublicBallots(60).catch(() => null);
+  const chain = CVV.selectChain(cfg);
+  if (chain) {
+    await CVV.initChain(chain, host).catch(() => {
+      st.msg = { kind: "err", text: "Glasanje na lancu trenutno nije dostupno." };
+    });
+  }
   await loadShareState();
-  if (st.my && Object.keys(st.draft).length === 0 && Object.keys(st.my.items).length) {
-    saveDraft({ ...st.my.items });
+  if (st.my && Object.keys(st.draft).length === 0 && Object.keys(counted()).length) {
+    saveDraft({ ...counted() });
   }
   if (!st.results) st.msg = { kind: "err", text: "Rezultati trenutno nisu dostupni." };
 }
@@ -224,7 +256,8 @@ function signIn(): Promise<void> {
     await p;
     st.signedIn = true;
     st.my = await fetchMyBallot();
-    if (Object.keys(st.draft).length === 0 && Object.keys(st.my.items).length) saveDraft({ ...st.my.items });
+    if (onChain()) await CVV.refreshChain();
+    if (Object.keys(st.draft).length === 0 && Object.keys(counted()).length) saveDraft({ ...counted() });
     await loadShareState();
     st.msg = { kind: "ok", text: "Prijavljen/a si eOsobnom." };
   });
@@ -239,6 +272,10 @@ async function submit(withConsent = false) {
   if (Object.keys(items).length && sumPoints(items) !== 100) {
     st.msg = { kind: "err", text: `Raspodijeli točno 100 bodova (sad ${sumPoints(items)}).` };
     draw();
+    return;
+  }
+  if (onChain()) {
+    CVV.startFlow("cast", { items });
     return;
   }
   if (!st.signedIn || (st.my && !st.my.verified)) {
@@ -269,7 +306,13 @@ async function submit(withConsent = false) {
 
 /** Povlačenje glasa: prazan listić na poslužitelju, a nacrt ostaje na uređaju za ponovnu predaju. */
 async function withdraw() {
-  const keep = Object.keys(st.draft).length ? { ...st.draft } : { ...(st.my?.items ?? {}) };
+  const keep = Object.keys(st.draft).length ? { ...st.draft } : { ...counted() };
+  if (onChain()) {
+    st.modal = null;
+    saveDraft(keep);
+    CVV.startFlow("withdraw");
+    return;
+  }
   await run("Povlačim glas…", async () => {
     st.modal = null;
     st.my = await castBallot({});
@@ -397,6 +440,7 @@ async function importZkKey(text: string) {
 }
 
 function shareHtml(): string {
+  if (onChain()) return chainShareHtml();
   const my = st.my;
   const has = !!my && Object.keys(my.items).length > 0;
   if (!has) {
@@ -485,6 +529,45 @@ function shareHtml(): string {
   </section>`;
 }
 
+/** Dijeljenje kad je glasanje na lancu: javno (ime iz baze + dokaz vlasništva) ili anonimno (na lancu). */
+function chainShareHtml(): string {
+  const my = st.my;
+  const tab = st.shareTab ?? (my?.public_mode ? "public" : "zk");
+  const busy = !!st.busy;
+  const modes: [PublicMode, string][] = [
+    ["full", "Ime i prezime iz eOsobne"],
+    ["initial", "Ime i prvo slovo prezimena"],
+    ["anon", "Bez imena (samo „potvrđeni glasač”)"],
+  ];
+  const radios = `<div class="sh-modes">${modes
+    .map(([m, l]) => `<label class="sh-radio"><input type="radio" name="pubmode" value="${m}" ${st.pubMode === m ? "checked" : ""} /> ${l}</label>`)
+    .join("")}</div>`;
+  let body = CVV.shareBodyHtml(tab, st.pubMode, st.pubConsent, busy);
+  if (tab === "public" && my?.public_mode && my.chain_public && my.share_id) {
+    body = `${st.myCard ? publicCardHtml(st.myCard, { compact: true, href: link(`glasanje/g/${my.share_id}`) }) : ""}
+      ${shareButtonsHtml(shareUrl(my.share_id), "Moj glas za novi Maksimir je na blockchainu, potvrđen eOsobnom. Provjeri i raspodijeli i ti svojih 100 bodova:")}
+      ${radios}
+      <div class="gl-actions">
+        <button class="btn btn-sm" data-act="pub-change" ${busy || st.pubMode === my.public_mode ? "disabled" : ""}>Promijeni prikaz imena</button>
+        <button class="btn btn-sm" data-act="pub-off" ${busy ? "disabled" : ""}>Ukloni javni prikaz</button>
+      </div>`;
+  } else if (tab === "public" && body.includes('data-cv="pub"')) {
+    body = radios + body;
+  }
+  const anon = CVV.anonShareId();
+  if (tab === "zk" && anon) {
+    body = shareButtonsHtml(shareUrl(anon), CHAIN_SHARE_TEXT) + `<p class="small"><a href="${link(`glasanje/g/${anon}`)}">Otvori svoju objavu i provjeri je →</a></p>`;
+  }
+  return `<section class="panel sh-panel">
+    <h2>Podijeli svoj glas</h2>
+    <div class="sh-tabs" role="tablist">
+      <button role="tab" class="${tab === "public" ? "active" : ""}" data-tab="public">Javno, s imenom${my?.public_mode ? " ✓" : ""}</button>
+      <button role="tab" class="${tab === "zk" ? "active" : ""}" data-tab="zk">Anonimno, na lancu${anon ? " ✓" : ""}</button>
+    </div>
+    <div class="sh-body">${body}</div>
+  </section>`;
+}
+
 function publicListHtml(): string {
   const p = st.pub;
   if (!p || (!p.count && !p.zk_shares)) return "";
@@ -511,7 +594,8 @@ function phase(): Phase {
   if (!n) return "empty";
   if (sum > 100) return "over";
   if (sum < 100) return "under";
-  const server = st.my?.items ?? {};
+  const server = counted();
+  if (onChain() && CVV.needsTransfer()) return "ready";
   return Object.keys(server).length && sameItems(st.draft, server) ? "done" : "ready";
 }
 
@@ -521,7 +605,9 @@ function stepsHtml(): string {
   const steps = [
     ["Odaberi radove", "Klikni „Dodaj” kod radova koji ti se sviđaju."],
     ["Podijeli 100 bodova", "Više bodova = jača podrška. Sve na jedan rad je u redu."],
-    ["Predaj eOsobnom", "Prijava ide preko Certilije, samo za potvrdu da si stvarna osoba."],
+    onChain()
+      ? ["Predaj eOsobnom i ključem", "Certilia potvrdi da si stvarna osoba, a tvoj ključ zapečati listić na lancu."]
+      : ["Predaj eOsobnom", "Prijava ide preko Certilije, samo za potvrdu da si stvarna osoba."],
   ];
   const signed = st.signedIn && st.my?.verified;
   return `<section class="gl-steps" aria-label="Kako glasati">
@@ -617,7 +703,7 @@ function hintText(p: Phase, sum: number): string {
   const signed = st.signedIn && st.my?.verified;
   switch (p) {
     case "empty":
-      return Object.keys(st.my?.items ?? {}).length
+      return Object.keys(counted()).length
         ? "Listić na ovom uređaju je prazan, a predani glas i dalje vrijedi."
         : "Listić je prazan. Klikni „+ Dodaj” kod rada koji ti se sviđa.";
     case "under":
@@ -636,7 +722,7 @@ function hintText(p: Phase, sum: number): string {
 function ballotHtml(): string {
   const entries = Object.entries(st.draft);
   const sum = sumPoints(st.draft);
-  const server = st.my?.items ?? {};
+  const server = counted();
   const hasServer = Object.keys(server).length > 0;
   const dirty = !sameItems(st.draft, server);
   const open = st.results?.open ?? true;
@@ -668,9 +754,11 @@ function ballotHtml(): string {
     ? "Glasanje je zatvoreno"
     : p === "done"
       ? "✓ Glas je predan"
-      : hasServer
-        ? "Predaj izmijenjeni glas"
-        : "Predaj glas";
+      : onChain()
+        ? CVV.submitLabel(hasServer)
+        : hasServer
+          ? "Predaj izmijenjeni glas"
+          : "Predaj glas";
 
   return `
     <aside class="panel gl-ballot" id="gl-listic">
@@ -699,7 +787,9 @@ function ballotHtml(): string {
         ${hasServer && dirty ? `<button class="btn btn-sm btn-quiet" data-act="reset">Odbaci izmjene i vrati predani listić</button>` : ""}
       </div>
       ${
-        hasServer && st.my?.receipt
+        onChain()
+          ? CVV.receiptHtml(dirty, !!st.busy)
+          : hasServer && st.my?.receipt
           ? `<details class="gl-receipt">
               <summary>✓ Glas zapisan kao #${st.my.receipt.seq} · ${esc(fmtDate(st.my.updated_at))}${dirty ? ` · <span class="warn">imaš nepredane izmjene</span>` : ""}</summary>
               <p class="small muted">Potvrda služi da kasnije sam/a provjeriš da je tvoj glas ubrojen.</p>
@@ -768,6 +858,7 @@ function integrityHtml(): string {
           Tko god kasnije prepravi povijest, ne može promijeniti ono što je već u Bitcoinu. U snapshotu je i vrh zapisnika ZK grupe.</li>
         <li><strong>Anonimni ZK dokazi.</strong> Tko podijeli glas anonimno, objavljuje Semaphore dokaz da je jedan od potvrđenih glasača.
           Svaki posjetitelj ga provjerava u svom pregledniku, a korijen grupe računa iz javnog zapisnika.</li>
+        ${onChain() ? CVV.integrityHtml() : ""}
         <li><strong>Po zatvaranju</strong> se objavljuje cijeli lanac pod pseudonimima.
           <a href="${VERIFY_SCRIPT}" target="_blank" rel="noopener">maksimir_verify.py ↗</a> iz njega ponovno izračuna svaki hash i izbroji glasove,
           pa provjeri tvoju potvrdu i svaki satni snapshot.</li>
@@ -793,6 +884,7 @@ function integrityHtml(): string {
 }
 
 function modalHtml(): string {
+  if (CVV.flowOpen()) return CVV.flowHtml();
   if (st.consent) {
     return `<div class="gl-modal" role="dialog" aria-modal="true" aria-labelledby="gl-modal-t">
       <div class="gl-modal-box">
@@ -812,7 +904,7 @@ function modalHtml(): string {
     </div>`;
   }
   if (st.modal === "withdraw") {
-    const n = Object.keys(st.my?.items ?? {}).length;
+    const n = Object.keys(counted()).length;
     return `<div class="gl-modal" role="dialog" aria-modal="true" aria-labelledby="gl-modal-t">
       <div class="gl-modal-box">
         <h3 id="gl-modal-t">Povući glas?</h3>
@@ -863,7 +955,8 @@ function submitDisabled(): boolean {
   const n = Object.keys(st.draft).length;
   const sum = sumPoints(st.draft);
   const open = st.results?.open ?? true;
-  return !!st.busy || !open || sameItems(st.draft, st.my?.items ?? {}) || (n > 0 && sum !== 100);
+  const same = sameItems(st.draft, counted()) && !(onChain() && CVV.needsTransfer());
+  return !!st.busy || !open || same || (n > 0 && sum !== 100);
 }
 
 /** Klizač i tipkanje ažuriraju zbroj, traku i savjet na mjestu (puni draw() bi prekinuo povlačenje). */
@@ -917,6 +1010,7 @@ function draw() {
     </section>
 
     ${stepsHtml()}
+    ${onChain() ? CVV.bannerHtml() : ""}
     ${st.msg ? `<div class="gl-msg gl-msg--${st.msg.kind}">${esc(st.msg.text)}</div>` : ""}
     ${
       st.busy
@@ -945,6 +1039,7 @@ function draw() {
   }
   window.scrollTo({ top: y });
   bind(el);
+  if (onChain()) CVV.bindChain(el);
 }
 
 function removeFromDraft(code: string) {
@@ -1029,7 +1124,7 @@ function bind(el: HTMLElement) {
     st.modal = null;
     draw();
   });
-  el.querySelector(".gl-modal")?.addEventListener("click", (e) => {
+  el.querySelector(".gl-modal:not(.cv-modal)")?.addEventListener("click", (e) => {
     if (e.target !== e.currentTarget) return;
     st.modal = null;
     st.consent = false;
@@ -1042,7 +1137,7 @@ function bind(el: HTMLElement) {
     draw();
   });
   on("reset", () => {
-    saveDraft({ ...(st.my?.items ?? {}) });
+    saveDraft({ ...counted() });
     draw();
   });
   on("clear", () => {
@@ -1116,7 +1211,9 @@ function bind(el: HTMLElement) {
 
 // Esc zatvara otvoreni dijalog (jedan slušač za cijelu stranicu).
 document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape" || !root?.isConnected || (!st.modal && !st.consent)) return;
+  if (e.key !== "Escape" || !root?.isConnected) return;
+  if (CVV.escapeFlow()) return;
+  if (!st.modal && !st.consent) return;
   st.modal = null;
   st.consent = false;
   draw();
@@ -1125,7 +1222,9 @@ document.addEventListener("keydown", (e) => {
 // ── mali panel na stranici pojedinog rada ───────────────────────────────────
 
 export async function renderRadVotePanel(el: HTMLElement, code: string) {
-  const res = await fetchResults().catch(() => null);
+  let res = await fetchResults().catch(() => null);
+  const chain = CVV.wantsChain(res) ? CVV.selectChain(await fetchChainConfig().catch(() => null)) : null;
+  if (chain) res = await import("./chainVote").then((cv) => cv.chainResults(chain, res)).catch(() => res);
   if (!el.isConnected) return;
   const row = res?.results.find((r) => r.code === code);
   const place = res ? res.results.findIndex((r) => r.code === code) + 1 : 0;

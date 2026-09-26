@@ -3,6 +3,7 @@
 // „potpisao”), zato se testira neovisno o ugovoru.
 import { expect } from "chai";
 import { zeroAddress } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import {
   BALLOT_SCOPE,
   BallotError,
@@ -83,5 +84,16 @@ describe("client/ballot", () => {
     const t = registerTypedData({ chainId: 100, contract: zeroAddress, commitment: 1n, deadline: 2n });
     expect(t.domain).to.deep.equal({ name: "MaksimirGlasanje", version: "1", chainId: 100, verifyingContract: zeroAddress });
     expect(t.primaryType).to.equal("Register");
+  });
+
+  it("fiksni vektor registrara = domovina-api maksimir-register/logic_test.ts (isti potpis u Denou i ovdje)", async () => {
+    // Hardhat račun #1. Ako se ovaj potpis promijeni, edge funkcija i klijent potpisuju različito.
+    const acc = privateKeyToAccount("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
+    const sig = await acc.signTypedData(
+      registerTypedData({ chainId: 31337, contract: "0x5fbdb2315678afecb367f032d93f642f64180aa3", commitment: 12345n, deadline: 2000000000n })
+    );
+    expect(sig).to.equal(
+      "0x5599fd03ac39f1e4175d5bf4995287400cd5d116f783458af6da78f2796f64281063f0d694e38e8b5deb48c2a31f14d9a382e9b0dc66c55367a7f3d4a8d531ef1c"
+    );
   });
 });

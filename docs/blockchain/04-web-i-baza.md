@@ -1,8 +1,9 @@
 # 4. Promjene u webu i u `domovina-api`
 
-> **Web čeka prelazak na Astro.** `web/` se refaktorira u drugoj sesiji (Vite + Pages → Astro +
-> Workers), pa ovdje nijedna web promjena nije napravljena. Sva kriptografija koju web treba
-> već postoji u [`chain/client/`](../../chain/client/), neovisno o frameworku, i testirana je.
+> **Izmjena 26. 9. 2026.:** Astro je odbačen; web ostaje Vite + Cloudflare Worker `maksimir`
+> ([odluka](../2026-09-25-web-nice-to-have.md)). Redoslijed spajanja, zastavica i prijelaz s faze 1
+> su u [08](08-integracija-s-fazom-1.md). Sva kriptografija koju web treba već postoji u
+> [`chain/client/`](../../chain/client/) i testirana je.
 
 ## Registrar (`domovina-api`)
 

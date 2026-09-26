@@ -63,6 +63,9 @@ export function newSecret(): Uint8Array {
 
 function assertSecret(s: Uint8Array) {
   if (!(s instanceof Uint8Array) || s.length !== SECRET_BYTES) throw new KeystoreError("tajna mora imati točno 32 bajta");
+  // Tajna od istih bajtova (same nule = „abandon ×23 art”) je javno poznata: svatko bi mogao mijenjati
+  // taj listić. Nađeno 26. 9. 2026. na Gnosisu (nalaz I-09): testni ključ od nula iz faze 1 upisan kao pravi.
+  if (s.every((b) => b === s[0])) throw new KeystoreError("ključ je slab (svi bajtovi isti, npr. same nule) — takav ključ svatko zna; izradi novi ključ");
 }
 
 /** 32 bajta → 24 riječi (BIP-39, engleski popis, s kontrolnim zbrojem). */
@@ -79,7 +82,9 @@ export function wordsToSecret(input: string | string[]): Uint8Array {
   if (unknown.length) throw new KeystoreError(`nepoznate riječi: ${unknown.join(", ")}`);
   const phrase = words.join(" ");
   if (!validateMnemonic(phrase, wordlist)) throw new KeystoreError("riječi ne prolaze kontrolni zbroj — provjeri redoslijed i pravopis");
-  return mnemonicToEntropy(phrase, wordlist);
+  const secret = mnemonicToEntropy(phrase, wordlist);
+  assertSecret(secret);
+  return secret;
 }
 
 /** Tajna → Semaphore identitet (isti oblik kao `Identity.export()` iz faze 1). */
@@ -113,7 +118,9 @@ export const passkeyLabel = (secret: Uint8Array, prefix = "Maksimir glasanje"): 
 export function phase1ExportToSecret(exported: string): Uint8Array {
   const k = exported.trim();
   if (!/^[A-Za-z0-9+/]{43}=$/.test(k)) throw new KeystoreError("nije ključ iz faze 1 (base64 od 32 bajta)");
-  return Uint8Array.from(atob(k), (c) => c.charCodeAt(0));
+  const secret = Uint8Array.from(atob(k), (c) => c.charCodeAt(0));
+  assertSecret(secret);
+  return secret;
 }
 
 // ── potvrda da su riječi zapisane (ADR 0001, odluka 7) ─────────────────────────────

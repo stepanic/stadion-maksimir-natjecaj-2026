@@ -63,16 +63,56 @@ git tag glasanje-v1-gnosis && git push --follow-tags
 Provjera: `npm run check-frozen` prolazi, izvor je verificiran uz adresu, a `groupId` i `closesAt`
 su u manifestu. Nakon toga deployer se isprazni.
 
-### Relayer
+### Vlasnik: Safe 2/3
+
+Na Chiadu isprobano 26. 9. 2026. ([`scripts/safe-chiado.ts`](../../chain/scripts/safe-chiado.ts),
+[`deployments/chiado/owner.json`](../../chain/deployments/chiado/owner.json)): Safe v1.3.0 L2
+(kanonski, ista adresa na Gnosisu), prag 2/3, `transferOwnership` + `acceptOwnership` iz Safea.
+Provjereno: 1 potpis → GS020, stari vlasnik → `OwnableUnauthorizedAccount`, 2 potpisa → uspjeh.
+Na Gnosisu se V1 deploya **izravno** s `OWNER=<Safe>`, pa drugi korak nije potreban.
+
+### Relayer (dio Workera `maksimir`)
 
 ```sh
-cd chain/relayer
-npx wrangler kv namespace create RELAY_KV        # id u wrangler.toml
-# wrangler.toml: CONTRACT_ADDRESS = <adresa>, CHAIN_ID = "100"
-npx wrangler secret put SPONSOR_PRIVATE_KEY
-npx wrangler deploy
-curl https://maksimir-relayer.<račun>.workers.dev/status
+cd web
+# wrangler.jsonc → vars.RELAYER_CHAINS: dodaj "100": {"contract": "<adresa>", "rpc": "https://rpc.gnosischain.com"}
+npx wrangler secret put SPONSOR_PRIVATE_KEY_100      # EOA sponzora, 1 xDAI
+npm run check -- http://localhost:8787               # prije deploya (docs/2026-09-25-regresijske-provjere.md)
+npm run deploy
+curl https://maksimir.domovina.ai/relayer/100/status
 ```
+
+KV `maksimir-relay` (kvote) već postoji i vezan je u `wrangler.jsonc`.
+
+### Gnosis, 26. 9. 2026. (napravljeno)
+
+| Što | Vrijednost |
+|---|---|
+| V1 | [`0x812960FA1120121DEd82A8806aECE93dcf49E869`](https://gnosisscan.io/address/0x812960FA1120121DEd82A8806aECE93dcf49E869), blok 48440122, `groupId` 249 |
+| vlasnik | Safe 2/3 [`0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576`](https://app.safe.global/home?safe=gno:0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576) (potpisnici kao MPT Safe; `scripts/safe-gnosis.ts`, `deployments/gnosis/safe.json`) |
+| registrar | `0x0F81daa9A724eAe838BE22dd446fcdB7Fbfa5374` (ključ u `chain/.env.gnosis`, gitignorirano) |
+| izvor | Sourcify **exact_match** (creation + runtime); Blockscout ga preuzima sam (`is_fully_verified`); tag `glasanje-v1-gnosis` |
+
+**Ponovni deploy (isti dan, nalaz [I-09](audit/nalazi.md)):** prvi V1 `0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`
+(blok 48439703) je povučen jer je za Matiju registriran ključ od samih nula; manifest je u
+`deployments/gnosis/superseded/`, tag `glasanje-v1-gnosis-povucen`, redak u bazi `gnosis-povucen` (`counts = false`).
+
+Zamke tog dana:
+
+- **`gnosis.blockscout.com` sada preusmjerava (301) na Gnosisscan**, koji traži Etherscan API ključ
+  (v2). Bez ključa verifikacija ide izravno preko Sourcify API-ja v2 (hardhat plugin za Sourcify pada):
+
+  ```sh
+  # standardni JSON ulaz iz build-infoa (artifacts/…/MaksimirGlasanjeV1.dbg.json → buildInfo)
+  curl -X POST https://sourcify.dev/server/v2/verify/100/<adresa> -H 'Content-Type: application/json' \
+    -d '{"stdJsonInput": <input>, "compilerVersion": "0.8.28+commit.7893614a",
+         "contractIdentifier": "contracts/v1/MaksimirGlasanjeV1.sol:MaksimirGlasanjeV1"}'
+  curl https://sourcify.dev/server/v2/verify/<verificationId>      # čekaj isJobCompleted
+  ```
+- **Blockscout PRO API** (`api.blockscout.com/<chainId>/api/v2/…?apikey=…`) traži ključ i za čitanje
+  (bez ključa HTTP 402). Ključ je u `chain/.env.blockscout` (gitignorirano, `BLOCKSCOUT_API_KEY`).
+- **Finalized blok kasni ~2 min**; odmah nakon deploya `verify --chain` i checkpoint lanac preskaču.
+- Deploy skripta šalje napojnicu 0,01 gwei (procjena daje 0, [I-05](audit/nalazi.md)).
 
 ## Alati
 
@@ -93,8 +133,8 @@ Blockscout i Gnosisscan rade.
 ## Nakon deploya
 
 - [ ] adresa u ovu mapu (README) i u `docs/glasanje-kako-radi.md`
-- [ ] registrar u `domovina-api` ([04](04-web-i-baza.md))
-- [ ] web nakon Astro migracije ([04](04-web-i-baza.md))
+- [ ] registrar u `domovina-api` i redak u `maksimir_chains` ([08](08-integracija-s-fazom-1.md#put-do-produkcije))
+- [ ] web: zastavica `chain_from` ([08](08-integracija-s-fazom-1.md#put-do-produkcije))
 - [ ] uzbuna kad saldo sponzora padne ispod 0,2 xDAI (`/status`)
 
 ## Oporavak

@@ -33,7 +33,12 @@ export type Results = {
   closes_at: string | null;
   voters: number;
   results: ResultRow[];
+  // od migracije 20260926120000 (spajanje s lancem)
+  phase1_open?: boolean;
+  chain_open?: boolean;
+  chain_from?: string | null;
 };
+export type ChainRegistration = { chainId: number; contract: string; commitment: string; counts: boolean; transfer_seq: number | null };
 export type MyBallot = {
   verified: boolean;
   consented: boolean;
@@ -44,6 +49,11 @@ export type MyBallot = {
   public_mode: PublicMode | null;
   share_id: string | null;
   zk_commitment: string | null;
+  // od migracije 20260926120000
+  pseudonym?: string | null;
+  chain_consented?: boolean;
+  chain_registrations?: ChainRegistration[];
+  chain_public?: { chainId: number; contract: string; nullifier: string } | null;
 };
 export type PublicMode = "full" | "initial" | "anon";
 export type PublicCard = {
@@ -54,6 +64,7 @@ export type PublicCard = {
   updated_at: string;
   items: { code: string; points: number; lead: string }[];
   receipt: Receipt | null;
+  chain?: { chainId: number; contract: string; nullifier: string; proof: ZkProof } | null;
 };
 export type ZkProof = {
   merkleTreeDepth: number;
@@ -65,7 +76,8 @@ export type ZkProof = {
 };
 export type Share =
   | { id: string; kind: "public"; created_at: string; card: PublicCard | null }
-  | { id: string; kind: "zk"; created_at: string; proof: ZkProof; zk_seq: number };
+  | { id: string; kind: "zk"; created_at: string; proof: ZkProof; zk_seq: number }
+  | { id: string; kind: "chain"; created_at: string; chainId: number; contract: string; txHash: string };
 export type PublicBallots = { count: number; zk_shares: number; ballots: (PublicCard & { id: string })[] };
 export type Receipt = {
   seq: number;
@@ -106,6 +118,11 @@ const MESSAGES: Record<string, string> = {
   points_sum_not_100: "Zbroj bodova na listiću mora biti točno 100.",
   no_ballot: "Najprije predaj listić.",
   invalid_mode: "Nepoznat način javnog prikaza.",
+  chain_registered: "Tvoj glas je na lancu. Listić mijenjaš ondje, ne u fazi 1.",
+  chain_terms_not_accepted: "Prije glasanja na lancu treba prihvatiti nove uvjete.",
+  not_registered: "Ovaj ključ još nema pravo glasa na lancu.",
+  invalid_proof: "Dokaz nije ispravnog oblika.",
+  keystore_exists: "Za ovaj passkey već postoji drugačiji spremljeni ključ.",
 };
 
 function rpcError(message: string): VoteError {
@@ -165,6 +182,106 @@ export async function fetchPublicBallots(limit = 100): Promise<PublicBallots> {
   const { data, error } = await sbAnon.rpc("maksimir_public_ballots", { p_limit: limit });
   if (error) throw rpcError(error.message);
   return data as PublicBallots;
+}
+
+// ── glasanje na lancu (migracija 20260926120000) ─────────────────────────────
+
+export type ChainCfg = {
+  chainId: number;
+  contract: `0x${string}`;
+  label: string;
+  counts: boolean;
+  rpcUrl: string;
+  relayerUrl: string | null;
+  explorerUrl: string | null;
+  semaphore: `0x${string}`;
+  groupId: string;
+  deployBlock: number;
+};
+/** Ime mreže za ljude. */
+export const chainName = (c: Pick<ChainCfg, "label" | "chainId"> | null) =>
+  !c ? "nepoznata mreža" : c.chainId === 100 ? "Gnosis Chain" : c.chainId === 10200 ? "Chiado (testna mreža Gnosisa)" : c.label;
+
+export type ChainConfig = { chain_from: string | null; active: ChainCfg | null; chains: ChainCfg[] };
+
+export async function fetchChainConfig(): Promise<ChainConfig | null> {
+  const { data, error } = await sbAnon.rpc("maksimir_chain_config");
+  return error ? null : (data as ChainConfig);
+}
+
+export async function acceptChainTerms(): Promise<MyBallot> {
+  const { data, error } = await sb.rpc("maksimir_accept_chain_terms");
+  if (error) throw rpcError(error.message);
+  return data as MyBallot;
+}
+
+export async function setPublicChain(mode: PublicMode, chain: ChainCfg, nullifier: string, proof: unknown): Promise<MyBallot> {
+  const { data, error } = await sb.rpc("maksimir_set_public_chain", {
+    p_mode: mode,
+    p_chain_id: chain.chainId,
+    p_contract: chain.contract,
+    p_nullifier: nullifier,
+    p_proof: proof,
+  });
+  if (error) throw rpcError(error.message);
+  return data as MyBallot;
+}
+
+/** Kratka poveznica na anonimnu objavu na lancu (anonimni klijent, bez veze na glasača). */
+export async function chainShareLink(chain: ChainCfg, txHash: string): Promise<string> {
+  const { data, error } = await sbAnon.rpc("maksimir_chain_share", { p_chain_id: chain.chainId, p_contract: chain.contract, p_tx_hash: txHash });
+  if (error) throw rpcError(error.message);
+  return (data as { id: string }).id;
+}
+
+export async function keystoreGet(hash: string): Promise<unknown | null> {
+  const { data, error } = await sbAnon.rpc("maksimir_keystore_get", { p_hash: hash });
+  if (error) throw rpcError(error.message);
+  return data ?? null;
+}
+
+export async function keystorePut(hash: string, blob: unknown): Promise<void> {
+  const { error } = await sbAnon.rpc("maksimir_keystore_put", { p_hash: hash, p_blob: blob });
+  if (error) throw rpcError(error.message);
+}
+
+const REGISTER_URL = (import.meta.env.VITE_MAKSIMIR_REGISTER_URL as string) || `${SUPABASE_URL}/functions/v1/maksimir-register`;
+
+export type Registration = {
+  chainId: number;
+  contract: string;
+  commitment: string;
+  deadline: string;
+  signature: `0x${string}`;
+  existing: boolean;
+  transferSeq: number | null;
+  transferred: Items;
+};
+
+const REGISTER_ERRORS: Record<string, string> = {
+  not_signed_in: "Prijava je istekla. Prijavi se ponovno eOsobnom.",
+  not_verified: MESSAGES.not_verified,
+  chain_terms_not_accepted: MESSAGES.chain_terms_not_accepted,
+  already_registered: "Za tebe je na lancu već upisan drugi ključ. Otključaj taj ključ (passkey ili 24 riječi).",
+  commitment_taken: "Ovaj ključ već pripada drugoj osobi. Izradi novi ključ.",
+  weak_commitment: "Ovaj ključ je javno poznat (npr. same nule) i ne smije se koristiti. Izradi novi ključ ili upiši svoje prave riječi.",
+  voting_closed: MESSAGES.voting_closed,
+  registrar_unavailable: "Upis prava glasa trenutno nije dostupan. Pokušaj kasnije.",
+  registrar_mismatch: "Upis prava glasa trenutno nije dostupan (ključ registrara). Pokušaj kasnije.",
+};
+
+/** Registrar (domovina-api): pravo glasa za commitment. Jednom po osobi, po ugovoru. */
+export async function requestRegistration(chain: ChainCfg, commitment: string): Promise<Registration> {
+  const session = await getSession();
+  if (!session) throw new VoteError(REGISTER_ERRORS.not_signed_in);
+  const res = await fetch(REGISTER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_ANON_KEY },
+    body: JSON.stringify({ chainId: chain.chainId, contract: chain.contract, commitment }),
+  });
+  const body = (await res.json().catch(() => ({}))) as Registration & { error?: string };
+  if (!res.ok) throw new VoteError(REGISTER_ERRORS[body.error ?? ""] ?? `Upis prava glasa nije uspio (${body.error ?? res.status}).`);
+  return body;
 }
 
 /** Poveznica za dijeljenje. /g/<id> poslužuje Pages Function s OG karticom. */

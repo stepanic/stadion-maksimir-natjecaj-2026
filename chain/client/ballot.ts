@@ -111,6 +111,27 @@ export async function proveShare(identity: Identity, group: Group): Promise<Soli
   return toSolidityProof(await generateProof(identity, group, SHARE_MESSAGE, SHARE_SCOPE));
 }
 
+/**
+ * Poruka dokaza vlasništva nullifiera za javnu objavu listića s imenom (domovina-api
+ * maksimir_set_public_chain). Veže lanac, ugovor i pseudonim glasača, pa se tuđi dokaz ne
+ * može prepisati na drugu karticu. Scope je BALLOT_SCOPE (isti nullifier kao listić), ali
+ * poruka nije ballotMessage ni migrateMessage, pa dokaz ne vrijedi kao listić ni selidba.
+ */
+export function publicMessage(w: Where & { pseudonym: Hex }): bigint {
+  return BigInt(
+    keccak256(
+      encodeAbiParameters(
+        [{ type: "bytes32" }, { type: "uint256" }, { type: "address" }, { type: "bytes32" }],
+        [keccak256(toBytes("maksimir-javno")), BigInt(w.chainId), w.contract, w.pseudonym]
+      )
+    )
+  );
+}
+
+export async function proveOwnership(identity: Identity, group: Group, w: Where & { pseudonym: Hex }): Promise<SolidityProof> {
+  return toSolidityProof(await generateProof(identity, group, publicMessage(w), BALLOT_SCOPE));
+}
+
 export async function proveMigrate(
   identity: Identity,
   group: Group,

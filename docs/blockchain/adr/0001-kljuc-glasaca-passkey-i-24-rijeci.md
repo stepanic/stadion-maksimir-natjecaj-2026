@@ -166,7 +166,12 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
 ## Riješena pitanja (Matija, 26. 9. 2026.)
 
 1. **`rpId = domovina.ai`**, dakle passkey vrijedi na svim poddomenama.
-2. **Potvrda riječi je obavezna.** Prije prve predaje glasač upisuje 3 nasumične riječi od 24.
+2. **Potvrda riječi: obavezan „Kopiraj” ili „Ispiši”** (izmjena 26. 9. 2026., Matija). Prvotno je
+   glasač prije prve predaje upisivao 3 nasumične riječi od 24; nakon stvarnog testa to je ocijenjeno
+   kao loš UX bez stvarne sigurnosti. Sada je „dalje” aktivan tek nakon klika na „Kopiraj riječi” ili
+   „Ispiši”; tko riječi ne spremi, to je njegova odgovornost. Kod potvrde ostaje u
+   `web/src/chainVoteView.ts` iza `CONFIRM_WORDS = false`.
+   Dopuna (nalaz I-09): tajna od 32 ista bajta (npr. same nule, `abandon ×23 art`) se odbija svuda.
 3. **Riječi se prikazuju pri izradi, a kasnije samo uz svjež passkey** (izmjena 26. 9. 2026.,
    nakon stvarnog testa u kojem Matija riječi nije zapisao).
    - Pri izradi: prikaz, potvrda 3 riječi, zatim riječi nestaju sa stranice.
@@ -229,6 +234,7 @@ stateDiagram-v2
 | Otključavanje passkeyjem | ✔ isti passkey, **isti commitment** kao pri izradi (`3790297512…`) |
 | Opaženo (drugi test) | više passkeyja istog imena „Maksimir TEST (localhost)” u Lozinkama; nije jasno koji je koji (K-05). **Popravljeno:** ime s otiskom, `user.id` iz ključa |
 | Opaženo | gumb „Izradi ključ” kliknut više puta, pa je svaki put nastala nova tajna i nove riječi (K-02). **Popravljeno:** gumb je neaktivan dok ključ postoji |
+| **Web tok na lancu** (26. 9. 2026., Brave, `localhost:5173`, Chiado) | ✔ novi ključ → 24 riječi → potvrda 3 riječi → passkey (Touch ID, Matija) → registracija → listić 50/30/20 na lancu ([tx](https://gnosis-chiado.blockscout.com/tx/0x295ec7a556acbec00e9ff323a38e9b946233578fe62f6bd894d7b1a3da5f3e28)); `ballotOf` = listić, omot u `maksimir_keystore` |
 
 ## Plan implementacije
 

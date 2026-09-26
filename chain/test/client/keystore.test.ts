@@ -120,7 +120,21 @@ describe("client/keystore (ADR 0001)", () => {
       expect(() => wordsToSecret([...w.slice(0, 23), "stadion"])).to.throw(KeystoreError, "nepoznate");
       // deterministički: 24 × "abandon" ne prolazi kontrolni zbroj, 23 × "abandon" + "art" prolazi (0x00…00)
       expect(() => wordsToSecret(Array(24).fill("abandon"))).to.throw(KeystoreError, "kontrolni zbroj");
-      expect(Buffer.from(wordsToSecret([...Array(23).fill("abandon"), "art"]))).to.deep.equal(Buffer.alloc(32));
+      // valjan kontrolni zbroj, ali tajna od samih nula: odbija se kao slaba (I-09)
+      expect(() => wordsToSecret([...Array(23).fill("abandon"), "art"])).to.throw(KeystoreError, "slab");
+    });
+
+    it("I-09: odbija slabu tajnu (svi bajtovi isti) — riječi, identitet, ključ iz faze 1", () => {
+      for (const b of [0x00, 0xff, 0x2a]) {
+        const weak = new Uint8Array(32).fill(b);
+        expect(() => secretToIdentity(weak)).to.throw(KeystoreError, "slab");
+        expect(() => secretToWords(weak)).to.throw(KeystoreError, "slab");
+        expect(() => phase1ExportToSecret(Buffer.from(weak).toString("base64"))).to.throw(KeystoreError, "slab");
+      }
+      // jedan različit bajt je dovoljan (nije slaba u ovom smislu)
+      const almost = new Uint8Array(32);
+      almost[31] = 1;
+      expect(() => secretToIdentity(almost)).to.not.throw();
     });
 
     it("odbija tajnu krive duljine i neispravan ključ iz faze 1", () => {

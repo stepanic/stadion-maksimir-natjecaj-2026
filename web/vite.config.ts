@@ -10,6 +10,9 @@ export default defineConfig(({ isSsrBuild }) => ({
       // Prerender ne crta dijagrame (v. src/mermaid-stub.ts).
       ...(isSsrBuild ? { mermaid: path.resolve(__dirname, "src/mermaid-stub.ts") } : {}),
     },
+    // chain/client (kriptografija glasanja na lancu) uvozi ove pakete: uvijek iz web/node_modules,
+    // da build ne ovisi o chain/node_modules i da u bundleu postoji samo jedna kopija.
+    dedupe: ["viem", "@semaphore-protocol/core", "@scure/bip39"],
   },
   build: isSsrBuild
     ? { outDir: "dist-ssr", emptyOutDir: true, target: "node20", sourcemap: false }

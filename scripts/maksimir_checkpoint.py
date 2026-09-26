@@ -12,6 +12,11 @@
    `ots upgrade` (nakon par sati dobiju trajnu Bitcoin atestaciju).
 4. Osvježi glasanje/checkpoints/index.json koji čita web.
 
+Snapshot v3 (glasanje na lancu, docs/blockchain/08-integracija-s-fazom-1.md): ako postoji
+manifest ugovora koji se broji (zadano chain/deployments/gnosis/v1.json; MAKSIMIR_CHAIN_MANIFEST
+ga mijenja), u snapshot se dodaje `chain`: blok (finalized), njegov hash, voters, registered i
+results() ugovora iz tog bloka. Novi checkpoint nastaje i kad se promijeni zbroj na lancu.
+
 Ne treba nikakva tajna: URL i anon ključ su javni (web/.env).
 Pokreće ga .github/workflows/maksimir-checkpoint.yml svaki sat; lokalno:
 
@@ -21,12 +26,15 @@ Pokreće ga .github/workflows/maksimir-checkpoint.yml svaki sat; lokalno:
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
 import subprocess
 import sys
 import urllib.request
+
+import maksimir_chain as mc
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = pathlib.Path(os.environ.get("MAKSIMIR_CHECKPOINT_DIR") or ROOT / "glasanje" / "checkpoints")
@@ -63,6 +71,23 @@ def fetch_snapshot() -> dict:
         return json.load(r)
 
 
+def chain_part() -> dict | None:
+    path = os.environ.get("MAKSIMIR_CHAIN_MANIFEST") or str(ROOT / "chain" / "deployments" / "gnosis" / "v1.json")
+    if not pathlib.Path(path).exists():
+        return None
+    m = mc.load_manifest(path)
+    rpc = os.environ.get("MAKSIMIR_CHAIN_RPC") or {100: "https://rpc.gnosischain.com", 10200: "https://rpc.chiadochain.net"}[m["chainId"]]
+    return mc.chain_snapshot(rpc, m)
+
+
+def chain_digest(ch: dict | None) -> str | None:
+    """Otisak zbroja na lancu (bez bloka): novi checkpoint samo kad se glasovi promijene."""
+    if not ch:
+        return None
+    body = json.dumps({"voters": ch["voters"], "registered": ch["registered"], "results": ch["results"]}, sort_keys=True)
+    return hashlib.sha256(body.encode()).hexdigest()
+
+
 def pending(ots: pathlib.Path) -> bool:
     info = subprocess.run(["ots", "info", str(ots)], capture_output=True, text=True).stdout
     return "BitcoinBlockHeaderAttestation" not in info
@@ -76,13 +101,23 @@ def main() -> int:
 
     # 1–2. novi checkpoint
     snap = fetch_snapshot()
+    # RPC lanca ne smije srušiti checkpoint faze 1 (nalaz F-21, docs/review/2026-09-26-neovisni-review-wiring.md)
+    try:
+        chain = chain_part()
+    except Exception as e:  # noqa: BLE001
+        print(f"UPOZORENJE: stanje lanca nije pročitano ({e}); snapshot bez `chain`", file=sys.stderr)
+        chain = None
+    if chain:
+        snap["chain"] = chain
     index_path = OUT / "index.json"
     index = json.loads(index_path.read_text()) if index_path.exists() else []
     last_hash = index[-1]["hash"] if index else None
     last_zk = index[-1].get("zk_hash") if index else None
+    last_chain = index[-1].get("chain_digest") if index else None
     zk = snap.get("zk") or {}
     stale = not index or dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(index[-1]["at"]) > dt.timedelta(hours=24)
-    if snap["head"]["hash"] != last_hash or zk.get("hash") != last_zk or stale or a.force:
+    changed_chain = chain is not None and chain_digest(chain) != last_chain
+    if snap["head"]["hash"] != last_hash or zk.get("hash") != last_zk or changed_chain or stale or a.force:
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         name = f"{stamp}-seq{snap['head']['seq']}.json"
         path = OUT / name
@@ -98,6 +133,11 @@ def main() -> int:
                 "voters": snap["voters"],
                 "bitcoin": False,
                 **({"zk_seq": zk["seq"], "zk_hash": zk["hash"], "zk_members": zk["members"]} if zk else {}),
+                **(
+                    {"chain_block": chain["block"], "chain_voters": chain["voters"], "chain_digest": chain_digest(chain)}
+                    if chain
+                    else {}
+                ),
             }
         )
         print(f"novi checkpoint {name}: seq {snap['head']['seq']}, {snap['voters']} glasača")

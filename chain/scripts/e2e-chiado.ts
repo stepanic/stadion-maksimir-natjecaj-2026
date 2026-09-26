@@ -1,4 +1,4 @@
-// E2E na pravom Chiadu kroz STVARNI kod relayera (chain/relayer/src/relay.ts).
+// E2E na pravom Chiadu kroz STVARNI kod relayera (web/worker/relayer/relay.ts).
 // Uloge su razdvojene točno kao u produkciji:
 //   preglednik  — Semaphore ključ, listić, ZK dokaz (ovdje u procesu, ali bez ikakvog
 //                 drugog ključa)
@@ -13,7 +13,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { gnosisChiado } from "viem/chains";
 import { encodePoints, proveBallot, proveShare, registerTypedData, toJson, decodePoints, ENTRIES } from "../client/ballot";
 import { fetchGroup } from "../client/group";
-import { parseCall, relay } from "../relayer/src/relay.ts";
+import { parseCall, relay } from "../../web/worker/relayer/relay.ts";
 
 const env = Object.fromEntries(
   readFileSync(".env.chiado", "utf8").split("\n").filter((l) => l.includes("=") && !l.startsWith("#")).map((l) => l.split("=") as [string, string])
