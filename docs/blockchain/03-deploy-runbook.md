@@ -91,7 +91,7 @@ KV `maksimir-relay` (kvote) već postoji i vezan je u `wrangler.jsonc`.
 | V1 | [`0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`](https://gnosisscan.io/address/0xC9E6bB402293645C99d32cb41d125fEbB9F7507B), blok 48439703, `groupId` 248 |
 | vlasnik | Safe 2/3 [`0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576`](https://app.safe.global/home?safe=gno:0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576) (potpisnici kao MPT Safe; `scripts/safe-gnosis.ts`, `deployments/gnosis/safe.json`) |
 | registrar | `0x0F81daa9A724eAe838BE22dd446fcdB7Fbfa5374` (ključ u `chain/.env.gnosis`, gitignorirano) |
-| izvor | Sourcify **exact_match** (creation + runtime); tag `glasanje-v1-gnosis` |
+| izvor | Sourcify **exact_match** (creation + runtime); Blockscout ga preuzima sam (`is_fully_verified`); tag `glasanje-v1-gnosis` |
 
 Zamke tog dana:
 
@@ -105,6 +105,8 @@ Zamke tog dana:
          "contractIdentifier": "contracts/v1/MaksimirGlasanjeV1.sol:MaksimirGlasanjeV1"}'
   curl https://sourcify.dev/server/v2/verify/<verificationId>      # čekaj isJobCompleted
   ```
+- **Blockscout PRO API** (`api.blockscout.com/<chainId>/api/v2/…?apikey=…`) traži ključ i za čitanje
+  (bez ključa HTTP 402). Ključ je u `chain/.env.blockscout` (gitignorirano, `BLOCKSCOUT_API_KEY`).
 - **Finalized blok kasni ~2 min**; odmah nakon deploya `verify --chain` i checkpoint lanac preskaču.
 - Deploy skripta šalje napojnicu 0,01 gwei (procjena daje 0, [I-05](audit/nalazi.md)).
 
