@@ -4,7 +4,8 @@
 zagrebačkom vremenu), a glasanje se nastavlja na Gnosis Chainu (`MaksimirGlasanjeV1`
 `0x812960FA1120121DEd82A8806aECE93dcf49E869`). Sve iz ovog plana je na produkciji i u `main`
 (PR #2, `domovina-api` PR #4). Tijek i hashevi: [Put do produkcije, korak 7](#put-do-produkcije).
-Povijest implementacije: [Stanje implementacije](#stanje-implementacije).
+Povijest implementacije: [Stanje implementacije](#stanje-implementacije). Sažetak za javnost:
+[Dan D: prijelaz na Gnosis](../2026-09-26-dan-d.md).
 
 Ovaj dokument spaja [`MaksimirGlasanjeV1`](01-arhitektura.md) s glasanjem koje radi na produkciji
 od 25. 9. 2026. ([faza 1](../glasanje-kako-radi.md)). Dijelovi su već opisani u

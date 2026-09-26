@@ -19,7 +19,8 @@ Glasanje je **neslužbeno** i nema utjecaja na odluku ocjenjivačkog suda. Pravi
 > ([`glasanje/faza1/`](../glasanje/faza1/lanac.json)), a završni snapshot je u Bitcoinu. Listići predani
 > u fazi 1 i dalje se broje dok ih glasač ne prenese na lanac. Novi tok (ključ glasača, listić na
 > lancu, relayer, rezultat = lanac + ostatak faze 1) opisan je u
-> [08 — integracija s fazom 1](blockchain/08-integracija-s-fazom-1.md).
+> [08 — integracija s fazom 1](blockchain/08-integracija-s-fazom-1.md), a sažetak za javnost u
+> [Dan D: prijelaz na Gnosis](2026-09-26-dan-d.md).
 
 Faza 1 je radila **offchain**: bez pametnih ugovora i bez novčanika, ali s istim kriptografskim
 alatima koji se koriste i na blockchainu (SHA-256 lanci, OpenTimestamps u Bitcoinu, Semaphore ZK

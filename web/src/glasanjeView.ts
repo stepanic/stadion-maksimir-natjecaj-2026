@@ -1006,6 +1006,7 @@ function draw() {
         <span><strong>${radovi.length}</strong> radova</span>
         <span>glasanje <strong>${res ? (res.open ? "otvoreno" : "zatvoreno") : "—"}</strong></span>
         <a href="${link(DOC_SLUG)}">Kako radi →</a>
+        <a href="${link("glasanje-dan-d")}">Prijelaz na lanac →</a>
       </div>
     </section>
 

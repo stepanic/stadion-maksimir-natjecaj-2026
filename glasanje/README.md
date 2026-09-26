@@ -9,7 +9,7 @@ Rezultati su javni uživo. Glasanje nema utjecaja na odluku ocjenjivačkog suda.
 > (`MaksimirGlasanjeV1` [`0x812960FA1120121DEd82A8806aECE93dcf49E869`](https://gnosisscan.io/address/0x812960FA1120121DEd82A8806aECE93dcf49E869),
 > manifest [`chain/deployments/gnosis/v1.json`](../chain/deployments/gnosis/v1.json)). Ovdje opisani
 > offchain dio više ne prima listiće; listići faze 1 koji nisu preneseni na lanac i dalje se broje.
-> Detalji prijelaza: [docs/blockchain/08](../docs/blockchain/08-integracija-s-fazom-1.md).
+> Sažetak: [Dan D](../docs/2026-09-26-dan-d.md); detalji prijelaza: [docs/blockchain/08](../docs/blockchain/08-integracija-s-fazom-1.md).
 
 ## Provjera nakon dana D
 
