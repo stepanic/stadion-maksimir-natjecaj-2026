@@ -632,11 +632,15 @@ Matija, 26. 9.: **najprije Gnosis (korak 5), zatim offchain dio** (registrar, we
    ([tx](https://gnosisscan.io/tx/0x50d52c4edb08163920dac014ae533a347abc85b11a3d3e14474f05a2a614f2e0)).
    `npm run check` na produkciji prošao; bez `?lanac=` web je i dalje faza 1.
 4. **E2E s pravom eOsobnom na Chiadu** (Brave, Matija klikne passkey) po [kontrolnoj listi](#e2e-s-pravom-eosobnom).
-5. ✅ **Gnosis** (26. 9. 2026.): Safe 2/3 `0xfb1b…c576`, V1 `0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`
+5. ✅ **Gnosis** (26. 9. 2026.): Safe 2/3 `0xfb1b…c576`, V1 `0x812960FA1120121DEd82A8806aECE93dcf49E869`
    (Sourcify exact_match, tag `glasanje-v1-gnosis`, [03](03-deploy-runbook.md#gnosis-26-9-2026-napravljeno)).
    Preostaje za ovaj korak: redak `gnosis` s `counts = true` u `maksimir_chains`; `RELAYER_CHAINS` + `SPONSOR_PRIVATE_KEY_100`;
    tajna `MAKSIMIR_REGISTRAR_KEY_100` u edge funkciji.
-6. **E2E na Gnosisu** s Matijinim pravim ključem.
+6. ✅ **E2E na Gnosisu** (26. 9. 2026., Matija, produkcija, `?lanac=gnosis`, prava eOsobna, passkey):
+   prvi pokušaj otkrio je [I-09](audit/nalazi.md) (ključ od nula) → zaštite + novi V1; drugi pokušaj s
+   pravim ključem iz faze 1 (24 riječi, commitment `157304732939…`) prošao:
+   [tx](https://gnosisscan.io/tx/0x372ab375281bf384a05dd01790680811830b8b98a359aa3b7aa3c09e31df906a),
+   `ballotOf` = listić (100 bodova, 5 radova), 1 registracija, 1 glasač.
 7. **Dan D:** `update maksimir_settings set active_chain_id = 100, active_contract = '<adresa>', chain_from = now()`
    pa [runbook dana D](#dan-d-prijelaz). Checkpoint Action od tada sam dodaje stanje lanca (manifest Gnosisa postoji).
 

@@ -88,10 +88,14 @@ KV `maksimir-relay` (kvote) već postoji i vezan je u `wrangler.jsonc`.
 
 | Što | Vrijednost |
 |---|---|
-| V1 | [`0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`](https://gnosisscan.io/address/0xC9E6bB402293645C99d32cb41d125fEbB9F7507B), blok 48439703, `groupId` 248 |
+| V1 | [`0x812960FA1120121DEd82A8806aECE93dcf49E869`](https://gnosisscan.io/address/0x812960FA1120121DEd82A8806aECE93dcf49E869), blok 48440122, `groupId` 249 |
 | vlasnik | Safe 2/3 [`0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576`](https://app.safe.global/home?safe=gno:0xfb1b7a0e5d43e2B92d1956C70018e2eE53B2c576) (potpisnici kao MPT Safe; `scripts/safe-gnosis.ts`, `deployments/gnosis/safe.json`) |
 | registrar | `0x0F81daa9A724eAe838BE22dd446fcdB7Fbfa5374` (ključ u `chain/.env.gnosis`, gitignorirano) |
 | izvor | Sourcify **exact_match** (creation + runtime); Blockscout ga preuzima sam (`is_fully_verified`); tag `glasanje-v1-gnosis` |
+
+**Ponovni deploy (isti dan, nalaz [I-09](audit/nalazi.md)):** prvi V1 `0xC9E6bB402293645C99d32cb41d125fEbB9F7507B`
+(blok 48439703) je povučen jer je za Matiju registriran ključ od samih nula; manifest je u
+`deployments/gnosis/superseded/`, tag `glasanje-v1-gnosis-povucen`, redak u bazi `gnosis-povucen` (`counts = false`).
 
 Zamke tog dana:
 
