@@ -3,9 +3,9 @@ name: chain
 # Ugovori glasanja (chain/): testovi + zabrana izmjene zamrznutih (deployanih) verzija.
 on:
   push:
-    paths: ["chain/**", "scripts/maksimir_*.py", "scripts/test_maksimir_chain.py", "web/worker/relayer/**", "web/package-lock.json", ".github/workflows/chain.yml"]
+    paths: ["chain/**", "scripts/maksimir_*.py", "scripts/test_maksimir_chain.py", "web/worker/relayer/**", "web/src/chainVote*.ts", "web/tsconfig.json", "web/package-lock.json", ".github/workflows/chain.yml"]
   pull_request:
-    paths: ["chain/**", "scripts/maksimir_*.py", "scripts/test_maksimir_chain.py", "web/worker/relayer/**", "web/package-lock.json", ".github/workflows/chain.yml"]
+    paths: ["chain/**", "scripts/maksimir_*.py", "scripts/test_maksimir_chain.py", "web/worker/relayer/**", "web/src/chainVote*.ts", "web/tsconfig.json", "web/package-lock.json", ".github/workflows/chain.yml"]
 
 jobs:
   contracts:
