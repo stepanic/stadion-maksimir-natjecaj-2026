@@ -10,8 +10,36 @@
     "isolatedModules": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "viem": [
+        "node_modules/viem"
+      ],
+      "viem/*": [
+        "node_modules/viem/*"
+      ],
+      "@semaphore-protocol/core": [
+        "node_modules/@semaphore-protocol/core"
+      ],
+      "@scure/bip39": [
+        "node_modules/@scure/bip39"
+      ],
+      "@scure/bip39/*": [
+        "node_modules/@scure/bip39/*"
+      ]
+    }
   },
-  "include": ["src", "worker", "vite.config.ts"]
+  "include": [
+    "src",
+    "worker",
+    "vite.config.ts"
+  ]
 }
