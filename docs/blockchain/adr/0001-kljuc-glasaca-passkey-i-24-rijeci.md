@@ -166,7 +166,12 @@ Izvori: [Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn),
 ## Riješena pitanja (Matija, 26. 9. 2026.)
 
 1. **`rpId = domovina.ai`**, dakle passkey vrijedi na svim poddomenama.
-2. **Potvrda riječi je obavezna.** Prije prve predaje glasač upisuje 3 nasumične riječi od 24.
+2. **Potvrda riječi: obavezan „Kopiraj” ili „Ispiši”** (izmjena 26. 9. 2026., Matija). Prvotno je
+   glasač prije prve predaje upisivao 3 nasumične riječi od 24; nakon stvarnog testa to je ocijenjeno
+   kao loš UX bez stvarne sigurnosti. Sada je „dalje” aktivan tek nakon klika na „Kopiraj riječi” ili
+   „Ispiši”; tko riječi ne spremi, to je njegova odgovornost. Kod potvrde ostaje u
+   `web/src/chainVoteView.ts` iza `CONFIRM_WORDS = false`.
+   Dopuna (nalaz I-09): tajna od 32 ista bajta (npr. same nule, `abandon ×23 art`) se odbija svuda.
 3. **Riječi se prikazuju pri izradi, a kasnije samo uz svjež passkey** (izmjena 26. 9. 2026.,
    nakon stvarnog testa u kojem Matija riječi nije zapisao).
    - Pri izradi: prikaz, potvrda 3 riječi, zatim riječi nestaju sa stranice.

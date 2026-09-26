@@ -95,7 +95,7 @@ const rpc = (user, fn, args = {}) =>
 
 // ── preglednik ──────────────────────────────────────────────────────────────────
 async function newDevice(browser, user, storage = {}) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
   await ctx.addInitScript(
     ([auth, extra]) => {
       if (sessionStorage.getItem("__e2e_init")) return;
@@ -141,17 +141,13 @@ async function newKeyFlow(page, source = "new") {
   await page.waitForSelector(".cv-words li");
   const words = await page.$$eval(".cv-words li span", (xs) => xs.map((x) => x.textContent.trim()));
   check(words.length === 24, `ključ se prikazuje kao 24 riječi`);
+  check(await page.$eval('[data-cv="written"]', (b) => b.disabled), "„dalje” je neaktivan dok riječi nisu kopirane ili ispisane");
+  await page.click('[data-cv="copy"]');
+  await page.waitForSelector('[data-cv="written"]:not([disabled])');
+  check((await page.evaluate(() => navigator.clipboard.readText())) === words.join(" "), "„Kopiraj riječi” stavlja upravo prikazane riječi u međuspremnik");
   await page.click('[data-cv="written"]');
-  await page.waitForSelector("[data-cv-word]");
-  check((await page.$$(".cv-words li")).length === 0, "riječi nestaju sa stranice prije potvrde");
-  const { positions } = await state(page);
-  // prvo krivo, pa točno
-  await page.fill('[data-cv-word="0"]', "krivo");
-  await page.click('[data-cv="confirm"]');
-  check(!!(await page.$(".cv-err")), "kriva potvrda riječi se odbija");
-  for (const [i, p] of positions.entries()) await page.fill(`[data-cv-word="${i}"]`, words[p]);
-  await page.click('[data-cv="confirm"]');
   await page.waitForSelector('[data-cv="protect"]');
+  check((await page.$$(".cv-words li")).length === 0, "riječi nestaju sa stranice nakon „dalje” (bez upisivanja 3 riječi)");
   return words;
 }
 
@@ -306,6 +302,20 @@ async function main() {
   s = await waitFor(pc, (x) => x.flow?.done, "ključ iz faze 1");
   check(s.commitment === expected, "commitment na lancu = commitment ZK ključa iz faze 1");
   check(s.ballot?.revision === 1 && s.ballot.items[c1] === 50, "listić predan tim ključem");
+
+  console.log("C2. I-09: ključ od nula iz faze 1 se ne nudi, a njegove riječi se odbijaju");
+  const Bz = await mkUser("z", "ANA", "NULA");
+  const devZ = await newDevice(browser, Bz, { "maksimir-zk-identity": Buffer.alloc(32).toString("base64") });
+  const pz = devZ.page;
+  await openGlasanje(pz, { [c1]: 100 });
+  await pz.click('[data-act="submit"]');
+  await pz.click('[data-cv="terms"]');
+  await pz.waitForSelector('[data-cv="new"]');
+  check(!(await pz.$('[data-cv="phase1"]')), "slab ključ iz faze 1 (same nule) nije ponuđen kao ključ za lanac");
+  await pz.click('[data-cv="enter"]');
+  await pz.fill("#cv-words-in", "abandon ".repeat(23) + "art");
+  await pz.click('[data-cv="enter-ok"]');
+  check(/slab/.test(await pz.textContent(".cv-err")), "riječi ključa od nula (abandon ×23 art) odbijene kao slab ključ");
 
   console.log("D. rezultati na stranici = lanac + ostatak faze 1");
   await openGlasanje(pa);

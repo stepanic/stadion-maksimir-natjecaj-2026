@@ -264,6 +264,7 @@ const REGISTER_ERRORS: Record<string, string> = {
   chain_terms_not_accepted: MESSAGES.chain_terms_not_accepted,
   already_registered: "Za tebe je na lancu već upisan drugi ključ. Otključaj taj ključ (passkey ili 24 riječi).",
   commitment_taken: "Ovaj ključ već pripada drugoj osobi. Izradi novi ključ.",
+  weak_commitment: "Ovaj ključ je javno poznat (npr. same nule) i ne smije se koristiti. Izradi novi ključ ili upiši svoje prave riječi.",
   voting_closed: MESSAGES.voting_closed,
   registrar_unavailable: "Upis prava glasa trenutno nije dostupan. Pokušaj kasnije.",
   registrar_mismatch: "Upis prava glasa trenutno nije dostupan (ključ registrara). Pokušaj kasnije.",

@@ -40,6 +40,7 @@ type Flow = {
   words: string[] | null; // samo dok su prikazane
   positions: number[];
   confirmErr: boolean;
+  saved: boolean; // riječi kopirane ili ispisane (uvjet za „dalje”)
   keyErr: string | null;
   status: string | null;
   error: string | null;
@@ -191,6 +192,7 @@ export function startFlow(purpose: Purpose, opts: { items?: Items; mode?: Public
     words: null,
     positions: [],
     confirmErr: false,
+    saved: false,
     keyErr: null,
     status: null,
     error: null,
@@ -369,10 +371,19 @@ function acceptKey(k: CV.Key): boolean {
   return true;
 }
 
+/**
+ * Potvrda upisom 3 riječi je ISKLJUČENA (Matija, 26. 9. 2026.): loš UX, a ne daje stvarnu
+ * sigurnost. Umjesto toga „dalje” je aktivan tek nakon „Kopiraj” ili „Ispiši”; tko riječi ne
+ * spremi, to je njegova odgovornost (ADR 0001, izmjena odluke 2). Kod potvrde ostaje za slučaj
+ * da se odluka vrati.
+ */
+const CONFIRM_WORDS = false;
+
 function beginNew(k: CV.Key) {
   const f = S.flow!;
   f.pending = k;
   f.words = S.mod!.secretToWords(k.secret);
+  f.saved = false;
   f.keyStage = "show";
   f.keyErr = null;
   S.host!.draw();
@@ -485,10 +496,11 @@ function keyHtml(f: Flow): string {
         <ol class="cv-words">${f.words!.map((w) => `<li><span>${esc(w)}</span></li>`).join("")}</ol>
         <p class="muted small">Otisak ključa: <strong>${esc(f.pending!.fingerprint)}</strong>. Ovo nisu riječi novčanika: ne unosi ih u MetaMask.</p>
         <div class="gl-actions">
-          <button class="btn btn-sm" data-cv="copy">Kopiraj</button>
+          <button class="btn ${f.saved ? "btn-sm" : "btn-primary"}" data-cv="copy">${f.saved ? "✓ " : ""}Kopiraj riječi</button>
           <button class="btn btn-sm" data-cv="print">Ispiši</button>
-          <button class="btn btn-primary" data-cv="written">Zapisao/la sam, dalje</button>
+          <button class="btn ${f.saved ? "btn-primary" : ""}" data-cv="written" ${f.saved ? "" : "disabled"}>Spremio/la sam riječi, dalje</button>
         </div>
+        ${f.saved ? "" : `<p class="muted small">Najprije klikni „Kopiraj riječi” (npr. u upravitelj lozinki) ili „Ispiši”.</p>`}
       </div>`;
     case "confirm":
       return `<div class="cv-key">
@@ -739,7 +751,14 @@ export function bindChain(el: HTMLElement) {
     S.flow!.keyStage = "choose";
     h.draw();
   });
-  on("written", () => toConfirm());
+  on("written", () => {
+    const f = S.flow!;
+    if (!f.saved) return;
+    if (CONFIRM_WORDS) return toConfirm();
+    f.words = null; // riječi nestaju sa stranice (ADR 0001)
+    f.keyStage = "protect";
+    h.draw();
+  });
   on("back-show", () => {
     const f = S.flow!;
     f.words = S.mod!.secretToWords(f.pending!.secret);
@@ -753,8 +772,10 @@ export function bindChain(el: HTMLElement) {
   on("copy", () => {
     const words = S.flow?.words?.join(" ");
     if (!words) return;
-    void navigator.clipboard?.writeText(words).then(() => {
-      h.msg("ok", "Riječi su kopirane. Međuspremnik se briše za 60 sekundi.");
+    const clip = navigator.clipboard?.writeText(words) ?? Promise.reject(new Error("nema međuspremnika"));
+    void clip.then(() => {
+      if (S.flow) S.flow.saved = true;
+      h.msg("ok", "Riječi su kopirane. Zalijepi ih na sigurno (upravitelj lozinki); međuspremnik se briše za 60 sekundi.");
       setTimeout(() => {
         void navigator.clipboard?.readText?.().then(
           (t) => {
@@ -764,12 +785,17 @@ export function bindChain(el: HTMLElement) {
         );
       }, 60_000);
       h.draw();
+    }, () => {
+      h.msg("err", "Kopiranje nije uspjelo u ovom pregledniku. Klikni „Ispiši” ili ih prepiši na papir.");
+      h.draw();
     });
   });
   on("print", () => {
     document.body.classList.add("cv-printing");
     window.print();
     document.body.classList.remove("cv-printing");
+    if (S.flow) S.flow.saved = true;
+    h.draw();
   });
   on("package", () => {
     const pkg = S.flow?.pkg;

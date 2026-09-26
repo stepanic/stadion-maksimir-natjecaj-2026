@@ -26,6 +26,7 @@ zaštite), **niska** (higijena, nema iskorištavanja), **info** (dizajn ili ops)
 | K-04 | info (UX) | kopiranje riječi otvara rizik međuspremnika (sinkronizacija, druge aplikacije) | pregled pri dodavanju „Kopiraj” | brisanje nakon 60 s + upozorenje; ispis kao preporučen put |
 | K-05 | niska (UX) | svi passkeyji istog imena, nasumičan `user.id` → gomilanje i zabuna pri izboru | stvarni test (Matija) | ime s otiskom ključa, `user.id` iz ključa (zamjena umjesto gomilanja), izravno otključavanje |
 | A-05 | info (ops) | javni Chiado RPC odbija procjenu gasa za deploy | deploy na Chiado | `DEPLOY_GAS` u skripti |
+| I-09 | **visoka** (integracija) | slab ključ (32 ista bajta; „ključ iz faze 1” od samih nula ostao u pregledniku od testa 25. 9.) ponuđen i registriran kao pravi na Gnosisu: tajna je javna, svatko može mijenjati taj listić | Matija u produkcijskom E2E: 24 riječi „abandon … art” | klijent odbija slabe tajne (`assertSecret`), `zk.ts` ih ne uvozi, baza odbija 256 slabih commitmenta (`weak_commitment`); V1 na Gnosisu ponovno deployan (stari povučen); testovi keystore, SQL, Deno, E2E C2 |
 | I-07 | **visoka** (integracija) | registrar bi prenio (povukao) listić faze 1 i kad ključ registrara ne odgovara ugovoru: glas ni u fazi 1 ni na lancu | pregled toka pri pisanju edge funkcije | provjera `registrar()` na lancu **prije** upisa u bazu; 2 Deno testa |
 | I-01 | srednja (web) | neprenesen listić faze 1 izgleda „predan”, gumb „Prenesi glas na lanac” je onemogućen | E2E u pregledniku (A1) | `needsTransfer()`; E2E provjera gumba |
 | I-02 | srednja (baza) | promjena oblika imena za listić s lanca vraća `no_ballot` (tražio se listić faze 1) | pisanje integracije | `_maksimir_set_public_for` prihvaća i javni listić s lanca; SQL test |
@@ -240,3 +241,28 @@ s PRF-om, lokalni Supabase, registrar i relayer, a ugovor je pravi V1 na Chiadu.
   0,1 gwei → 5 s. Trošak uz 0,01 gwei i ~0,5 M gasa: ~0,000005 xDAI po listiću.
 - **I-04.** Web s novim kodom mora raditi i nad bazom bez migracije (redoslijed deploya ne smije
   biti važan). Prvi pokušaj je na svakoj stranici zvao novi RPC i dobivao 404.
+
+## I-09 — javno poznat ključ registriran na Gnosisu (visoka, 26. 9. 2026.)
+
+**Kako je nađen.** Prvi pravi glas na Gnosisu (Matija, produkcija, `?lanac=gnosis`): tok je ponudio
+„Koristi svoj ZK ključ iz faze 1”, a 24 riječi su bile `abandon ×23 art`, dakle tajna od samih nula.
+U fazi 1 (zamka 15, `docs/2026-09-25-glasanje-javnosti.md`) test je u Braveu uvezao „ključ” od nula
+i prepisao pravi; pravi je ostao u `~/Downloads/maksimir-zk-kljuc.txt` (commitment `157304732939…`,
+isti kao u ZK grupi faze 1). Registrirani commitment na Gnosisu (`214974906843…`) je commitment ključa od nula.
+
+**Posljedica.** V1 nema uklanjanja člana, a registracija je jedna po osobi, pa je na tom ugovoru
+nastalo mjesto u grupi čiju tajnu svatko zna: svatko može mijenjati ili povući taj listić do 2027.
+
+**Popravak.**
+1. `chain/client/keystore.ts` `assertSecret`: tajna od 32 ista bajta se odbija (riječi, identitet,
+   uvoz iz faze 1); `web/src/zk.ts` je ne uvozi; `phase1Key()` je zato ne nudi.
+2. `domovina-api` `20260926130000_maksimir_weak_keys.sql`: 256 commitmenta slabih tajni (izračunati
+   unaprijed, Postgres nema Poseidon) i okidač na registracijama i ZK članovima → `weak_commitment`.
+3. V1 na Gnosisu je ponovno deployan (Matija, 26. 9.); stari ugovor je povučen (manifest u
+   `deployments/gnosis/superseded/`, redak u bazi `counts = false`). Na starom nije glasao nitko drugi.
+
+**Testovi.** keystore „I-09: odbija slabu tajnu”, SQL 13b, Deno `weak_commitment`, E2E C2 (ključ od
+nula iz faze 1 se ne nudi, riječi `abandon ×23 art` se odbijaju).
+
+**Pouka.** Svaki ulaz tajne izvana (uvoz, riječi, stari `localStorage`) treba provjeriti i na
+entropiju, ne samo na oblik. Kontrolni zbroj BIP-39 ne štiti od slabe tajne.

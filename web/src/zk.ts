@@ -80,6 +80,8 @@ export function parseIdentity(exported: string): Identity {
   const k = exported.trim();
   try {
     if (!KEY_RE.test(k) || atob(k).length !== 32) throw new Error("oblik");
+    // same nule (ili isti bajtovi) = javno poznat ključ; takav je 25. 9. prepisao pravi ključ (I-09)
+    if (new Set(atob(k)).size === 1) throw new Error("slab");
     return Identity.import(k);
   } catch {
     throw new VoteError("To nije ispravan ZK ključ. Zalijepi cijeli sadržaj datoteke maksimir-zk-kljuc.txt.");
