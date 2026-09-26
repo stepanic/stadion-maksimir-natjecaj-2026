@@ -123,6 +123,25 @@ class VerifyChain(unittest.TestCase):
         self.assertTrue(mv.compare_chain_tally(ev, bad2["chain"], "snapshot"))
 
 
+class Faza1(unittest.TestCase):
+    """Zatvoreni lanac faze 1 (dan D) i svi checkpointi iz repoa, glob kao u README-u."""
+
+    def test_index_json_nije_snapshot(self):
+        self.assertFalse(mv.is_snapshot(json.loads((ROOT / "glasanje/checkpoints/index.json").read_text())))
+        self.assertTrue(mv.is_snapshot(json.loads((ROOT / "glasanje/checkpoints/20260925T131212Z-seq0.json").read_text())))
+
+    def test_lanac_faze1_i_checkpointi(self):
+        import subprocess
+        snaps = sorted(str(p) for p in (ROOT / "glasanje/checkpoints").glob("*.json"))
+        out = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/maksimir_verify.py"), str(ROOT / "glasanje/faza1/lanac.json"), *snaps,
+             "--zk", str(ROOT / "glasanje/faza1/zk_grupa.json")],
+            capture_output=True, text=True)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("index.json: nije snapshot, preskočeno", out.stdout)
+        self.assertIn("SVE PROVJERE PROŠLE", out.stdout)
+
+
 class Finality(unittest.TestCase):
     def test_deploy_jos_nije_finaliziran(self):
         m = {"block": "100"}

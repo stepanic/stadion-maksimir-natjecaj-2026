@@ -1,0 +1,20 @@
+[
+  {
+    "seq": 1,
+    "hash": "596d9959a92f1c845272d4d9e1d0df500f7282111e34cec5c8b6b596aea18a9a",
+    "ts_ms": 1790343380427,
+    "revision": 1,
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "pseudonym": "3c06de4fe4b812e5d76c64d55da71b65076590f7734ed146f245550bf08c6217",
+    "items_canon": "6TVJ3MUHR:50,GY0F1A9OM:30,W3YS5VJBZ:20"
+  },
+  {
+    "seq": 2,
+    "hash": "b3b94377339bba2bd04c3fb978bda52b3150b65dec1646fe44a561105b49de16",
+    "ts_ms": 1790374522854,
+    "revision": 0,
+    "prev_hash": "596d9959a92f1c845272d4d9e1d0df500f7282111e34cec5c8b6b596aea18a9a",
+    "pseudonym": "3c06de4fe4b812e5d76c64d55da71b65076590f7734ed146f245550bf08c6217",
+    "items_canon": ""
+  }
+]

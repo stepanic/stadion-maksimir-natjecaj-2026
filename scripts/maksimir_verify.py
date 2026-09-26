@@ -194,6 +194,10 @@ def verify_onchain(manifest_path: str, rpc_url: str | None, snapshots: list[tupl
     return errors, ev
 
 
+def is_snapshot(obj) -> bool:
+    return isinstance(obj, dict) and "head" in obj and str(obj.get("schema", "")).startswith("maksimir-snapshot/")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("log")
@@ -211,6 +215,10 @@ def main() -> int:
     snaps = []
     for path in a.snapshots:
         snap = json.load(open(path, encoding="utf-8"))
+        if not is_snapshot(snap):
+            # checkpoints/index.json upadne u glob checkpoints/*.json
+            print(f"{path}: nije snapshot, preskočeno")
+            continue
         snaps.append((path, snap))
         e = verify_snapshot(log, snap)
         print(f"snapshot {path}: seq {snap['head']['seq']}, {snap['voters']} glasača — {'OK' if not e else 'PAD'}")
