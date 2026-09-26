@@ -26,7 +26,7 @@ sequenceDiagram
   W->>F: id_token
   F->>DB: upsert_identity_verification (oib_hash)
   F-->>W: email + email_otp
-  W->>DB: verifyOtp → sesija; maksimir_cast_ballot(items)
+  W->>DB: verifyOtp → sesija, zatim maksimir_cast_ballot(items)
   DB->>DB: listić + red u maksimir_log (hash lanac)
   GH->>DB: maksimir_snapshot() (anon)
   GH->>GH: ots stamp → commit glasanje/checkpoints/

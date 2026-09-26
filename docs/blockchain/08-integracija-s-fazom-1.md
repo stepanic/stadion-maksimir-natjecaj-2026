@@ -294,7 +294,7 @@ sequenceDiagram
   M->>R: glasanje/faza1/lanac.json, zk_grupa.json
   M->>M: maksimir_verify.py lanac.json checkpoints/*.json --zk zk_grupa.json
   W-->>W: sljedeće učitavanje: tok na lancu
-  Note over GA: .ots dobiva Bitcoin atestaciju za nekoliko sati;<br/>prijelaz ne čeka na to
+  Note over GA: .ots dobiva Bitcoin atestaciju za nekoliko sati,<br/>prijelaz ne čeka na to
 ```
 
 ### Zatvaranje `maksimir_cast_ballot`

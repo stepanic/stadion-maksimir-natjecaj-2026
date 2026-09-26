@@ -49,7 +49,7 @@ sequenceDiagram
   actor G as Glasač
 
   O->>V2: deploy (zna adresu V1)
-  O->>V1: setSuccessor(V2)  — jednom, zauvijek; SAMO zapis adrese
+  O->>V1: setSuccessor(V2)  — jednom, zauvijek, SAMO zapis adrese
   Note over V1: V1 i dalje radi za sve: registracije,<br/>prvi listići, izmjene (A-07)
   G->>G: dokaz s porukom migrateMessage (V1 → V2)
   G->>V2: migrate(dokaz)  (preko relayera ili sam)

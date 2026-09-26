@@ -108,7 +108,7 @@ sequenceDiagram
   U->>K: Face ID
   K-->>B: PRF(sol)
   B->>B: dešifriraj omot → tajna SAMO u memoriji
-  B->>B: ZK dokaz → relayer; tajna se briše iz memorije
+  B->>B: ZK dokaz → relayer, tajna se briše iz memorije
   end
 
   rect rgb(255, 245, 235)
