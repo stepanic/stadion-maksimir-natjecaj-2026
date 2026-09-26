@@ -633,3 +633,30 @@ Matija, 26. 9.: **najprije Gnosis (korak 5), zatim offchain dio** (registrar, we
 6. **E2E na Gnosisu** s Matijinim pravim ključem.
 7. **Dan D:** `update maksimir_settings set active_chain_id = 100, active_contract = '<adresa>', chain_from = now()`
    pa [runbook dana D](#dan-d-prijelaz). Checkpoint Action od tada sam dodaje stanje lanca (manifest Gnosisa postoji).
+
+## Otvoreno nakon sesije 26. 9. 2026.
+
+**Gnosis (sljedeći korak, Matijin redoslijed: najprije lanac, pa offchain).** Ključevi su izrađeni
+lokalno u `chain/.env.gnosis` (gitignorirano; kopiju na sigurno): deployer `0x880e…891f`, registrar
+`0x0F81…5374`, sponzor relayera `0x7789…6549`. Safe v1.3.0 L2, factory i Semaphore v4 postoje na
+Gnosisu (provjereno). Čeka se:
+
+- [ ] potvrda vlasnika Safea (prijedlog: 2/3 s istim potpisnicima kao MPT Safe `0x449a…af2e`:
+      `0xEC41…6cf3`, `0x5890…CD4F`, `0x7f7A…F792`);
+- [ ] uplata 0,01 xDAI na deployera (deploy V1 + Safe stoje ~0,00003 xDAI);
+- [ ] zatim: Safe → `deploy-v1.ts` s `OWNER=<Safe>`, `REGISTRAR=0x0F81…5374` → verifikacija → manifest
+      `deployments/gnosis/v1.json` → `check-frozen` → tag `glasanje-v1-gnosis`.
+
+**Neovisni review** ([drugi pregled](../review/2026-09-26-neovisni-review-wiring.md), druga sesija,
+Fable 5.1): F-22 (CI na grani) popravljen u `f9b2dfe`. Otvoreni i treba ih riješiti ili izrijekom
+prihvatiti **prije dana D**: F-01/F-13 (povezivanje po vremenu: registracija, zapis „prijenos” i
+prvi listić u istom trenutku), F-02/F-14/F-16 (anonimne točke pisanja bez provjere SNARK-a), F-04
+(`snarkArtifacts` nisu prikvačeni), F-06 (keystore), F-15 (registracija bez dokaza posjeda tajne),
+F-17 (500 s porukom, `localhost:5173` u produkcijskom CORS-u), F-18/F-21 (`?lanac=` smije birati i
+ugovor koji se broji, prije dana D), F-20 (veza commitment ↔ nullifier u `localStorage` i
+`__chainVote`), F-21 (checkpoint pada kad RPC Gnosisa ne odgovori). Redoslijed koji review predlaže
+je u njegovu sažetku.
+
+**Ostalo:** merge obiju grana u `main` (uz zeleni CI i Matijin ok), testni passkey „Maksimir glasanje ·
+ključ …” za `localhost` može se obrisati iz Lozinki.
+
