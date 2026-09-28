@@ -18,10 +18,12 @@
     "@scure/bip39": "^1.6.0",
     "@semaphore-protocol/core": "^4.14.3",
     "@supabase/supabase-js": "^2.117.2",
+    "@types/three": "^0.180.0",
     "highlight.js": "^11.10.0",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "mermaid": "^11.4.1",
+    "three": "^0.180.0",
     "viem": "^2.56.9"
   },
   "devDependencies": {
