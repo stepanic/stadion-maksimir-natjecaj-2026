@@ -65,11 +65,12 @@ def main():
                 rows[k] = r
     data = sorted(rows.values(), key=lambda r: (r["datum"] or "9999", r["izvor"], r["naslov"]))
 
-    with TSV.open("w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f, delimiter="\t", quoting=csv.QUOTE_NONE, escapechar="\\", lineterminator="\n")
-        w.writerow(COLS)
-        for r in data:
-            w.writerow([r[c].replace("\t", " ").replace("\n", " ") for c in COLS])
+    # Običan TSV bez navodnika i escapea: tabovi i novi redovi u poljima se pretvore u razmak,
+    # pa se datoteka čita i piše bez gubitaka (csv s escapechar bi pri svakom pokretanju
+    # dodavao još jednu '\\' ispred navodnika).
+    lines = ["\t".join(COLS)]
+    lines += ["\t".join(re.sub(r"[\t\r\n]+", " ", r[c]) for c in COLS) for r in data]
+    TSV.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     by_src = collections.Counter(r["izvor"] for r in data)
     by_tip = collections.Counter(r["tip"] or "?" for r in data)
@@ -125,7 +126,7 @@ def main():
         title = cell(r["naslov"] or r["url"])
         mark = "" if r["provjereno"] == "da" else " ˢ"
         L.append(
-            f"| {r['datum'] or '—'} | {cell(r['izvor'])} | [{title}]({r['url']}){mark} "
+            f"| {r['datum'].replace('-', '\u2011') or '—'} | {cell(r['izvor'])} | [{title}]({r['url']}){mark} "
             f"| {r['tip']} | {r['stav']} | {cell(r['sazetak'])} |"
         )
     L += ["", "ˢ = podatak iz rezultata pretrage, stranica nije otvorena.", ""]
