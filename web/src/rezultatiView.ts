@@ -2,6 +2,7 @@
 // i galerija svih panela pojedinog rada (/rezultati/<rank>) s lightboxom.
 
 import { awards, coverUrl, pageUrl, thumbUrl, RESULTS_SOURCE, type Award } from "./rezultati";
+import { renderModel3d, wireModel3d } from "./modeli3d";
 import { link } from "./routes";
 
 function esc(s: string): string {
@@ -112,6 +113,8 @@ export function renderAward(el: HTMLElement, rank: number): boolean {
       </div>
     </div>
 
+    ${renderModel3d(a.code)}
+
     <h2 class="gallery-title">Svi natječajni paneli</h2>
     <p class="muted small">Klikni panel za prikaz preko cijelog zaslona, pa klikni sliku za zumiranje detalja. Strelice ← → listaju, Esc zatvara.</p>
     <div class="gallery">
@@ -133,6 +136,7 @@ export function renderAward(el: HTMLElement, rank: number): boolean {
     </nav>
   `;
 
+  wireModel3d(el);
   el.querySelectorAll<HTMLButtonElement>(".gallery-item").forEach((b) =>
     b.addEventListener("click", () => openLightbox(a, Number(b.dataset.page)))
   );

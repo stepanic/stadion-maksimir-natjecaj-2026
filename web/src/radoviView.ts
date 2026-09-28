@@ -4,6 +4,7 @@
 
 import radoviData from "../../sources/radovi.json";
 import { renderRadVotePanel } from "./glasanjeView";
+import { renderModel3d, wireModel3d } from "./modeli3d";
 import { link } from "./routes";
 
 type Role = { name: string; role: string };
@@ -204,6 +205,8 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
         : ""
     }
 
+    ${renderModel3d(r.code)}
+
     <div class="panel gl-rad-panel" id="gl-rad-panel"></div>
 
     ${
@@ -246,6 +249,7 @@ export function renderRad(el: HTMLElement, code: string): Rad | null {
       ${next ? `<a class="btn" href="${link(`radovi/${next.code}`)}">${esc(rankLabel(next))} →</a>` : `<span></span>`}
     </nav>
   `;
+  wireModel3d(el);
   void renderRadVotePanel(el.querySelector<HTMLElement>("#gl-rad-panel")!, r.code);
   return r;
 }
