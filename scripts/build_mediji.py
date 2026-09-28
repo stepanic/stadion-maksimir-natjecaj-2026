@@ -117,12 +117,16 @@ def main():
         "|---|---|",
         *[f"| {cell(s)} | {n} |" for s, n in by_src.most_common()],
         "",
-        "## Sve objave (kronološki)",
+        "## Sve objave (najnovije prve)",
+        "",
+        "Na webu klik na zaglavlje „Datum” mijenja redoslijed (najnovije ↔ najstarije).",
         "",
         "| Datum | Izvor | Naslov | Vrsta | Stav | Sažetak |",
         "|---|---|---|---|---|---|",
     ]
-    for r in data:
+    # Silazno po datumu (najnovije gore); objave bez datuma idu na kraj.
+    newest = sorted(data, key=lambda r: (bool(r["datum"]), r["datum"]), reverse=True)
+    for r in newest:
         title = cell(r["naslov"] or r["url"])
         mark = "" if r["provjereno"] == "da" else " ˢ"
         L.append(

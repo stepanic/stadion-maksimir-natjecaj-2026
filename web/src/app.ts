@@ -10,6 +10,7 @@ import { renderGlasanje } from "./glasanjeView";
 import { renderShare } from "./shareView";
 import { link } from "./routes";
 import { applyMeta } from "./meta";
+import { enhanceDateTables } from "./tableSort";
 
 const navEl = document.getElementById("nav")!;
 const contentEl = document.getElementById("content")!;
@@ -85,6 +86,7 @@ async function renderDoc(slug: string, hash: string) {
     { label: doc.title },
   ]);
   setActiveNav(slug);
+  enhanceDateTables(contentEl);
   await renderMermaidIn(contentEl);
   scrollToHash(hash);
 }

@@ -2385,3 +2385,17 @@ body.lb-open {
 @media (max-width: 700px) {
   .model3d-stage { aspect-ratio: 3 / 4; }
 }
+
+/* Prekidač redoslijeda u zaglavlju tablice s datumima (tableSort.ts) */
+.th-sort {
+  all: unset;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--navy);
+}
+.th-sort:hover,
+.th-sort:focus-visible {
+  color: var(--red);
+  text-decoration: underline;
+}
