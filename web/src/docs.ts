@@ -16,6 +16,7 @@ import research06 from "../../research/06-status-natjecaja.md?raw";
 import research07 from "../../research/07-kronologija-objava.md?raw";
 import research08 from "../../research/08-rezultati-natjecaja.md?raw";
 import research09 from "../../research/09-svi-radovi.md?raw";
+import research10 from "../../research/10-javnost-ankete-i-slicni-projekti.md?raw";
 import ops20260826 from "../../docs/2026-08-26-provjera-statusa-i-deploy.md?raw";
 import ops20260925 from "../../docs/2026-09-25-rezultati-i-svi-radovi.md?raw";
 import opsSeoPlan from "../../docs/2026-09-25-seo-rute-plan.md?raw";
@@ -172,6 +173,14 @@ export const docs: DocSection[] = [
         subtitle: "Popis po rangu: šifre, autori, zemlje (službeni EOJN zapisnik)",
         repoPath: "research/09-svi-radovi.md",
         raw: research09,
+        section: "research",
+      },
+      {
+        slug: "research-10-javnost",
+        title: "10 — Javnost: ankete i slični projekti",
+        subtitle: "15 anketa portala bez provjere glasa, peticije, nezavisni projekti i Dinamo",
+        repoPath: "research/10-javnost-ankete-i-slicni-projekti.md",
+        raw: research10,
         section: "research",
       },
     ],
