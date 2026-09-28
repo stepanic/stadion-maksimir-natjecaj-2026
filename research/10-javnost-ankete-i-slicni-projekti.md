@@ -5,6 +5,9 @@ a za ankete i izvorni kod widgeta. Ni u jednoj anketi nije glasano. Što nije pr
 
 ## Ukratko
 
+- Sve pojedinačne objave (1.013, od najave 2025. do 28. 9. 2026.) su u medijskom arhivu
+  [`11-medijski-arhiv.md`](11-medijski-arhiv.md) (`sources/mediji.tsv`).
+
 - Portali su u prva dva dana pokrenuli **najmanje 15 anketa**. U svim anketama o izabranom rješenju negativnih je
   **74–89 %**. Najveća je Indexova, sa 145.008 glasova.
 - **Nijedna anketa, peticija ni neslužbeno glasanje nema autorizaciju ni neporecivost.** Glasovi nisu vezani uz
