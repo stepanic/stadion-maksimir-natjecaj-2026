@@ -177,6 +177,8 @@ pa se lanac `check && commit && deploy` nastavi i kad provjera padne. Izlaz preu
 
 ## Vezani dokumenti
 
+- [`2026-09-28-3d-model-i-medijski-arhiv.md`](2026-09-28-3d-model-i-medijski-arhiv.md): 3D model i medijski arhiv
+
 - [`2026-09-25-seo-rute-plan.md`](2026-09-25-seo-rute-plan.md): plan i odluke (hash → prave rute, zašto bez Astra)
 - [`2026-09-25-web-nice-to-have.md`](2026-09-25-web-nice-to-have.md): odgođeno (2,27 MB JS po stranici, `docs.ts` glob, slike, Astro)
 - [`2026-09-25-glasanje-javnosti.md`](2026-09-25-glasanje-javnosti.md): glasanje, `ALLOWED_ORIGINS`, E2E
