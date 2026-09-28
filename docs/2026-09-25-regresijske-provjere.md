@@ -167,6 +167,14 @@ Na stanju prije popravka ovo je uhvatilo sve četiri greške, a nakon njega su s
 Otvoreno: dodati ovaj korak u `regression.mjs` (ili u build), i u pregledniku tražiti tekst „Syntax error” na svim
 rutama, a ne samo brojati SVG-ove.
 
+## Prerender ne zna sve što zna preglednik (28. 9. 2026.)
+
+Provjera uspoređuje HTML iz prerendera s DOM-om u pregledniku, pa svaka izmjena DOM-a nakon iscrtavanja mora
+raditi i pod happy-domom. happy-dom nema `table.tHead`, `table.tBodies` ni `row.cells`, pa je
+`web/src/tableSort.ts` u prvoj verziji prekidač dodao samo u pregledniku i provjera je pala na četiri rute.
+Rješenje je koristiti samo `querySelector`/`querySelectorAll`. I: `npm run check … | tail` guta izlazni kod,
+pa se lanac `check && commit && deploy` nastavi i kad provjera padne. Izlaz preusmjeri u datoteku.
+
 ## Vezani dokumenti
 
 - [`2026-09-25-seo-rute-plan.md`](2026-09-25-seo-rute-plan.md): plan i odluke (hash → prave rute, zašto bez Astra)
