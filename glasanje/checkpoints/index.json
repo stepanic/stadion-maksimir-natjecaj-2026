@@ -89,5 +89,19 @@
     "chain_block": 48457493,
     "chain_voters": 2,
     "chain_digest": "92e8ab393f0eceaecd261655a9666cbd1678294c0d334421f653cca1aa99b59c"
+  },
+  {
+    "file": "20260928T065213Z-seq2.json",
+    "at": "2026-09-28T06:52:12.556904+00:00",
+    "seq": 2,
+    "hash": "b3b94377339bba2bd04c3fb978bda52b3150b65dec1646fe44a561105b49de16",
+    "voters": 0,
+    "bitcoin": false,
+    "zk_seq": 1,
+    "zk_hash": "433a3c8abad42ffe03d406f91c378881a8bb63ec0aa33ba43347ff16ffada48e",
+    "zk_members": 1,
+    "chain_block": 48478330,
+    "chain_voters": 2,
+    "chain_digest": "92e8ab393f0eceaecd261655a9666cbd1678294c0d334421f653cca1aa99b59c"
   }
 ]
