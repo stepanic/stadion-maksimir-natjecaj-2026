@@ -179,7 +179,7 @@ export const docs: DocSection[] = [
       {
         slug: "research-10-javnost",
         title: "10 — Javnost: ankete i slični projekti",
-        subtitle: "15 anketa portala bez provjere glasa, peticije, nezavisni projekti i Dinamo",
+        subtitle: "16 anketa portala bez provjere glasa, peticije, nezavisni projekti, Dinamo i politika",
         repoPath: "research/10-javnost-ankete-i-slicni-projekti.md",
         raw: research10,
         section: "research",

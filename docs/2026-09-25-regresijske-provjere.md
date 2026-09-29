@@ -80,6 +80,10 @@ prerender. Nova ruta ili dokument se time automatski provjerava.
 **Baseline** je deploy `dd23a1dd` (commit `4e1ec0f`, zadnji s hash rutama). Pages čuva svaki deploy na
 `<id>.stadion-maksimir-8cl.pages.dev`, a middleware za preusmjeravanje nije u tom starom deployu, pa baseline
 ostaje dostupan. Za buduće promjene kao baseline se može uzeti i trenutna produkcija prije deploya.
+Od 29. 9. je `dd23a1dd` zastario kao baseline: 8 padova (`/rezultati/1`, `/radovi/6TVJ3MUHR`, dokumenti glasanja,
+`/ops-status-deploy` i screenshotovi) su namjerne promjene nakon 25. 9. (3D model, puna širina, novi tekstovi).
+Kad prod provjera javi samo `BASELINE` i screenshot padove, a HTTP, DOM, stari linkovi i navigacija prođu, nema regresije.
+Za čistu usporedbu prije sljedećeg deploya pokreni provjeru s produkcijom kao baselineom (vidi gore).
 
 ### Kad je promjena namjerna (izmijenjen tekst dokumenta)
 

@@ -6,7 +6,7 @@ Brojevi su ponovno provjereni 28. 9. oko 17:30 UTC (druga, detaljnija provjera).
 
 ## Ukratko
 
-- Sve pojedinačne objave (1.013, od najave 2025. do 28. 9. 2026.) su u medijskom arhivu
+- Sve pojedinačne objave (1.175 iz 203 izvora, od najave 2025. do 28. 9. 2026.) su u medijskom arhivu
   [`11-medijski-arhiv.md`](11-medijski-arhiv.md) (`sources/mediji.tsv`).
 
 - Portali su u prva dva dana pokrenuli **najmanje 16 anketa**. U svim anketama o izabranom rješenju negativnih je
