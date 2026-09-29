@@ -9,6 +9,7 @@ Nezavisne provjere ključnih tvrdnji iz `research/01-05` putem **Claude Desktop 
 | **A** | Tehničke brojke (UEFA / FIFA / NN) — verifikacija ~30 ključnih cifara | [`_prompt-A-tehnicki-brojke.md`](_prompt-A-tehnicki-brojke.md) | [`A-tehnicki-brojke-REPORT.md`](A-tehnicki-brojke-REPORT.md) |
 | **B** | Predsjednik OS Toma Plejić + dopredsjednik Vasa Perović — dublji opus, recentni stavovi, izjave o stadionima | [`_prompt-B-plejic-perovic.md`](_prompt-B-plejic-perovic.md) | [`B-plejic-perovic-REPORT.md`](B-plejic-perovic-REPORT.md) |
 | **C** | Konzervatorski operativni okvir — Z-1528 / Z-1530 / Z-6940, što je *zaista* dopušteno u kontaktnoj zoni parka | [`_prompt-C-konzervatorski.md`](_prompt-C-konzervatorski.md) | [`C-konzervatorski-REPORT.md`](C-konzervatorski-REPORT.md) |
+| **D** | Javnost nakon rezultata (28. 9. 2026.) — ankete, peticije, slični projekti, rupe u medijskom arhivu (`research/10`, `11`) | [`_prompt-D-javnost-mediji.md`](_prompt-D-javnost-mediji.md) | [`D-javnost-mediji-REPORT.md`](D-javnost-mediji-REPORT.md) |
 
 ## Workflow
 

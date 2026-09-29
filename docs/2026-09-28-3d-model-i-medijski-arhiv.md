@@ -43,6 +43,17 @@ flowchart LR
   tražilice (index, večernji), tagovi (tportal) i prolaz po ID-u članka (večernji, sportnet).
   - Slobodna Dalmacija, Nacional, gnkdinamo.hr i Hina blokiraju curl (Cloudflare) i rade samo u pregledniku.
   - X je čitljiv samo u prijavljenom pregledniku, jer mirrori vraćaju 451 ili traže JS.
+- **Što otvara blokirane stranice** (provjereno 29. 9.):
+
+  | Izvor | Put koji radi |
+  |---|---|
+  | Reddit (i post i komentari) | `<url posta>/.rss`, preglednički User-Agent, jedan zahtjev u 3 s. `.json`, `old.reddit` i `r.jina.ai` vraćaju 403 ili 429. |
+  | Cloudflare dio (Slobodna, Nacional, Hina, dezeen, stadiumbusiness, skyscrapercity) | `https://r.jina.ai/<url>` |
+  | Cloudflare challenge i preko jine (forum.hr, coliseum-online, slobodenpecat, bustler) | Firecrawl `scrape`, 1 kredit po stranici. Mjesečni limit je 1.000 kredita i 29. 9. je potrošen. |
+  | X, Instagram | samo prijavljeni preglednik |
+
+- **Provjera sumnje na uklanjanje:** Večernji preusmjerava `…/x-<ID>` na pravi slug (301), i to i za
+  uklonjene članke. Tako se dokazuje da je članak postojao baš na Večernjem, iako sada daje 404.
 - **Uklonjeni članci.** Večernji je uklonio četiri članka (24. do 27. 9.) i nijedan nema snimku u Waybacku.
   Ubuduće važne objave spremiti odmah, npr. `web.archive.org/save/<url>`.
 - **Rupe u pokrivenosti:** Crna Gora, veliki talijanski i španjolski dnevnici, Večernji prije 23. 9. i
