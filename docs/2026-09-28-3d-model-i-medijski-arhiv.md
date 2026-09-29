@@ -52,6 +52,9 @@ flowchart LR
   | Cloudflare challenge i preko jine (forum.hr, coliseum-online, slobodenpecat, bustler) | Firecrawl `scrape`, 1 kredit po stranici. Mjesečni limit je 1.000 kredita i 29. 9. je potrošen. |
   | X, Instagram | samo prijavljeni preglednik |
 
+- **Stanje linkova 29. 9.:** od 1.033 URL-a mrtva su samo 4 Večernjakova (već označena). Svi Reddit linkovi
+  odgovaraju, ali 13 objava nema sadržaj: 9 `[removed]` (7 u r/dinamo) i 4 `[deleted]`. To je zabilježeno u
+  sažetku u TSV-u. Neprovjerene su ostale samo 2 teme na forum.hr (Cloudflare, a Firecrawl krediti su potrošeni).
 - **Provjera sumnje na uklanjanje:** Večernji preusmjerava `…/x-<ID>` na pravi slug (301), i to i za
   uklonjene članke. Tako se dokazuje da je članak postojao baš na Večernjem, iako sada daje 404.
 - **Uklonjeni članci.** Večernji je uklonio četiri članka (24. do 27. 9.) i nijedan nema snimku u Waybacku.
