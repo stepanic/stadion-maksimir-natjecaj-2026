@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Najbolji i najlošiji · prototip glasanja</title>
+<link rel="stylesheet" href="core.css">
+<style>
+  .set { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .set .work.best { border-color: var(--ok); }
+  .set .work.worst { border-color: var(--red); opacity: .6; }
+  .bw { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+  .bw button { border: 0; background: #fff; padding: 9px 4px; font-weight: 600; font-size: 14px; color: var(--muted); }
+  .bw button + button { border-left: 1px solid var(--line); }
+  .bw button.on.b { background: var(--ok); color: #fff; }
+  .bw button.on.w { background: var(--red); color: #fff; }
+  .stage { font-size: 13px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .6px; }
+</style>
+</head>
+<body>
+<div class="wrap narrow">
+  <div id="play">
+    <div class="stage" id="stage"></div>
+    <h1>Koji ti je najbolji, a koji najlošiji?</h1>
+    <p class="lead">Četiri rada odjednom. Označi jedan <b>★ najbolji</b> i jedan <b>✕ najlošiji</b>. Dva ostaju neoznačena. Tako u 22 ekrana vidiš svih 88 radova.</p>
+    <div class="progress"><i id="pg"></i></div>
+    <div class="set" id="set"></div>
+    <div class="row" style="margin-top:12px"><span class="muted" id="hint"></span><span class="spacer"></span><button class="btn primary" id="next" disabled>Dalje →</button></div>
+  </div>
+  <div id="result"></div>
+</div>
+<script src="radovi-data.js"></script>
+<script src="core.js"></script>
+<script>
+const { RADOVI, shuffle, header, setMeta, card, bordaTop, ballotEditor, act, el } = UX;
+header("Najbolji i najlošiji · MaxDiff");
+const $ = (id) => document.getElementById(id);
+
+// Podijeli popis u skupine od 4; ostatak rasporedi tako da nijedna skupina nema manje od 3.
+function chunk(list) {
+  const n = list.length, k = Math.ceil(n / 4), out = [];
+  let i = 0;
+  for (let g = 0; g < k; g++) { const size = Math.floor(n / k) + (g < n % k ? 1 : 0); out.push(list.slice(i, i + size)); i += size; }
+  return out;
+}
+
+const score = {}, finalist = new Set();
+for (const r of RADOVI) score[r.code] = 0;
+let pass = 1, sets = chunk(shuffle(RADOVI.map((r) => r.code))), si = 0, best = null, worst = null, total = sets.length + 6;
+const winners = [];
+
+function draw() {
+  const set = sets[si];
+  best = worst = null;
+  $("stage").textContent = pass === 1 ? `Krug 1 · ekran ${si + 1} od ${sets.length}` : `Finale · ekran ${si + 1} od ${sets.length}`;
+  const done = pass === 1 ? si : 22 + si;
+  $("pg").style.width = (done / total) * 100 + "%";
+  setMeta(`${done} od ~${total} ekrana`);
+  const box = $("set");
+  box.innerHTML = "";
+  for (const c of set) {
+    const n = card(c);
+    const bb = el("button", { class: "b", onclick: () => mark(c, "best") }, "★ najbolji");
+    const wb = el("button", { class: "w", onclick: () => mark(c, "worst") }, "✕ najlošiji");
+    n.append(el("div", { class: "bw" }, bb, wb));
+    box.append(n);
+  }
+  upd();
+}
+
+function mark(c, kind) {
+  act();
+  if (kind === "best") { best = best === c ? null : c; if (worst === c) worst = null; }
+  else { worst = worst === c ? null : c; if (best === c) best = null; }
+  upd();
+}
+function upd() {
+  for (const n of document.querySelectorAll("#set .work")) {
+    const c = n.dataset.code;
+    n.classList.toggle("best", c === best); n.classList.toggle("worst", c === worst);
+    n.querySelector(".b").classList.toggle("on", c === best);
+    n.querySelector(".w").classList.toggle("on", c === worst);
+  }
+  const ok = best && worst;
+  $("next").disabled = !ok;
+  $("hint").textContent = ok ? "" : !best ? "Označi najbolji." : "Označi najlošiji.";
+}
+
+function next() {
+  const w = pass === 1 ? 1 : 2;              // finale vrijedi dvostruko
+  score[best] += w; score[worst] -= w;
+  if (pass === 1) winners.push(best);
+  si++;
+  if (si < sets.length) return draw();
+  if (pass === 1) { pass = 2; winners.forEach((c) => finalist.add(c)); sets = chunk(shuffle(winners)); si = 0; total = 22 + sets.length; return draw(); }
+  finish();
+}
+
+function finish() {
+  $("play").classList.add("hidden");
+  const ranked = Object.keys(score).sort((a, b) => score[b] - score[a] || finalist.has(b) - finalist.has(a));
+  setMeta(`${total} ekrana`);
+  ballotEditor($("result"), bordaTop(ranked, 5), "maxdiff",
+    `Svaki „najbolji” donosi bod, a svaki „najlošiji” oduzima bod (u finalu po dva). Pobjednici 22 ekrana iz prvog kruga ušli su u finale. Prvih 5 dobiva bodove u omjeru 5 : 4 : 3 : 2 : 1.`, { base: UX.bordaWeights(ranked, 5) });
+}
+
+$("next").onclick = () => { act(); next(); };
+draw();
+</script>
+</body>
+</html>

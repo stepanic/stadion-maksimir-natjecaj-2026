@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brzi izbor · prototip glasanja</title>
+<link rel="stylesheet" href="core.css">
+<style>
+  .picks { display: flex; gap: 8px; flex-wrap: wrap; min-height: 54px; background: #fff; border-radius: var(--r); box-shadow: var(--shadow); padding: 8px; margin-bottom: 14px; align-items: center; }
+  .pick { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; padding: 4px 6px 4px 4px; background: #fff; }
+  .pick img { width: 54px; height: 34px; object-fit: cover; border-radius: 6px; }
+  .pick .n { font-weight: 800; color: var(--blue); width: 18px; text-align: center; }
+  .pick button { border: 0; background: none; font-size: 16px; padding: 0 3px; color: var(--muted); }
+  .rankbadge { position: absolute; top: 8px; left: 8px; background: var(--blue); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="play">
+    <h1>Tvojih pet favorita</h1>
+    <p class="lead">Klikni do 5 radova redom kojim ti se sviđaju: prvi klik je tvoj broj 1. Redoslijed možeš mijenjati strelicama. Bodovi se predlažu automatski i možeš ih promijeniti.</p>
+    <div class="picks" id="picks"></div>
+    <div class="row" style="margin-bottom:12px"><span class="muted" id="cnt"></span><span class="spacer"></span><button class="btn primary" id="done" disabled>Moj listić →</button></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div id="result" class="narrow" style="margin:0 auto"></div>
+</div>
+<script src="radovi-data.js"></script>
+<script src="core.js"></script>
+<script>
+const { RADOVI, BY, shuffle, header, setMeta, card, bordaTop, ballotEditor, act, el } = UX;
+header("Brzi izbor · top 5");
+const $ = (id) => document.getElementById(id);
+const order = shuffle(RADOVI.map((r) => r.code));
+const picks = [];
+const MAX = 5;
+
+function toggle(c) {
+  act();
+  const i = picks.indexOf(c);
+  if (i >= 0) picks.splice(i, 1); else if (picks.length < MAX) picks.push(c);
+  draw();
+}
+function move(i, d) {
+  act();
+  const j = i + d; if (j < 0 || j >= picks.length) return;
+  [picks[i], picks[j]] = [picks[j], picks[i]]; draw();
+}
+
+function draw() {
+  const p = $("picks");
+  p.innerHTML = "";
+  if (!picks.length) p.append(el("span", { class: "muted" }, "Još nisi odabrao nijedan rad."));
+  picks.forEach((c, i) => p.append(el("div", { class: "pick" },
+    el("span", { class: "n" }, String(i + 1)), el("img", { src: BY[c].img, alt: "" }), el("span", { class: "code" }, c),
+    el("button", { onclick: () => move(i, -1), "aria-label": "gore" }, "↑"),
+    el("button", { onclick: () => move(i, 1), "aria-label": "dolje" }, "↓"),
+    el("button", { onclick: () => toggle(c), "aria-label": "makni" }, "✕"))));
+  const grid = $("grid");
+  grid.innerHTML = "";
+  for (const c of order) {
+    const i = picks.indexOf(c);
+    const n = card(c, { onclick: () => toggle(c), cls: i >= 0 ? "sel" : "" });
+    if (i >= 0) n.append(el("div", { class: "rankbadge" }, String(i + 1)));
+    grid.append(n);
+  }
+  $("cnt").textContent = `Odabrano ${picks.length} od ${MAX}`;
+  $("done").disabled = !picks.length;
+  setMeta(`${picks.length}/${MAX}`);
+}
+
+$("done").onclick = () => {
+  act();
+  $("play").classList.add("hidden");
+  const k = picks.length;
+  ballotEditor($("result"), bordaTop(picks, k), "brzi",
+    `Bodovi po redoslijedu (${[...Array(k)].map((_, j) => k - j).join(" : ")}), svedeno na 100.`, { base: UX.bordaWeights(picks, k) });
+};
+draw();
+</script>
+</body>
+</html>

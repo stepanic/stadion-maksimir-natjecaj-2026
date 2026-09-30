@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swipe · prototip glasanja</title>
+<link rel="stylesheet" href="core.css">
+<style>
+  .deck { position: relative; height: min(62vh, 520px); max-width: 520px; margin: 0 auto; touch-action: none; }
+  .deck .work { position: absolute; inset: 0; cursor: grab; user-select: none; }
+  .deck .work img { aspect-ratio: auto; flex: 1; min-height: 0; height: auto; }
+  .deck .work.next { transform: scale(.95) translateY(10px); filter: brightness(.96); }
+  .stamp { position: absolute; top: 18px; padding: 6px 14px; border: 4px solid; border-radius: 10px; font-weight: 900;
+    font-size: 26px; letter-spacing: 1px; opacity: 0; transform: rotate(-12deg); background: rgba(255,255,255,.85); }
+  .stamp.yes { left: 16px; color: var(--ok); border-color: var(--ok); }
+  .stamp.no { right: 16px; color: var(--red); border-color: var(--red); transform: rotate(12deg); }
+  .actions { display: flex; justify-content: center; gap: 22px; margin: 16px 0; }
+  .round { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 28px; box-shadow: var(--shadow); }
+  .round.small { width: 48px; height: 48px; font-size: 20px; align-self: center; }
+  .round.no { color: var(--red); } .round.yes { color: var(--ok); }
+  .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .duel .work { cursor: pointer; }
+  .liked .work.sel::after { content: "✓"; position: absolute; top: 8px; right: 10px; background: var(--blue); color: #fff; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap narrow">
+  <div id="p1">
+    <h1>Sviđa li ti se ovaj stadion?</h1>
+    <p class="lead">Povuci desno ako ti se sviđa, lijevo ako ne. Ili koristi gumbe ili tipke <kbd>←</kbd> <kbd>→</kbd>. Brzo, bez razmišljanja: kasnije ćeš usporediti samo one koji su ti se svidjeli.</p>
+    <div class="progress"><i id="pg"></i></div>
+    <div class="deck" id="deck"></div>
+    <div class="actions">
+      <button class="round no" id="no" aria-label="Ne">✕</button>
+      <button class="round small" id="undo" aria-label="Vrati zadnji" title="Vrati zadnji">↩</button>
+      <button class="round yes" id="yes" aria-label="Sviđa mi se">♥</button>
+    </div>
+    <p class="center"><button class="btn hidden" id="early">Dosta je, idem dalje →</button></p>
+  </div>
+  <div id="p2" class="hidden liked">
+    <h1>Suzi izbor na najviše 12</h1>
+    <p class="lead" id="p2lead"></p>
+    <div class="grid" id="likedGrid"></div>
+    <p class="row" style="margin-top:12px"><span class="muted" id="p2count"></span><span class="spacer"></span><button class="btn primary" id="p2go">Dalje →</button></p>
+  </div>
+  <div id="p3" class="hidden">
+    <h1>Koji ti je od ova dva draži?</h1>
+    <p class="lead">Sad slažemo samo tvoje favorite, redom. Svaka odluka prepolovi preostale mogućnosti.</p>
+    <div class="progress"><i id="pg3"></i></div>
+    <div class="duel" id="duel"></div>
+    <p class="center" style="margin-top:14px"><button class="btn" id="manual">Preskoči dvoboje, raspodijelit ću sam</button></p>
+  </div>
+  <div id="result"></div>
+</div>
+<script src="radovi-data.js"></script>
+<script src="core.js"></script>
+<script>
+const { RADOVI, shuffle, header, setMeta, card, bordaTop, ballotEditor, act, rnd, el } = UX;
+header("Swipe · da / ne");
+
+const order = shuffle(RADOVI.map((r) => r.code));
+const liked = [], history = [];
+let i = 0, busy = false;
+const $ = (id) => document.getElementById(id);
+
+function drawDeck() {
+  const deck = $("deck");
+  deck.innerHTML = "";
+  if (i >= order.length) return toPhase2();
+  if (i + 1 < order.length) deck.append(card(order[i + 1], { cls: "next" }));
+  const top = card(order[i]);
+  top.append(el("div", { class: "stamp yes" }, "SVIĐA MI SE"), el("div", { class: "stamp no" }, "NE"));
+  deck.append(top);
+  drag(top);
+  $("pg").style.width = (i / order.length) * 100 + "%";
+  setMeta(`${i}/88 · sviđa ti se ${liked.length}`);
+  $("early").classList.toggle("hidden", i < 20 || liked.length < 2);
+}
+
+function decide(yes, node) {
+  if (busy || i >= order.length) return;
+  busy = true; act();
+  const code = order[i];
+  history.push([code, yes]);
+  if (yes) liked.push(code);
+  const fly = node || document.querySelector("#deck .work:last-child");
+  fly.style.transition = "transform .25s, opacity .25s";
+  fly.style.transform = `translateX(${yes ? 140 : -140}%) rotate(${yes ? 18 : -18}deg)`;
+  fly.style.opacity = "0";
+  i++;
+  setTimeout(() => { busy = false; drawDeck(); }, 200);
+}
+function undo() {
+  if (busy || !history.length) return;
+  act();
+  const [code, yes] = history.pop();
+  if (yes) liked.splice(liked.lastIndexOf(code), 1);
+  i--; drawDeck();
+}
+
+function drag(node) {
+  let x0 = null, dx = 0;
+  const yes = node.querySelector(".stamp.yes"), no = node.querySelector(".stamp.no");
+  node.addEventListener("pointerdown", (e) => { x0 = e.clientX; node.setPointerCapture(e.pointerId); node.style.transition = "none"; });
+  node.addEventListener("pointermove", (e) => {
+    if (x0 === null) return;
+    dx = e.clientX - x0;
+    node.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
+    yes.style.opacity = Math.max(0, Math.min(1, dx / 100));
+    no.style.opacity = Math.max(0, Math.min(1, -dx / 100));
+  });
+  const end = () => {
+    if (x0 === null) return;
+    x0 = null;
+    if (Math.abs(dx) > 100) return decide(dx > 0, node);
+    node.style.transition = "transform .2s"; node.style.transform = ""; yes.style.opacity = no.style.opacity = 0; dx = 0;
+  };
+  node.addEventListener("pointerup", end);
+  node.addEventListener("pointercancel", end);
+}
+
+// ── faza 2: ako je favorita previše, suzi na 12 ──
+function toPhase2() {
+  $("p1").classList.add("hidden");
+  if (liked.length <= 12) return toPhase3(liked.slice());
+  const pickd = new Set();
+  $("p2").classList.remove("hidden");
+  $("p2lead").textContent = `Svidjelo ti se ${liked.length} radova. Označi najviše 12 koje ćeš zatim usporediti.`;
+  const grid = $("likedGrid");
+  for (const c of liked) {
+    const n = card(c, { onclick: () => {
+      act();
+      if (pickd.has(c)) pickd.delete(c); else if (pickd.size < 12) pickd.add(c);
+      n.classList.toggle("sel", pickd.has(c)); upd();
+    } });
+    grid.append(n);
+  }
+  const upd = () => { $("p2count").textContent = `Označeno ${pickd.size}/12`; $("p2go").disabled = pickd.size < 1; };
+  $("p2go").onclick = () => { $("p2").classList.add("hidden"); toPhase3([...pickd]); };
+  upd();
+}
+
+// ── faza 3: poredaj favorite binarnim umetanjem (≈ n·log₂n dvoboja) ──
+function ask(a, b) {
+  return new Promise((res) => {
+    const box = $("duel");
+    box.innerHTML = "";
+    const pair = rnd() < 0.5 ? [a, b] : [b, a];
+    pair.forEach((c) => box.append(card(c, { onclick: () => { act(); res(c === a); } })));
+  });
+}
+async function toPhase3(items) {
+  if (items.length < 2) return finish(items);
+  $("p3").classList.remove("hidden");
+  // Put A iz istraživanja: suzi pa raspodijeli ručno, bez algoritamskog prijedloga.
+  $("manual").onclick = () => {
+    act();
+    $("p3").classList.add("hidden");
+    setMeta(`${i} swipeova · ručna raspodjela`);
+    ballotEditor($("result"), Object.fromEntries(items.map((c) => [c, 0])), "swipe-rucno",
+      `Svidjelo ti se ${liked.length} radova${items.length < liked.length ? `, a suzio/la si na ${items.length}` : ""}. Sad im sam podijeli 100 bodova.`);
+  };
+  items = shuffle(items);
+  const expected = Math.ceil(items.length * Math.log2(items.length));
+  let asked = 0;
+  const sorted = [items[0]];
+  for (let k = 1; k < items.length; k++) {
+    let lo = 0, hi = sorted.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      $("pg3").style.width = Math.min(100, (asked / expected) * 100) + "%";
+      setMeta(`dvoboj ${asked + 1} od najviše ~${expected}`);
+      const better = await ask(items[k], sorted[mid]);
+      asked++;
+      if (better) hi = mid; else lo = mid + 1;
+    }
+    sorted.splice(lo, 0, items[k]);
+  }
+  $("p3").classList.add("hidden");
+  finish(sorted, asked);
+}
+
+function finish(sorted, asked = 0) {
+  $("p1").classList.add("hidden");
+  const k = Math.min(5, sorted.length);
+  setMeta(`${i} swipeova · ${asked} dvoboja`);
+  if (!sorted.length) {
+    $("result").append(el("p", {}, "Nijedan rad ti se nije svidio. ", el("a", { href: "swipe.html" }, "Pokušaj ponovno"), "."));
+    return;
+  }
+  ballotEditor($("result"), bordaTop(sorted, k), "swipe",
+    `Od ${i} pregledanih radova svidjelo ti se ${liked.length}. ${asked ? `U ${asked} dvoboja poredali smo ih; ` : ""}prvih ${k} dobiva bodove po redu (${[...Array(k)].map((_, j) => k - j).join(" : ")}).`, { base: UX.bordaWeights(sorted, k) });
+}
+
+$("yes").onclick = () => decide(true);
+$("no").onclick = () => decide(false);
+$("undo").onclick = undo;
+$("early").onclick = () => { order.length = i; toPhase2(); };
+addEventListener("keydown", (e) => {
+  if ($("p1").classList.contains("hidden")) return;
+  if (e.key === "ArrowRight") decide(true);
+  else if (e.key === "ArrowLeft") decide(false);
+  else if (e.key === "Backspace") undo();
+});
+drawDeck();
+</script>
+</body>
+</html>

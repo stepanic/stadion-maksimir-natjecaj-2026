@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Žetoni · prototip glasanja</title>
+<link rel="stylesheet" href="core.css">
+<style>
+  .tray { position: sticky; bottom: 0; z-index: 10; background: #fff; border-top: 1px solid var(--line); padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
+  .tokens { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tok { width: 20px; height: 20px; border-radius: 50%; background: var(--red); box-shadow: inset 0 -2px 0 rgba(0,0,0,.2); transition: transform .15s, opacity .15s; }
+  .tok.used { opacity: .15; transform: scale(.8); }
+  .credits { flex: 1; min-width: 160px; }
+  .minus { position: absolute; top: 8px; left: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: #fff; box-shadow: var(--shadow); font-weight: 800; }
+  .modes { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .modes button { border: 0; background: #fff; padding: 8px 14px; font-weight: 600; }
+  .modes button.on { background: var(--blue); color: #fff; }
+  .pop { animation: pop .25s; } @keyframes pop { 50% { transform: scale(1.06); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="play">
+    <h1>Baci svoje žetone</h1>
+    <p class="lead" id="lead"></p>
+    <div class="row" style="margin-bottom:12px">
+      <span class="modes"><button id="mTok" class="on">Žetoni 10 × 10</button><button id="mQv">Kvadratno</button></span>
+      <label class="toggle"><input type="checkbox" id="onlySel"> samo odabrani</label>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div id="result" class="narrow" style="margin:0 auto"></div>
+</div>
+<div class="tray" id="tray">
+  <div class="tokens" id="tokens"></div>
+  <div class="credits hidden" id="credits"><div class="muted" id="ctext"></div><div class="progress" style="margin:4px 0 0"><i id="cbar"></i></div></div>
+  <span class="spacer"></span>
+  <button class="btn primary" id="done" disabled>Moj listić →</button>
+</div>
+<script src="radovi-data.js"></script>
+<script src="core.js"></script>
+<script>
+const { RADOVI, shuffle, header, setMeta, card, allocate, ballotEditor, act, el } = UX;
+header("Žetoni · dot / kvadratno glasanje");
+const $ = (id) => document.getElementById(id);
+
+const order = shuffle(RADOVI.map((r) => r.code));
+let mode = "tok";              // "tok": 10 žetona po 10 bodova · "qv": 100 kredita, n glasova = n² kredita
+const v = {};                  // broj žetona / glasova po radu
+const TOKENS = 10, CREDITS = 100;
+const cost = () => Object.values(v).reduce((s, n) => s + (mode === "qv" ? n * n : n), 0);
+const budget = () => (mode === "qv" ? CREDITS : TOKENS);
+const nextCost = (c) => (mode === "qv" ? 2 * (v[c] || 0) + 1 : 1);
+
+function setMode(m) {
+  if (m === mode) return;
+  if (mode) act();
+  mode = m;
+  for (const k of Object.keys(v)) delete v[k];
+  $("mTok").classList.toggle("on", m === "tok"); $("mQv").classList.toggle("on", m === "qv");
+  $("lead").innerHTML = m === "tok"
+    ? "Imaš <b>10 žetona</b>. Svaki vrijedi 10 bodova. Klikni rad da mu daš žeton, a više žetona na isti rad znači jaču podršku. <b>−</b> vraća žeton."
+    : "Imaš <b>100 kredita</b>. Prvi glas za rad košta 1, drugi 3, treći 5… (n glasova = n² kredita). Jaka podrška jednom radu je skupa, a široka podrška više radova jeftina. To je <b>kvadratno glasanje</b>.";
+  draw();
+}
+
+function add(c) {
+  if (cost() + nextCost(c) > budget()) return;
+  act(); v[c] = (v[c] || 0) + 1; draw(c);
+}
+function sub(c, e) {
+  e.stopPropagation(); act();
+  v[c]--; if (!v[c]) delete v[c]; draw();
+}
+
+function draw(pop) {
+  const grid = $("grid");
+  grid.innerHTML = "";
+  const only = $("onlySel").checked;
+  for (const c of order) {
+    if (only && !v[c]) continue;
+    const n = card(c, { onclick: () => add(c), cls: v[c] ? "sel" + (c === pop ? " pop" : "") : "" });
+    if (v[c]) {
+      n.append(el("div", { class: "badge" }, mode === "qv" ? `${v[c]} gl.` : `${v[c] * 10} b`));
+      n.append(el("button", { class: "minus", onclick: (e) => sub(c, e), "aria-label": "Vrati" }, "−"));
+    }
+    grid.append(n);
+  }
+  const used = cost();
+  $("tokens").classList.toggle("hidden", mode === "qv");
+  $("credits").classList.toggle("hidden", mode !== "qv");
+  $("tokens").innerHTML = "";
+  for (let i = 0; i < TOKENS; i++) $("tokens").append(el("span", { class: "tok" + (i < used ? " used" : "") }));
+  $("ctext").textContent = `Potrošeno ${used} od ${CREDITS} kredita`;
+  $("cbar").style.width = used + "%";
+  $("done").disabled = !Object.keys(v).length;
+  setMeta(mode === "qv" ? `${CREDITS - used} kredita` : `${TOKENS - used} žetona`);
+}
+
+function finish() {
+  act();
+  $("play").classList.add("hidden"); $("tray").classList.add("hidden");
+  const b = allocate(v);
+  const why = mode === "qv"
+    ? `Kvadratno glasanje: potrošio si ${cost()} od ${CREDITS} kredita. Bodovi su razmjerni broju glasova (ne kreditima).`
+    : `Svaki žeton vrijedi 10 bodova.${cost() < TOKENS ? ` Iskoristio si ${cost()} od 10 žetona, pa su bodovi razmjerno podignuti na 100.` : ""}`;
+  ballotEditor($("result"), b, mode === "qv" ? "kvadratno" : "zetoni", why);
+}
+
+$("mTok").onclick = () => setMode("tok");
+$("mQv").onclick = () => setMode("qv");
+$("onlySel").onchange = () => draw();
+$("done").onclick = finish;
+mode = "";
+setMode("tok");
+</script>
+</body>
+</html>

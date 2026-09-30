@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dvoboj · prototip glasanja</title>
+<link rel="stylesheet" href="core.css">
+<style>
+  .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .duel .work { cursor: pointer; }
+  .duel .work:hover { border-color: #9fb3d6; }
+  .duel .work.win { border-color: var(--ok); transform: scale(1.02); }
+  .duel .work.lose { opacity: .35; }
+  .vs { text-align: center; color: var(--muted); font-weight: 700; margin: 10px 0; }
+  @media (max-width: 560px) { .duel { gap: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap narrow">
+  <div id="play">
+    <h1>Koji ti se više sviđa?</h1>
+    <p class="lead">Dva rada, jedan klik. Nema točnog odgovora. Aplikacija bira parove tako da iz što manje dvoboja sazna tvoj ukus. Lijevo/desno je nasumično. Tipke: <kbd>←</kbd> <kbd>→</kbd>, a <kbd>↓</kbd> preskače.</p>
+    <div class="progress"><i id="pg"></i></div>
+    <div class="duel" id="duel"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="skip">Ne mogu odlučiti</button>
+      <div class="spacer"></div>
+      <button class="btn primary hidden" id="finish">Pokaži moj listić →</button>
+    </div>
+    <p class="muted" id="hint" style="font-size:14px"></p>
+  </div>
+  <div id="result"></div>
+</div>
+<script src="radovi-data.js"></script>
+<script src="core.js"></script>
+<script>
+const { RADOVI, shuffle, header, setMeta, card, bordaTop, ballotEditor, act, rnd } = UX;
+header("Dvoboj · parne usporedbe");
+
+const MIN = 20;                                   // nakon ovoliko odluka nudimo listić
+const R = {}, N = {}, W = {}, seen = new Set();
+for (const r of RADOVI) { R[r.code] = 1500; N[r.code] = 0; W[r.code] = 0; }
+let decisions = 0, cur = null, locked = false;
+
+function nextPair() {
+  // a: rad koji je najmanje puta viđen (pokrivenost), b: blizak po rejtingu, a još nisu bili u paru
+  const codes = shuffle(Object.keys(R));
+  const minN = Math.min(...codes.map((c) => N[c]));
+  const a = codes.find((c) => N[c] === minN);
+  let best = null, bestScore = Infinity;
+  for (const b of codes) {
+    if (b === a || seen.has([a, b].sort().join("|"))) continue;
+    const s = Math.abs(R[a] - R[b]) + 60 * N[b] + rnd() * 40;
+    if (s < bestScore) { bestScore = s; best = b; }
+  }
+  return rnd() < 0.5 ? [a, best] : [best, a];
+}
+
+function show() {
+  cur = nextPair();
+  const box = document.getElementById("duel");
+  box.innerHTML = "";
+  cur.forEach((c, i) => box.append(card(c, { onclick: () => pick(i) })));
+  const seenN = Object.values(N).filter((x) => x > 0).length;
+  setMeta(`odluka ${decisions} · viđeno ${seenN}/88`);
+  document.getElementById("pg").style.width = Math.min(100, (decisions / MIN) * 100) + "%";
+  document.getElementById("finish").classList.toggle("hidden", decisions < MIN);
+  document.getElementById("hint").textContent = decisions < MIN
+    ? `Još ${MIN - decisions} odluka do prijedloga listića. Što više, to točnije.`
+    : `Možeš završiti ili nastaviti. Viđeno je ${seenN} od 88 radova; nastavak pokazuje i ostale.`;
+}
+
+function pick(i) {
+  if (locked) return;
+  locked = true; act();
+  const [a, b] = cur, w = cur[i], l = cur[1 - i];
+  const ea = 1 / (1 + 10 ** ((R[l] - R[w]) / 400));   // Elo, K = 32
+  R[w] += 32 * (1 - ea); R[l] -= 32 * (1 - ea);
+  N[a]++; N[b]++; W[w]++; decisions++;
+  seen.add([a, b].sort().join("|"));
+  const cards = document.querySelectorAll("#duel .work");
+  cards[i].classList.add("win"); cards[1 - i].classList.add("lose");
+  setTimeout(() => { locked = false; show(); }, 260);
+}
+
+function skip() {
+  act();
+  const [a, b] = cur; N[a]++; N[b]++; seen.add([a, b].sort().join("|"));
+  show();
+}
+
+function finish() {
+  const ranked = Object.keys(R).filter((c) => N[c] > 0).sort((x, y) => R[y] - R[x] || W[y] - W[x]);
+  document.getElementById("play").classList.add("hidden");
+  setMeta(`${decisions} odluka`);
+  ballotEditor(document.getElementById("result"), bordaTop(ranked, 5), "dvoboj",
+    `Iz ${decisions} dvoboja izračunali smo tvoju ljestvicu (Elo). Prvih 5 dobiva bodove u omjeru 5 : 4 : 3 : 2 : 1.`, { base: UX.bordaWeights(ranked, 5) });
+}
+
+document.getElementById("skip").onclick = skip;
+document.getElementById("finish").onclick = finish;
+addEventListener("keydown", (e) => {
+  if (document.getElementById("play").classList.contains("hidden")) return;
+  if (e.key === "ArrowLeft") pick(0);
+  else if (e.key === "ArrowRight") pick(1);
+  else if (e.key === "ArrowDown") skip();
+});
+show();
+</script>
+</body>
+</html>
