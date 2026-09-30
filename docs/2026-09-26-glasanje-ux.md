@@ -83,6 +83,7 @@ lokalno i na produkciji, kao i `npm run check` prije i poslije deploya.
 
 ## Vezani dokumenti
 
+- [2026-09-30-glasanje-ux-istrazivanje.md](2026-09-30-glasanje-ux-istrazivanje.md): istraživanje UX obrazaca (dvoboj, swipe, MaxDiff, kvadratno) i offline prototipi u `prototipi/glasanje-ux/`
 - [2026-09-29-glasanje-obilazak-kao-posjetitelj.md](2026-09-29-glasanje-obilazak-kao-posjetitelj.md): obilazak kao posjetitelj, nalazi O-1…O-6 (odjava ne briše ključ, 1 glasač otkriva listić)
 - [2026-09-25-glasanje-javnosti.md](2026-09-25-glasanje-javnosti.md): pravila glasanja, backend, zamke faze 1
 - [2026-09-25-regresijske-provjere.md](2026-09-25-regresijske-provjere.md): `npm run check` i postupak deploya
