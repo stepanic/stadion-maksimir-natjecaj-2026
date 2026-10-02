@@ -73,7 +73,7 @@ const S = {
       commitment: S.key?.commitment ?? S.mod?.localCommitment() ?? null,
       nullifier: S.nullifier,
       ballot: S.ballot,
-      flow: S.flow ? { purpose: S.flow.purpose, steps: { ...S.flow.steps }, keyStage: S.flow.keyStage, error: S.flow.error, done: S.flow.done, status: S.flow.status } : null,
+      flow: S.flow ? { purpose: S.flow.purpose, items: { ...S.flow.items }, steps: { ...S.flow.steps }, keyStage: S.flow.keyStage, error: S.flow.error, done: S.flow.done, status: S.flow.status } : null,
       positions: S.flow?.positions ?? [],
     };
   },
