@@ -64,6 +64,29 @@ Bez gotovog uzora, dakle naš doprinos:
 - anonimno spajanje glasova pri spajanju duplikata (Semaphore nullifier);
 - glasovi za privatnu osobu koja još nije pristala, a ne smiju biti javni.
 
+## Postoje li gotova rješenja (istraživanje 3. 10. 2026.)
+
+Gotove platforme koja radi „složi svoj parlament” s naknadnim pristankom kandidata
+nema. Korisniku je najvrjedniji švicarski princip: narod smije izabrati i nekoga tko
+se nije kandidirao, pa izbor postaje čast koju narod daje, a ne nagrada za
+samonametanje. Dijelove ideje već su isprobali ovi sustavi:
+
+| Sustav | Što je radio | Pouka |
+|---|---|---|
+| [Švicarske općine, većinski izbori](https://www.zh.ch/de/politik-staat/wahlen-abstimmungen/gemeindewahlen.html) | prazan listić, upiše se bilo koja osoba s pravom da bude birana; općina bira hoće li dopustiti sve ili samo predložene; [Bauen 2008.](https://www.swissinfo.ch/eng/compulsory-service_tapped-for-public-office-but-unwilling-to-serve/42414478) izabrana nekandidatkinja; [*Amtszwang*](https://hub.hslu.ch/gemeindengestalten/amtszwang-in-schweizer-gemeinden-notwendiges-uebel-oder-ueberholte-praxis/) u 7 kantona | radi jer općina ima registar stanovnika; za RH tu ulogu ima Certilia |
+| [Francis Matthey, 1993.](https://en.wikipedia.org/wiki/Francis_Matthey) | parlament ga izabrao u Savezno vijeće umjesto službene kandidatkinje; odbio je, izabrana Ruth Dreifuss | „ne želim” je legitiman ishod |
+| [Widmer-Schlumpf, 2007.](https://en.wikipedia.org/wiki/2007_Swiss_Federal_Council_election) | izabrana umjesto Blochera, nije bila službena kandidatkinja; prihvatila sljedeće jutro; ime skrivano do izbora | tajnost do odluke štiti od pritiska |
+| [LaPrimaire.org](https://fr.wikipedia.org/wiki/LaPrimaire.org) (FR, 2016./17.) | građani se kandidiraju ili predlažu osobe; prag 500 podrški; 215 → 16 kvalificiranih; većinske prosudbe | najbliže ideji; prag + ocjenjivanje; pobjednica nije skupila zakonske potpise |
+| [Primaire populaire](https://en.wikipedia.org/wiki/2022_French_People%27s_Primary) (FR, 2022.) | ~467.000 glasača; Mélenchon, Jadot i Hidalgo [stavljeni na glasanje bez pristanka](https://www.lejdd.fr/Politique/presidentielle-de-2022-melenchon-jadot-ou-hidalgo-candidats-malgre-eux-a-une-primaire-4057409) i javno odbili | ne objavljivati osobu bez pristanka, inače otpor i gubitak legitimiteta |
+| [Voices for Indi](https://en.wikipedia.org/wiki/Voices_movement_(Australia)) (AU, 2012./13.) | [razgovori za kuhinjskim stolom](https://www.communityindependentsproject.org/cip-resources/kitchen-table-conversations), zajednica bira nezavisnu kandidatkinju, pobijedila 2013. | zajednica prvo, kandidat poslije; uživo, bez platforme |
+
+Nitko od njih nije imao državno potvrđen identitet glasača i kandidata ni
+provjerljivost na lancu. Švicarski „prazan listić” na razini države bio bi nov.
+
+Napomena: za švicarske općine nije nađeno točno pravilo kako se razlikuju dvije osobe
+istog imena na praznom listiću (solothurnski priručnik objavljuje izabrane kao „ime,
+prezime, godište, zanimanje”). Provjeriti u kantonskom zakonu ako zatreba.
+
 ## Rizici
 
 - **GDPR, predloženi:** objava imena privatne osobe s brojem glasova bez pristanka.
