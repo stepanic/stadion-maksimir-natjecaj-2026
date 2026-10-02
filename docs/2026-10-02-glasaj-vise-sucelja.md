@@ -1,13 +1,13 @@
 # Glasanje: više sučelja nad istim listićem (/glasaj)
 
-Stanje: 2. 10. 2026. Lokalno izrađeno i testirano, još nije na produkciji.
+Stanje: 2. 10. 2026. Na produkciji od 2. 10. 2026. (Worker verzija `3c3e3932`), s poveznicom s klasičnog `/glasanje`.
 
 ## Sažetak
 
 `/glasaj` je drugo sučelje za glasanje, usporedno s klasičnim `/glasanje`. Glasač izabere
 favorite redom, dobije prijedlog bodova koji može mijenjati, vidi pregled listića i predaje ga.
-Ispod su isti backend, isti ugovor na Gnosisu i isti tok predaje. Klasično sučelje nije
-mijenjano i dalje radi kao prije.
+Ispod su isti backend, isti ugovor na Gnosisu i isti tok predaje. Klasično sučelje radi kao prije;
+jedina vidljiva izmjena na njemu je red „Novo: Jednostavnije glasanje u 3 koraka →” iznad koraka.
 
 | | `/glasanje` (klasično) | `/glasaj` (novo) |
 |---|---|---|
@@ -68,13 +68,14 @@ U fazi 1 (bez lanca) predaja ide kroz klasični listić; nacrt je već ondje.
 
 | Datoteka | Izmjena |
 |---|---|
+| `web/src/glasanjeView.ts` | jedan red s poveznicom na `/glasaj` iznad koraka (`.gl-alt`) |
 | `web/src/chainVoteView.ts` | testni hook `__chainVote` izlaže i `items` toka (javni podaci; ponašanje isto) |
 | `web/src/app.ts` | ruta `glasaj`, stavka u navigaciji, puna širina |
 | `web/src/meta.ts` | naslov, opis i OG za `/glasaj`; ruta ulazi u prerender i sitemap |
 | `web/scripts/regression.mjs` | `/glasaj` se puni uživo, pa se ne uspoređuje s prerenderom (kao `/glasanje`) |
 | `web/src/style.css` | nove klase `.gj-*`; postojeće nisu dirane |
 
-`glasanjeView.ts`, `glasanje.ts`, `chainVote.ts`, `chain/`, relayer i worker nisu mijenjani.
+Logika `glasanjeView.ts` (osim te poveznice), `glasanje.ts`, `chainVote.ts`, `chain/`, relayer i worker nisu mijenjani.
 
 ## Testovi
 
@@ -88,7 +89,7 @@ U fazi 1 (bez lanca) predaja ide kroz klasični listić; nacrt je već ondje.
 `test:paritet` treba Vite (`npx vite --port 5173`). Lažni backend (`scripts/lib/glasanje-mock.mjs`)
 presreće Supabase, GitHub i Gnosis RPC (`ballotOf`, `results`, `voters` kodirani kao ugovor), pa
 ništa ne ide na produkciju. Paritetni scenariji prvo su napisani i pušteni samo nad klasičnim
-sučeljem (commit `02a2748`), a tek onda je dodano novo.
+sučeljem (commit `d2c7eb6`), a tek onda je dodano novo.
 
 Provjera osjetljivosti testa: dvije namjerne greške u `glasajView.ts` (u tok ide prijedlog umjesto
 listića s pregleda; prijenos šalje nacrt umjesto glasa iz faze 1) test je uhvatio, pa su vraćene.
@@ -98,11 +99,13 @@ prolazi, `test:paritet` 72/72, `check` prolazi nad lokalnim workerom.
 
 ## Otvoreno
 
-1. **Deploy.** Nije napravljen. Prije: `npm run check` nad produkcijom, poslije isto plus
-   read-only obilazak `/glasaj` (postupak u [regresijskim provjerama](2026-09-25-regresijske-provjere.md)).
-2. **Kako ljudi dolaze na `/glasaj`.** Zasad samo navigacija. Mogućnosti: poveznica s klasičnog
-   `/glasanje` (mala izmjena postojeće stranice), ili nasumična dodjela sučelja za usporedbu
-   prema [istraživanju](2026-09-30-glasanje-ux-istrazivanje.md) (A/B/C, mjerila objaviti unaprijed).
+1. **Deploy (napravljeno 2. 10. 2026.).** `npm run check` nad produkcijom prije (137 ruta) i poslije
+   (139 ruta) prošao. Read-only obilazak u Braveu: poveznica na `/glasanje` vidljiva, klik vodi na
+   `/glasaj`, glas na lancu (revizija 4) prikazan jednako u oba sučelja, nacrt nije diran, konzola bez grešaka.
+2. **Kako ljudi dolaze na `/glasaj`.** Poveznica s `/glasanje` i stavka u navigaciji. Nasumična dodjela
+   sučelja (A/B/C iz [istraživanja](2026-09-30-glasanje-ux-istrazivanje.md)) nije uvedena: bez mjerenja
+   ne bi ništa pokazala, a mjerenje traži odluku što se i gdje bilježi (pravilo 2: ništa na lancu,
+   samo zbirno offchain) i unaprijed objavljena mjerila.
 3. **Ostale varijante iz prototipa** (dvoboj, MaxDiff, žetoni) mogu se dodati na isti način:
    novi ekran izbora koji puni `st.picks` ili `st.items`, ostalo je zajedničko.
 4. **Swipe:** drugi prolaz kroz odbijene radove (protiv pada prihvaćanja kroz niz) nije napravljen.
