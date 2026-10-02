@@ -179,6 +179,18 @@ raditi i pod happy-domom. happy-dom nema `table.tHead`, `table.tBodies` ni `row.
 Rješenje je koristiti samo `querySelector`/`querySelectorAll`. I: `npm run check … | tail` guta izlazni kod,
 pa se lanac `check && commit && deploy` nastavi i kad provjera padne. Izlaz preusmjeri u datoteku.
 
+## Prolazni 404 odmah nakon deploya (2. 10. 2026.)
+
+`npm run check` pokrenut odmah nakon `npm run deploy` (verzija `56c00290`) pao je s dvije greške u konzoli:
+`/radovi/GGWUGWAZB` i `/radovi/J8B0FD4Q0`, „Failed to load resource: 404”. Same stranice su vraćale 200, a
+ponovno učitavanje tih stranica (Playwright, praćeni svi odgovori ≥ 400) nije pokazalo nijedan 4xx. Isti sadržaj
+je sat ranije prošao provjeru i prije i poslije deploya. Najvjerojatnije se dio zahtjeva u prvim sekundama
+poslužio iz stare verzije koja traži hashirane assete kojih u novoj više nema.
+
+Pravilo: nakon deploya pričekaj oko minutu prije provjere. Ako padne samo na „greške u konzoli” s 404 na
+nekoliko ruta, ciljano ponovno učitaj baš te rute i zabilježi sve odgovore ≥ 400 (ne cijeli `check` ispočetka).
+Ako se ponovi, to je stvarna greška.
+
 ## Vezani dokumenti
 
 - [`2026-09-28-3d-model-i-medijski-arhiv.md`](2026-09-28-3d-model-i-medijski-arhiv.md): 3D model i medijski arhiv
