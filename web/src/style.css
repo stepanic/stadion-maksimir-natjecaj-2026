@@ -2402,6 +2402,9 @@ body.lb-open {
 
 /* ── /glasaj: jednostavnije sučelje za isti listić (glasajView.ts) ───────────── */
 .gj { width: 100%; }
+.gl-alt { margin: 0 0 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: #e8eef7; font-size: 14px; }
+.gl-alt > span:first-child { font-weight: 700; color: var(--navy); }
+.gl-alt a { font-weight: 600; }
 .gj-hero h1 { margin-bottom: 8px; }
 .gj-links { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: 12px 0 0; }
 .gj-steps { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }

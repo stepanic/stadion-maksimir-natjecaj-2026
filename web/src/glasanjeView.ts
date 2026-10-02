@@ -1010,6 +1010,8 @@ function draw() {
       </div>
     </section>
 
+    <p class="gl-alt"><span>Novo:</span> <a href="${link("glasaj")}">Jednostavnije glasanje u 3 koraka →</a>
+      <span class="muted">izaberi favorite, provjeri bodove, predaj. Isti glas i isti listić.</span></p>
     ${stepsHtml()}
     ${onChain() ? CVV.bannerHtml() : ""}
     ${st.msg ? `<div class="gl-msg gl-msg--${st.msg.kind}">${esc(st.msg.text)}</div>` : ""}

@@ -233,7 +233,7 @@ const glasajOnly = [
       await page.locator(`.gl-row[data-code="${order[0]}"] [data-f="num"]`).press("Tab");
       await page.fill(`.gl-row[data-code="${order[1]}"] [data-f="num"]`, "10");
       await page.locator(`.gl-row[data-code="${order[1]}"] [data-f="num"]`).press("Tab");
-      await page.goto(BASE + "/glasaj", { waitUntil: "networkidle" });
+      await page.click('.gl-alt a[href="/glasaj"]');
       await page.waitForSelector('[data-act="resume"]');
       await page.click('[data-act="resume"]');
       const back = await page.evaluate(() => globalThis.__glasaj.state.items);
