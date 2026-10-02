@@ -2401,7 +2401,7 @@ body.lb-open {
 }
 
 /* ── /glasaj: jednostavnije sučelje za isti listić (glasajView.ts) ───────────── */
-.gj { max-width: 980px; margin: 0 auto; }
+.gj { width: 100%; }
 .gj-hero h1 { margin-bottom: 8px; }
 .gj-links { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: 12px 0 0; }
 .gj-steps { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
