@@ -35,6 +35,7 @@ import chainWebBaza from "../../docs/blockchain/04-web-i-baza.md?raw";
 import chainAdrKljuc from "../../docs/blockchain/adr/0001-kljuc-glasaca-passkey-i-24-rijeci.md?raw";
 import chainSesija from "../../docs/2026-09-26-glasanje-onchain.md?raw";
 import glasanjeDanD from "../../docs/2026-09-26-dan-d.md?raw";
+import glasanjeViseSucelja from "../../docs/2026-10-02-glasaj-vise-sucelja.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -250,6 +251,14 @@ export const docs: DocSection[] = [
         subtitle: "26.9.2026.: što se promijenilo, što to znači za glasača, provjeri sam",
         repoPath: "docs/2026-09-26-dan-d.md",
         raw: glasanjeDanD,
+        section: "glasanje",
+      },
+      {
+        slug: "glasanje-vise-sucelja",
+        title: "Više sučelja, isti listić (/glasaj)",
+        subtitle: "Jednostavnije glasanje u 3 koraka nad istim backendom i lancem; testovi pariteta",
+        repoPath: "docs/2026-10-02-glasaj-vise-sucelja.md",
+        raw: glasanjeViseSucelja,
         section: "glasanje",
       },
       {

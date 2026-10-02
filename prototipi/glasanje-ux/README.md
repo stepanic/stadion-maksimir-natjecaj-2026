@@ -63,5 +63,11 @@ mijenjati bez diranja ugovora, registrara ili relayera. Da to ostane istina, vri
 4. Gledaj „Odgovara mišljenju” više nego „Zabavno”. Zabavno sučelje koje daje listić s kojim se
    osoba ne slaže gore je od dosadnog.
 
+## Produkcijska implementacija
+
+Varijante „Brzi izbor” (favoriti redom) i „Swipe” prenesene su u stranicu `/glasaj` nad
+pravim backendom i lancem, usporedno s klasičnim `/glasanje`. Pravila 1–4 iznad tamo vrijede i
+pokriva ih test pariteta: [`docs/2026-10-02-glasaj-vise-sucelja.md`](../../docs/2026-10-02-glasaj-vise-sucelja.md).
+
 Istraživanje literature i primjera je u
 [`docs/2026-09-30-glasanje-ux-istrazivanje.md`](../../docs/2026-09-30-glasanje-ux-istrazivanje.md).

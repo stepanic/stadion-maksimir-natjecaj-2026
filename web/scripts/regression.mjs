@@ -89,8 +89,8 @@ const contentOf = (html) =>
     return c.innerHTML.replace(/\s+/g, " ").trim();
   }, html);
 
-// /glasanje i objave pune se uživo; dokumenti /glasanje-* su obični dokumenti.
-const isLive = (p) => p === "/glasanje" || p.startsWith("/glasanje/");
+// /glasanje, /glasaj i objave pune se uživo; dokumenti /glasanje-* su obični dokumenti.
+const isLive = (p) => p === "/glasanje" || p === "/glasaj" || p.startsWith("/glasanje/");
 const newSinceBaseline = [];
 for (const p of paths) {
   const raw = await (await get(BASE + p)).text();

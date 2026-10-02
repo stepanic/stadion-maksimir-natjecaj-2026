@@ -7,6 +7,7 @@ import { landingHtml } from "./landing";
 import { renderResultsIndex, renderAward } from "./rezultatiView";
 import { renderRadoviIndex, renderRad } from "./radoviView";
 import { renderGlasanje } from "./glasanjeView";
+import { renderGlasaj } from "./glasajView";
 import { renderShare } from "./shareView";
 import { link } from "./routes";
 import { applyMeta } from "./meta";
@@ -23,6 +24,7 @@ export function buildNav() {
   html.push(`<a class="nav-home nav-results" href="${link("rezultati")}" data-slug="rezultati">Rezultati natječaja · 5 nagrađenih radova</a>`);
   html.push(`<a class="nav-home nav-results" href="${link("radovi")}" data-slug="radovi">Svih 88 natječajnih radova</a>`);
   html.push(`<a class="nav-home nav-results" href="${link("glasanje")}" data-slug="glasanje">Glasanje javnosti · tvojih 100 bodova</a>`);
+  html.push(`<a class="nav-home nav-results" href="${link("glasaj")}" data-slug="glasaj">Glasaj u 3 koraka · jednostavnije</a>`);
   for (const section of docs) {
     html.push(`<div class="nav-section">`);
     html.push(`<div class="nav-section-title">${section.title}</div>`);
@@ -171,7 +173,7 @@ export async function route() {
   renderedPath = location.pathname;
   applyMeta(slug);
   // Mreža svih radova koristi punu širinu ekrana; ostale stranice ostaju u stupcu za čitanje.
-  contentEl.classList.toggle("content--wide", slug === "radovi" || slug === "glasanje");
+  contentEl.classList.toggle("content--wide", slug === "radovi" || slug === "glasanje" || slug === "glasaj");
   if (!slug) {
     renderHome();
     return;
@@ -185,6 +187,13 @@ export async function route() {
     setActiveNav("glasanje");
     window.scrollTo({ top: 0 });
     await renderShare(contentEl, slug.slice("glasanje/g/".length));
+    return;
+  }
+  if (slug === "glasaj") {
+    setCrumbs([{ label: "Naslovnica", href: link("") }, { label: "Glasanje javnosti", href: link("glasanje") }, { label: "Glasaj u 3 koraka" }]);
+    setActiveNav("glasaj");
+    window.scrollTo({ top: 0 });
+    await renderGlasaj(contentEl);
     return;
   }
   if (slug === "glasanje") {

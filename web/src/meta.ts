@@ -32,6 +32,7 @@ export function allRoutes(): string[] {
     "radovi",
     ...radovi.map((r) => `radovi/${r.code}`),
     "glasanje",
+    "glasaj",
     ...docs.flatMap((s) => s.items.map((d) => d.slug)),
   ];
 }
@@ -79,6 +80,12 @@ export function pageMeta(slug: string): PageMeta {
     return m(
       "Glasanje javnosti za novi Stadion Maksimir",
       "Svaki građanin s eOsobnom ima 100 bodova za 88 natječajnih radova. Provjerljivo do Bitcoina.",
+      "/og-glasanje.png"
+    );
+  if (slug === "glasaj")
+    return m(
+      "Glasaj za novi Maksimir u 3 koraka",
+      "Izaberi favorite među 88 natječajnih radova, provjeri bodove i predaj glas eOsobnom. Isti glas kao na klasičnom listiću, samo jednostavnije.",
       "/og-glasanje.png"
     );
   // Objava ima svoju OG karticu na /g/<id> (Pages Function); ova ruta se ne indeksira.

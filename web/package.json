@@ -13,7 +13,8 @@
     "check": "node scripts/regression.mjs",
     "test:relayer": "node --test --experimental-strip-types worker/relayer/test/*.test.ts",
     "typecheck": "tsc --noEmit -p .",
-    "test:paritet": "node scripts/glasanje-paritet.mjs"
+    "test:paritet": "node scripts/glasanje-paritet.mjs",
+    "test:glasanje": "node --test --experimental-strip-types test/*.test.ts"
   },
   "dependencies": {
     "@scure/bip39": "^1.6.0",

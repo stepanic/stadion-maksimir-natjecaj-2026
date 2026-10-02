@@ -45,7 +45,30 @@ const klasicno = {
   },
 };
 
-const UIS = [klasicno].filter((u) => !ONLY || u.name === ONLY);
+const glasaj = {
+  name: "glasaj",
+  path: "/glasaj",
+  /** Kroz sučelje: favoriti redom → točni bodovi upisani u polja → pregled. */
+  async compose(page, items) {
+    const start = page.locator('[data-act="begin"], [data-act="new"]').first();
+    await start.click();
+    await page.click('[data-act="via-favoriti"]');
+    const order = Object.entries(items).sort(([, a], [, b]) => b - a).map(([c]) => c);
+    for (const c of order) await page.click(`.gj-pick[data-pick="${c}"]`);
+    await page.click('[data-act="to-points"]');
+    for (const c of order) {
+      await page.fill(`.gj-rows li[data-code="${c}"] input`, String(items[c]));
+      await page.locator(`.gj-rows li[data-code="${c}"] input`).press("Tab");
+    }
+    await page.click('[data-act="to-review"]');
+  },
+  submit: (page) => page.locator('[data-act="transfer"], [data-act="submit"]').first().click(),
+  submitLabel: (page) => page.locator('[data-act="transfer"], [data-act="submit"]').first().innerText(),
+  counted: klasicno.counted,
+  withdraw: klasicno.withdraw,
+};
+
+const UIS = [klasicno, glasaj].filter((u) => !ONLY || u.name === ONLY);
 
 // ── scenariji ──────────────────────────────────────────────────────────────────
 
@@ -114,6 +137,139 @@ const scenarios = [
   },
 ];
 
+// ── samo /glasaj: putovi koje klasični listić nema ───────────────────────────────
+
+const g = () => (p) => p.evaluate(() => globalThis.__glasaj.state);
+const glasajOnly = [
+  {
+    name: "favoriti: prijedlog po redoslijedu, preseti, ručne izmjene, svedi na 100",
+    opts: { signedIn: true },
+    async run({ page }) {
+      const st = g();
+      await page.click('[data-act="begin"]');
+      await page.click('[data-act="via-favoriti"]');
+      const order = (await st(page)).order;
+      check(order.length === 88 && order.join() !== [...order].sort().join(), "88 radova, nasumičan redoslijed");
+      const five = order.slice(0, 5);
+      for (const c of five) await page.click(`.gj-pick[data-pick="${c}"]`);
+      check(JSON.stringify((await st(page)).picks) === JSON.stringify(five), "favoriti su zapamćeni redom klika");
+      await page.click('.gj-tray [data-down="0"]');
+      check((await st(page)).picks[1] === five[0], "strelica ↓ mijenja redoslijed");
+      await page.click('.gj-tray [data-up="1"]');
+      await page.click('[data-act="to-points"]');
+      let s = await st(page);
+      check(JSON.stringify(five.map((c) => s.items[c])) === "[33,27,20,13,7]", `prijedlog Borda 33/27/20/13/7 (${five.map((c) => s.items[c])})`);
+      check(same(await draftOf(page), s.items), "prijedlog je odmah u zajedničkom nacrtu");
+      await page.click('[data-preset="equal"]');
+      s = await st(page);
+      check(five.every((c) => s.items[c] === 20), "„Svima jednako” daje 20 svakome");
+      await page.click(`.gj-rows li[data-code="${five[0]}"] [data-nudge="5"]`);
+      s = await st(page);
+      check(s.items[five[0]] === 25 && s.preset === null, "+ dodaje 5 bodova, preset više nije aktivan");
+      check(await page.locator('[data-act="to-review"]').isDisabled(), "s 105 bodova nema dalje");
+      check(/5 bodova previše/.test(await page.locator("[data-meter]").innerText()), "piše koliko je previše");
+      await page.click('[data-act="fit"]');
+      s = await st(page);
+      check(Object.values(s.items).reduce((a, b) => a + b, 0) === 100, `„Svedi na 100” (${JSON.stringify(s.items)})`);
+      await page.click('[data-preset="first"]');
+      s = await st(page);
+      check(s.items[five[0]] === 100 && five.slice(1).every((c) => s.items[c] === 0), "„Sve prvom”: 100 prvom, ostali 0");
+      check((await page.locator(".gj-rows li.is-zero").count()) === 4, "radovi s 0 bodova su označeni");
+      await page.click('[data-preset="rank"]');
+      await page.click('[data-act="to-review"]');
+      const shown = await page.$$eval(".gj-list li", (lis) => lis.map((l) => Number(l.querySelector("strong").textContent)));
+      check(JSON.stringify(shown) === "[33,27,20,13,7]", `pregled pokazuje bodove (${shown})`);
+      const canon = await page.locator(".gj-tech code").textContent();
+      check(canon.split(",").length === 5 && canon === [...canon.split(",")].sort().join(","), `tehnički zapis je kanonski (sortiran po šifri): ${canon}`);
+      await page.click('[data-act="submit"]');
+      const f = await flowState(page);
+      check(f?.purpose === "cast" && same(f.items, (await st(page)).items), "u tok ide točno listić s pregleda");
+      await page.keyboard.press("Escape");
+      check((await flowState(page)) === null, "Esc zatvara tok bez predaje");
+      check((await st(page)).screen === "pregled", "nakon Esc glasač je i dalje na pregledu");
+    },
+  },
+  {
+    name: "jedan po jedan: sviđa/ne, vrati, dosta → favoriti samo iz onih koji se sviđaju",
+    opts: { signedIn: true },
+    async run({ page }) {
+      const st = g();
+      await page.click('[data-act="begin"]');
+      await page.click('[data-act="via-swipe"]');
+      const keys = ["ArrowRight", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowLeft", "ArrowLeft", "ArrowRight", "Backspace", "ArrowLeft"];
+      for (const k of keys) await page.keyboard.press(k);
+      let s = await st(page);
+      check(s.seen === 10 && s.liked.length === 3, `10 pregledanih, 3 sviđa (${s.seen}, ${s.liked.length})`);
+      check(JSON.stringify(s.liked) === JSON.stringify([s.order[0], s.order[2], s.order[5]]), "„Vrati” poništava zadnju odluku");
+      await page.click('[data-act="no"]');
+      await page.click('[data-act="yes"]');
+      s = await st(page);
+      check(s.seen === 12 && s.liked.length === 4, "gumbi ✕ i ♥ rade kao tipke");
+      await page.click('[data-act="enough"]');
+      check((await page.locator(".gj-pick").count()) === 4, "biraju se samo radovi koji se sviđaju");
+      for (const c of s.liked) await page.click(`.gj-pick[data-pick="${c}"]`);
+      await page.click('[data-act="to-points"]');
+      await page.click('[data-act="to-review"]');
+      await page.click('[data-act="submit"]');
+      const f = await flowState(page);
+      check(f && same(Object.fromEntries(Object.keys(f.items).map((c) => [c, 1])), Object.fromEntries(s.liked.map((c) => [c, 1]))), "listić čine točno favoriti iz swipea");
+    },
+  },
+  {
+    name: "isti nacrt u oba sučelja (prijelaz /glasaj ↔ /glasanje)",
+    opts: { signedIn: false },
+    async run({ page }) {
+      await page.click('[data-act="begin"]');
+      await page.click('[data-act="via-favoriti"]');
+      const order = (await page.evaluate(() => globalThis.__glasaj.state.order)).slice(0, 2);
+      for (const c of order) await page.click(`.gj-pick[data-pick="${c}"]`);
+      await page.click('[data-act="to-points"]');
+      const items = await page.evaluate(() => globalThis.__glasaj.state.items);
+      await page.goto(BASE + "/glasanje", { waitUntil: "networkidle" });
+      await chainReady(page);
+      const rows = await page.$$eval(".gl-row", (rs) => Object.fromEntries(rs.map((r) => [r.dataset.code, Number(r.querySelector('[data-f="num"]').value)])));
+      check(same(rows, items), `klasični listić vidi isti nacrt (${JSON.stringify(rows)})`);
+      await page.fill(`.gl-row[data-code="${order[0]}"] [data-f="num"]`, "90");
+      await page.locator(`.gl-row[data-code="${order[0]}"] [data-f="num"]`).press("Tab");
+      await page.fill(`.gl-row[data-code="${order[1]}"] [data-f="num"]`, "10");
+      await page.locator(`.gl-row[data-code="${order[1]}"] [data-f="num"]`).press("Tab");
+      await page.goto(BASE + "/glasaj", { waitUntil: "networkidle" });
+      await page.waitForSelector('[data-act="resume"]');
+      await page.click('[data-act="resume"]');
+      const back = await page.evaluate(() => globalThis.__glasaj.state.items);
+      check(same(back, { [order[0]]: 90, [order[1]]: 10 }), `/glasaj nastavlja izmjene s klasičnog (${JSON.stringify(back)})`);
+    },
+  },
+  {
+    name: "faza 1 bez lanca: predaja ide kroz klasični listić s istim nacrtom",
+    opts: { chain: false, signedIn: true },
+    async run({ page }) {
+      await glasaj.compose(page, { [A]: 55, [B]: 45 });
+      check((await page.locator('[data-act="submit"]').count()) === 0, "nema predaje izvan lanca");
+      await page.click('[data-act="classic"]');
+      await page.waitForSelector('[data-act="submit"]');
+      check(same(await draftOf(page), { [A]: 55, [B]: 45 }), "nacrt je prenesen");
+      check(!(await page.locator('[data-act="submit"]').isDisabled()), "klasični listić je spreman za predaju");
+    },
+  },
+  {
+    name: "ograničenja: najviše 10 favorita, pretraga, prazan listić nema dalje",
+    opts: {},
+    async run({ page }) {
+      await page.click('[data-act="begin"]');
+      await page.click('[data-act="via-favoriti"]');
+      check(await page.locator('[data-act="to-points"]').isDisabled(), "bez favorita nema dalje");
+      const order = await page.evaluate(() => globalThis.__glasaj.state.order);
+      for (const c of order.slice(0, 11)) await page.click(`.gj-pick[data-pick="${c}"]`);
+      const s = await page.evaluate(() => globalThis.__glasaj.state);
+      check(s.picks.length === 10, "jedanaesti favorit se ne dodaje");
+      check(/Najviše 10 favorita/.test(await page.locator(".gl-msg--err").innerText()), "poruka o ograničenju");
+      await page.fill(".gj-search", A);
+      check((await page.locator(".gj-pick").count()) === 1, "pretraga po šifri");
+    },
+  },
+];
+
 const browser = await chromium.launch({ headless: !args.includes("--headed") });
 for (const ui of UIS) {
   console.log(`\n■ ${ui.name} (${ui.path})`);
@@ -127,6 +283,21 @@ for (const ui of UIS) {
     }
     await t.page.screenshot({ path: join(SHOTS, `${ui.name}-${scenarios.indexOf(s) + 1}.png`) });
     check(t.errors.length === 0, `${ui.name}: bez JS grešaka ${t.errors.join("; ")}`);
+    await t.ctx.close();
+  }
+}
+if (!ONLY || ONLY === "glasaj") {
+  console.log("\n■ samo /glasaj");
+  for (const s of glasajOnly) {
+    console.log(`· ${s.name}`);
+    const t = await open(browser, glasaj, s.opts);
+    try {
+      await s.run(t);
+    } catch (e) {
+      check(false, `glasaj: ${s.name}: ${e.message.split("\n")[0]}`);
+    }
+    await t.page.screenshot({ path: join(SHOTS, `glasaj-x${glasajOnly.indexOf(s) + 1}.png`), fullPage: true });
+    check(t.errors.length === 0, `glasaj: bez JS grešaka ${t.errors.join("; ")}`);
     await t.ctx.close();
   }
 }
