@@ -142,14 +142,17 @@ export async function renderGlasaj(el: HTMLElement) {
   if (root === el) draw();
 }
 
-async function run(text: string, fn: () => Promise<void>) {
+async function run(text: string, fn: () => Promise<void>): Promise<string | null> {
   st.busy = text;
   st.msg = null;
   draw();
   try {
     await fn();
+    return null;
   } catch (e) {
-    st.msg = { kind: "err", text: e instanceof VoteError ? e.message : `Neočekivana greška: ${(e as Error).message}` };
+    const text = e instanceof VoteError ? e.message : `Neočekivana greška: ${(e as Error).message}`;
+    st.msg = { kind: "err", text };
+    return text;
   } finally {
     st.busy = null;
     st.abort = null;
@@ -157,7 +160,7 @@ async function run(text: string, fn: () => Promise<void>) {
   }
 }
 
-function signIn(): Promise<void> {
+function signIn(): Promise<string | null> {
   // Prozor Certilije otvara se sinkrono, izravno iz klika (inače ga preglednik blokira).
   st.abort = new AbortController();
   const p = signInWithCertilia(st.abort.signal);

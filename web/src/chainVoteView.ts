@@ -13,7 +13,8 @@ type Mod = typeof CV;
 
 export type Host = {
   draw(): void;
-  signIn(): Promise<void>;
+  /** Prijava eOsobnom; vraća poruku greške ili null. */
+  signIn(): Promise<string | null>;
   signedIn(): boolean;
   my(): MyBallot | null;
   setMy(m: MyBallot): void;
@@ -571,6 +572,7 @@ export function flowHtml(): string {
       <div class="gl-actions"><button class="btn btn-primary" data-cv="close" data-autofocus>Zatvori</button></div>`;
   } else if (now === "signin") {
     body = `<p>Za glasanje se jednom prijaviš eOsobnom ili aplikacijom Certilia mobile.ID.</p>
+      ${f.error ? `<p class="cv-err" role="alert">${esc(f.error)}</p>` : ""}
       <button class="btn btn-primary" data-cv="signin" data-autofocus>Prijavi se eOsobnom</button>`;
   } else if (now === "terms") {
     body = `<ul class="cv-terms">
@@ -725,7 +727,14 @@ export function bindChain(el: HTMLElement) {
   on("close", () => closeFlow());
   on("retry", () => void advance());
   on("signin", () => {
-    void h.signIn().then(() => advance());
+    // Greška prijave mora biti vidljiva u modalu, ne samo na stranici iza njega.
+    void h.signIn().then(async (err) => {
+      await advance();
+      if (err && S.flow) {
+        S.flow.error = err;
+        h.draw();
+      }
+    });
   });
   on("terms", () => {
     void acceptChainTerms()

@@ -327,11 +327,24 @@ async function proxy<T>(path: string, body?: unknown): Promise<T> {
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 429) {
+    const sec = retryAfter(res);
+    const kad = sec ? `za ${Math.ceil(sec / 60)} min` : "za nekoliko minuta";
+    throw new VoteError(`Previše pokušaja prijave s ove mreže. Pokušaj ponovno ${kad}.`);
+  }
   if (!res.ok) throw new VoteError(`Certilia poslužitelj nije dostupan (${res.status}).`);
   return (await res.json()) as T;
 }
 
+/** Sekunde iz Retry-After, ako ga CORS propusti do skripte (inače null). */
+function retryAfter(res: Response): number | null {
+  const n = Number(res.headers.get("Retry-After"));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Certilia server broji i polling u limit po IP-u, pa ne pitamo češće nego treba. */
+const POLL_MS = 3000;
 
 /**
  * Otvara Certilia prijavu u skočnom prozoru i čeka ishod preko pollinga
@@ -367,12 +380,16 @@ export async function signInWithCertilia(signal: AbortSignal): Promise<void> {
     // iako prijava teče (ista zamka kao u flutter_certilia).
     let code: string | null = null;
     const deadline = Date.now() + 5 * 60_000;
+    let pause = POLL_MS;
     while (!code) {
       if (signal.aborted) throw new VoteError("Prijava je otkazana.");
       if (Date.now() > deadline) throw new VoteError("Prijava je istekla. Pokušaj ponovno.");
-      await sleep(2000);
+      await sleep(pause);
+      pause = POLL_MS;
       const res = await fetch(`${CERTILIA}/api/auth/polling/${polling.polling_id}/status`);
       if (res.status === 404) throw new VoteError("Sesija prijave je istekla. Pokušaj ponovno.");
+      // Limit po IP-u: pričekaj koliko server kaže (najviše 30 s), prijava u prozoru teče dalje.
+      if (res.status === 429) pause = Math.min(retryAfter(res) ?? 30, 30) * 1000;
       if (!res.ok) continue;
       const st = (await res.json()) as { status: string; result?: { code: string }; errorDescription?: string };
       if (st.status === "completed" && st.result?.code) code = st.result.code;
