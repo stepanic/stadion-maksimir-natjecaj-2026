@@ -112,6 +112,65 @@ prolazi, `test:paritet` 72/72, `check` prolazi nad lokalnim workerom.
 5. **Slijepi mod** (imena timova skrivena dok se bira) iz prototipa nije prenesen, radi
    jednostavnosti. Ako se uvede, treba biti isti u svim sučeljima.
 
+## Prijava na iPhoneu: prozor Certilije se odmah zatvarao (2. 10. 2026.)
+
+**Simptom.** Na iPhoneu, u pregledniku bez aktivne Certilia sesije, „Prijavi se eOsobnom” otvori
+prozor koji se odmah zatvori. Isto se događalo i kad je korisnik nakon uspješne prijave ručno
+kliknuo „Zatvori” umjesto da pričeka automatsko zatvaranje. U Braveu s aktivnom Certilia sesijom
+sve je radilo.
+
+**Uzrok.** Certilia proxy (`certilia.domovina.ai`, repo `stepanic/flutter_certilia`,
+`certilia-server`) ima `express-rate-limit` od **100 zahtjeva / 15 min po IP-u** na cijelom `/api`.
+Klijent je za vrijeme prijave pitao `GET /api/auth/polling/:id/status` svake 2 s (30/min), pa je
+prijava dulja od otprilike 3 min sama potrošila limit. Sljedeći poziv (`initialize` pri novom
+pokušaju ili `exchange` nakon uspjeha) dobio je 429. `finally` u `signInWithCertilia` zatvorio je
+prozor, a poruka je završila u `st.msg` stranice iza chain modala, gdje se ne vidi. Brza prijava
+s aktivnom sesijom stane u limit, zato je tamo radilo. U trenutku dijagnoze naš IP je imao
+`ratelimit-remaining: 0`.
+
+```mermaid
+sequenceDiagram
+  participant T as Tab glasanja
+  participant P as Certilia prozor
+  participant S as certilia.domovina.ai
+  T->>S: initialize, polling/start
+  T->>P: otvori authorization_url
+  loop svake 2 s
+    T->>S: polling status (brojao se u limit)
+  end
+  S-->>T: 429 nakon 100 zahtjeva
+  T->>P: finally zatvara prozor
+  Note over T: greška u st.msg iza modala
+```
+
+Ručni „Zatvori” se činio kao zaseban bug jer gumb u `public/callback.js` radi drugo od
+automatskog zatvaranja (`window.close()` + odmah `history.back()`, pa `history.go(-1)` i
+`about:blank`). Server, međutim, sprema uspjeh prije nego što prikaže stranicu, a
+`updateSessionByState` mijenja samo sesije u stanju `pending`, pa povratak u povijest ne može
+pregaziti uspjeh. Nakon popravka limita ručni „Zatvori” radi (korisnik potvrdio na iPhoneu), dakle
+i to je bio isti limit: ručno zatvaranje je značilo dulju prijavu.
+
+**Popravak.**
+
+- Server (`9327e92`, Coolify app `v1373oj6valkmqebdugaacmu`, deploy preko Coolify API-ja
+  `/api/v1/deploy?uuid=…`): `skip` za `GET /auth/polling/:id/status`. `polling_id` se ne može
+  pogoditi, a čitanje je iz memorije. Ostali `/api` pozivi i dalje se broje.
+- Web (`ab01bb5`): `Host.signIn()` vraća poruku greške, a chain modal je prikazuje na koraku
+  prijave; polling svake 3 s, nakon 429 pričeka 30 s; 429 pri `initialize`/`exchange` daje poruku
+  „Previše pokušaja prijave s ove mreže”.
+
+**Zamke.**
+
+- `Retry-After` i `RateLimit-*` zaglavlja **nisu** izložena kroz CORS (nema
+  `Access-Control-Expose-Headers`), pa ih skripta ne vidi i ne zna koliko čekati.
+- Redeploy Certilia servera prekida prijave u tijeku: polling sesije i limiter žive u memoriji
+  (restart ujedno resetira limit).
+- Provjera stanja limita: `curl -sD- -o/dev/null "https://certilia.domovina.ai/api/health" | grep -i ratelimit`
+  (troši jedan zahtjev). Polling status na produkciji više nema `RateLimit` zaglavlja.
+- Mobilni operateri stavljaju puno korisnika iza istog IP-a (CGNAT), pa je 100 / 15 min za
+  `initialize` + `polling/start` + `exchange` (3 zahtjeva po prijavi) i dalje oko 33 prijave po IP-u
+  u 15 min. Ako se glasanje jako proširi, treba podići `RATE_LIMIT_MAX_REQUESTS` na Coolifyju.
+
 ## Vezani dokumenti
 
 - [Istraživanje UX obrazaca](2026-09-30-glasanje-ux-istrazivanje.md)
