@@ -51,7 +51,7 @@ Oznake u stupcu „Danas” odnose se na `MaksimirGlasanjeV1` na Gnosisu.
 | **A6** | Prebivalište za lokalne referendume | ne provjerava se | potpisana vjerodajnica iz registra birača (DIP), dokazana istim ZK obrascem |
 | **A7** | Izgubljen ključ, novi uređaj | ponovni upis s 24 riječi | nova Certilia prijava daje istu oznaku osobe; stari ključ se opoziva (MACI promjena ključa) |
 | **A8** | Certilia ne radi ili joj je ključ kompromitiran | — | višednevno glasanje, papir kao zamjena, javni brojač upisa uz gornju granicu iz registra birača, samoprovjera „je li moj OIB upisan” |
-| **A9** | Naš proxy vidi `id_token` s osobnim podacima | da | `nonce` veže token uz glasačev commitment, pa ukraden token ne vrijedi; proxy vodi država ili je auditiran |
+| **A9** | Naš proxy vidi `id_token` s osobnim podacima | da | `nonce = Poseidon(commitment, r)` veže token uz glasačev ključ, a sol `r` skriva commitment; zaseban OIDC klijent; proxy vodi država ili je auditiran |
 | **B1** | Listić je na lancu u čitljivom obliku, a glasač zna svoj nullifier, pa ima potvrdu za kupca | **da, V1** | šifrirani listići (MACI ili prag-ElGamal); na lancu nema sadržaja po glasaču |
 | **B2** | Međurezultati utječu na glasače | uživo javni | zbroj se dešifrira tek nakon zatvaranja, s dokazom točnosti |
 | **B3** | Prisila kod kuće (netko stoji iza glasača) | mijenjanje glasa | ponovno glasanje koje se ne vidi izvana + papir poništava e-glas (estonski model) |
@@ -126,7 +126,7 @@ tablice bez prefiksa `maksimir_` i stupac `election_id` u svakoj. To rješava **
 ```mermaid
 flowchart LR
   subgraph G["Glasač, preglednik"]
-    T["Certilia id_token<br/>RS256, nonce = hash commitmenta"]
+    T["Certilia id_token<br/>RS256, nonce = Poseidon(c, r)"]
     ZP["ZK dokaz prava glasa<br/>potpis Certilije, 18+, HR"]
     K["MACI ključ glasača"]
     L["šifrirana poruka listića"]
@@ -188,8 +188,9 @@ moguće naknadno preskočiti, jer su zbog anonimnosti neodvojivi od pravih.
 
 **Rješenje: ZK dokaz Certilijinog potpisa.** Glasač u pregledniku dokazuje:
 
-> „Imam JWT koji je potpisala Certilia ključem `n` (RSA-2048), `aud` je naša aplikacija, `exp` nije
-> istekao, `nonce` je hash mog commitmenta, a iz `sub` (OIB) slijedi oznaka osobe `t`.”
+> „Imam JWT koji je potpisala Certilia ključem `n` (RSA-2048), `aud` je naša aplikacija, token je
+> svjež, `nonce` je `Poseidon(commitment, r)` s mojom tajnom soli `r`, a iz `sub` (OIB) slijedi
+> oznaka osobe `t`.”
 
 Javni ulazi dokaza: Certilijin javni ključ, `aud`, trenutak, commitment, oznaka `t`, bitovi
 „18+” i „HR”. Tajni ulazi: cijeli token i potpis. Ugovor (*gatekeeper*) provjerava dokaz i upisuje
@@ -204,7 +205,7 @@ sequenceDiagram
   participant O as Prag OPRF
   participant C as Gatekeeper na lancu
   B->>B: novi ključ, commitment c
-  B->>I: prijava, nonce = H(c)
+  B->>I: prijava, nonce = Poseidon(c, r)
   U->>I: eOsobna ili mobile.ID
   I-->>B: id_token, RS256
   B->>O: zaslijepljeni OIB + ZK dokaz da je iz valjanog tokena
@@ -303,11 +304,18 @@ odborom s promatračima, a ukraden potpisni ključ dao bi tisuće tihih glasova.
 
 ### A9. Proxy vidi token
 
-**Problem.** Certilia za razmjenu koda traži client secret, pa token prolazi kroz naš proxy.
+**Problem.** Certilia za razmjenu koda traži client secret, pa token prolazi kroz naš proxy. Uz to,
+JavaScript prijave poslužuje operater, pa bi pri prijavi mogao podmetnuti svoj commitment.
 
-**Rješenje.** `nonce = H(commitment)` veže token uz glasačev ključ, pa ga proxy ne može iskoristiti
-za svoj commitment. Osobne podatke iz tokena proxy i dalje vidi. Zato za državnu razinu proxy vodi
-DIP, a kôd mu je otvoren i auditiran.
+**Rješenje.**
+- `nonce = Poseidon(commitment, r)` veže token uz glasačev ključ, pa ga proxy ne može iskoristiti
+  za drugi commitment. Tajna sol `r` je privatni ulaz dokaza, pa Certilia i proxy iz `nonce` ne
+  saznaju commitment (inače bi znali vezu OIB → commitment, nalaz F-01).
+- Zaseban OIDC klijent samo za glasanje, pa token s drugih prijava na domovina.ai ne vrijedi.
+- Ponovljiva izgradnja s objavljenim hashem (C2), a glasač iz neovisnog klijenta odmah vidi svoj
+  commitment na lancu.
+- Osobne podatke iz tokena proxy i dalje vidi. Za državnu razinu proxy vodi DIP, a kôd mu je
+  otvoren i auditiran; ako Certilia dopusti javnog PKCE klijenta, proxy nije potreban.
 
 ---
 
@@ -638,6 +646,7 @@ flowchart TD
 
 ## Vezani dokumenti
 
+- [Stadion V2: plan](blockchain/09-v2-plan.md): prva instanca općeg modela
 - [Kako tehnički radi glasanje](glasanje-kako-radi.md)
 - [Glasač ima kontrolu nad svojim glasom](blockchain/06-kontrola-glasaca.md)
 - [Verzioniranje i migracija](blockchain/07-verzioniranje.md)

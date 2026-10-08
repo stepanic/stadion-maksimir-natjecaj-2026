@@ -28,6 +28,7 @@ import glasanjeOdluke from "../../docs/2026-09-25-glasanje-javnosti.md?raw";
 import glasanjeReadme from "../../glasanje/README.md?raw";
 import chainReadme from "../../docs/blockchain/README.md?raw";
 import chainIntegracija from "../../docs/blockchain/08-integracija-s-fazom-1.md?raw";
+import chainV2Plan from "../../docs/blockchain/09-v2-plan.md?raw";
 import chainKontrola from "../../docs/blockchain/06-kontrola-glasaca.md?raw";
 import chainVerzije from "../../docs/blockchain/07-verzioniranje.md?raw";
 import chainArhitektura from "../../docs/blockchain/01-arhitektura.md?raw";
@@ -306,6 +307,14 @@ export const docs: DocSection[] = [
         subtitle: "MaksimirGlasanjeV1: plan, odluke, stanje, otvorena pitanja",
         repoPath: "docs/blockchain/README.md",
         raw: chainReadme,
+        section: "glasanje-lanac",
+      },
+      {
+        slug: "lanac-v2-plan",
+        title: "Stadion V2: plan",
+        subtitle: "Certilia ZK umjesto registrara, tvornica glasovanja, kontinuitet bez dvostrukog glasa (8.10.2026.)",
+        repoPath: "docs/blockchain/09-v2-plan.md",
+        raw: chainV2Plan,
         section: "glasanje-lanac",
       },
       {
