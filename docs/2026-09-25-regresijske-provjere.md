@@ -198,3 +198,12 @@ Ako se ponovi, to je stvarna greška.
 - [`2026-09-25-seo-rute-plan.md`](2026-09-25-seo-rute-plan.md): plan i odluke (hash → prave rute, zašto bez Astra)
 - [`2026-09-25-web-nice-to-have.md`](2026-09-25-web-nice-to-have.md): odgođeno (2,27 MB JS po stranici, `docs.ts` glob, slike, Astro)
 - [`2026-09-25-glasanje-javnosti.md`](2026-09-25-glasanje-javnosti.md): glasanje, `ALLOWED_ORIGINS`, E2E
+
+## Normalizacija `#/` daje lažne BASELINE razlike (8. 10. 2026.)
+
+`regression.mjs` u baseline sadržaju mijenja `href="#/` u `href="/` (jedina dopuštena razlika iz
+refaktora hash ruta). Zamjena ide po cijelom HTML-u, pa pokvari i doslovni tekst unutar `<code>` na
+stranicama koje opisuju tu migraciju (`/ops-seo-rute-plan`, `/ops-regresijske-provjere`). Takva
+razlika pri usporedbi s produkcijom nije regresija: potvrdi ju tako da usporediš sirovi HTML s
+`curl -s <url>/<ruta> | grep -o '…'` na obje strane. Popravak skripte: zamjenjivati samo u atributu
+`href` elemenata `<a>`, ne u tekstu.
