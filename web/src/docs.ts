@@ -36,6 +36,7 @@ import chainAdrKljuc from "../../docs/blockchain/adr/0001-kljuc-glasaca-passkey-
 import chainSesija from "../../docs/2026-09-26-glasanje-onchain.md?raw";
 import glasanjeDanD from "../../docs/2026-09-26-dan-d.md?raw";
 import glasanjeViseSucelja from "../../docs/2026-10-02-glasaj-vise-sucelja.md?raw";
+import opciModelGlasovanja from "../../docs/2026-10-08-opci-model-glasovanja.md?raw";
 
 import ccReadme from "../../research/cross-check/README.md?raw";
 import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
@@ -259,6 +260,14 @@ export const docs: DocSection[] = [
         subtitle: "Jednostavnije glasanje u 3 koraka nad istim backendom i lancem; testovi pariteta",
         repoPath: "docs/2026-10-02-glasaj-vise-sucelja.md",
         raw: glasanjeViseSucelja,
+        section: "glasanje",
+      },
+      {
+        slug: "opci-model-glasovanja",
+        title: "Opći model glasovanja: do eReferenduma",
+        subtitle: "31 problem i rješenje: Certilia ZK umjesto registrara, MACI, prag-OPRF, papir poništava e-glas",
+        repoPath: "docs/2026-10-08-opci-model-glasovanja.md",
+        raw: opciModelGlasovanja,
         section: "glasanje",
       },
       {
