@@ -8,6 +8,8 @@ zamrznutim commitom, bez ikakve izmjene koda. Audit koji implementator radi uz k
 |---|---|---|---|---|
 | 26. 9. 2026. | [2026-09-26-neovisni-review-glasanje.md](2026-09-26-neovisni-review-glasanje.md) | `faaaa5f` (+ `domovina-api` `d5d88b7`) | `audit-fable-2026-09-26` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
 | 26. 9. 2026. | [2026-09-26-neovisni-review-wiring.md](2026-09-26-neovisni-review-wiring.md) | `feat/glasanje-integracija` `ef4c5d8` → proširenje na `1ecab96` (+ `domovina-api` `feat/maksimir-chain` `6b6ad33` → `106f205`) | `audit-fable-2026-09-26-wiring`, `audit-fable-2026-09-26-wiring-2` | Claude Fable 5.1 (kôd: Claude Opus 5.5) |
+| 9. 10. 2026. | [2026-10-09-neovisni-review-tjedan-glasaj.md](2026-10-09-neovisni-review-tjedan-glasaj.md) | `main` `d02bf0b`, raspon `827c576..d02bf0b` (`/glasaj`, `ballotMath`, paritet, Certilia popravak `ab01bb5`; + `certilia-server` `9327e92`) | `audit-fable-2026-10-09` | Claude Fable 5.1 (kôd: Claude Opus 5.5), nalazi F-23…F-37 |
+| 9. 10. 2026. | [2026-10-09-neovisni-review-opci-model-i-v2.md](2026-10-09-neovisni-review-opci-model-i-v2.md) | planovi na `d02bf0b`: opći model glasovanja, `09-v2-plan.md`, Složi svoj sabor | `audit-fable-2026-10-09` | Claude Fable 5.1 (tekst: Claude Opus 5.5), nalazi E-01…E-15 (pregled plana, ne koda) |
 
 ## Zašto ovako
 
