@@ -44,6 +44,7 @@ import ccSynthesis from "../../research/cross-check/SYNTHESIS.md?raw";
 import ccA from "../../research/cross-check/A-tehnicki-brojke-REPORT.md?raw";
 import ccB from "../../research/cross-check/B-plejic-perovic-REPORT.md?raw";
 import ccC from "../../research/cross-check/C-konzervatorski-REPORT.md?raw";
+import ccD from "../../research/cross-check/D-javnost-mediji-REPORT.md?raw";
 
 import srcSazetak from "../../sources/00-sazetak-cinjenica.md?raw";
 import srcUvjeti from "../../sources/uvjeti-natjecaja.md?raw";
@@ -239,6 +240,14 @@ export const docs: DocSection[] = [
         subtitle: "Z-1528, zaštita, preventivna zaštita",
         repoPath: "research/cross-check/C-konzervatorski-REPORT.md",
         raw: ccC,
+        section: "cross-check",
+      },
+      {
+        slug: "cc-d-javnost",
+        title: "D — Javnost i mediji",
+        subtitle: "Cross-check anketa, peticija, sličnih projekata i medijskog arhiva (rujan 2026.)",
+        repoPath: "research/cross-check/D-javnost-mediji-REPORT.md",
+        raw: ccD,
         section: "cross-check",
       },
     ],
