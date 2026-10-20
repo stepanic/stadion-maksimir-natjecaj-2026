@@ -226,3 +226,16 @@ Izlazni kod je zbog lažnih razlika 1, pa se izlaz čita, ne samo kod. Screensho
 proglasi regresijom, izreži područje razlike (`ImageChops.difference(...).getbbox()`) i pogledaj.
 Za parsiranje mermaida `jsdom` instaliraj u privremenu mapu (npr. scratchpad), a mermaid uvezi
 apsolutnim putem iz `web/node_modules`; tako radi i za markdown iz drugih repoa (zajedno).
+
+### Drugi prolaz istim postupkom (20. 10. 2026., README i javni opisi)
+
+Preview `c1e959d3` → produkcija `e44092b5`. Dvije stvari koje nisu regresija:
+
+- **Prvi `check` je pao na `page.goto: Timeout 30000ms` (`networkidle`, `/glasanje-kako-radi`)** prije ikakve
+  usporedbe. Ponovljen jednom bez izmjena i prošao je, dakle prolazno. Ako padne dvaput na istoj ruti, gledaj nju.
+- **Screenshot razlika na stranici kojoj je dodan banner** (`1280_sot`) očekivana je, za razliku od šuma na
+  `1280_radovi`. Nova ruta (`/cc-d-javnost`) se ne uspoređuje, ispiše se pod „nove od baselinea”.
+
+README se prikazuje i na stranici (`/readme`), pa izmjena READMEa traži deploy. Opis, homepage i teme repoa na
+GitHubu nisu u stablu (`gh repo edit`); kad se stanje natječaja ili glasanja promijeni, osvježi i njih.
+Napomena o opsegu licence je u READMEu, ne u `LICENSE`: dopisan tekst u `LICENSE` GitHub prikazuje kao „Other”.
