@@ -207,3 +207,22 @@ stranicama koje opisuju tu migraciju (`/ops-seo-rute-plan`, `/ops-regresijske-pr
 razlika pri usporedbi s produkcijom nije regresija: potvrdi ju tako da usporediš sirovi HTML s
 `curl -s <url>/<ruta> | grep -o '…'` na obje strane. Popravak skripte: zamjenjivati samo u atributu
 `href` elemenata `<a>`, ne u tekstu.
+
+## Preview kao „prije”, produkcija kao baseline (20. 10. 2026.)
+
+`--baseline dd23a1dd` je zastario, pa usporedba s njim pada na svakoj kasnijoj izmjeni sadržaja.
+Postupak koji je za deploy samo dokumenata trajao dva prolaza od ~3 min:
+
+1. `npm run deploy:preview` → URL verzije, npr. `https://f2d528a8-maksimir.d-o-m.workers.dev`.
+2. `npm run check -- <preview> --baseline https://maksimir.domovina.ai`: razlike smiju biti samo
+   namjerne izmjene i dvije poznate lažne (`#/` gore).
+3. `npm run deploy`.
+4. `npm run check -- https://maksimir.domovina.ai --alias https://stadion-maksimir.domovina.ai
+   --baseline <preview>`: ostaju samo dvije lažne razlike, dakle produkcija je ista kao provjereni
+   preview.
+
+Izlazni kod je zbog lažnih razlika 1, pa se izlaz čita, ne samo kod. Screenshot razlika
+`1280_radovi` (područje prve kartice) bila je šum učitavanja slike, vizualno ista; prije nego se
+proglasi regresijom, izreži područje razlike (`ImageChops.difference(...).getbbox()`) i pogledaj.
+Za parsiranje mermaida `jsdom` instaliraj u privremenu mapu (npr. scratchpad), a mermaid uvezi
+apsolutnim putem iz `web/node_modules`; tako radi i za markdown iz drugih repoa (zajedno).
