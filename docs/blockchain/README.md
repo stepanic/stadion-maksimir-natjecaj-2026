@@ -2,11 +2,11 @@
 
 > Sažetak sesije, zamke i otvorene stavke: [2026-09-26-glasanje-onchain.md](../2026-09-26-glasanje-onchain.md).
 
-Status 26. 9. 2026.: **`MaksimirGlasanjeV1` je prošao 6 krugova audita (47 testova, 100 % pokrivenosti,
-23/23 mutanta ubijena, 800 fuzz koraka), radi na Chiadu (testnet) i prošao je E2E kroz stvarni
-kod relayera.** Na Gnosis mainnet još nije deployan. Web još nije spojen; plan spajanja s fazom 1
-je u [08](08-integracija-s-fazom-1.md) i **implementiran je** (lokalno + Chiado, 26. 9.; produkcija čeka ok). Web ostaje Vite + Worker (Astro je odbačen,
-[odluka](../2026-09-25-web-nice-to-have.md)).
+Status 20. 10. 2026.: **`MaksimirGlasanjeV1` je na Gnosis mainnetu od 26. 9. 2026. i javnost glasa na lancu**
+([dan D](../2026-09-26-dan-d.md)). Prije deploya je prošao 6 krugova audita (100 % pokrivenosti, 23/23 mutanta
+ubijena, 800 fuzz koraka), Chiado i E2E kroz stvarni kod relayera. Spajanje s fazom 1 opisano je u [08](08-integracija-s-fazom-1.md).
+Sljedeće: popravci iz [neovisnih pregleda](../review/README.md) i [plan V2](09-v2-plan.md). Web ostaje Vite + Worker
+(Astro je odbačen, [odluka](../2026-09-25-web-nice-to-have.md)).
 
 Faza 1 ([glasanje-kako-radi.md](../glasanje-kako-radi.md)) drži listiće u Postgresu, a operater
 baze vidi sve. U V1 **glasačev preglednik izrađuje ZK dokaz za svaki listić**. Ugovor ga provjerava
@@ -19,6 +19,7 @@ novčanik ni xDAI.
 |---|---|---|
 | **6** | [06-kontrola-glasaca.md](06-kontrola-glasaca.md) | **glasač ima kontrolu nad svojim glasom**: tko drži koji ključ, tko što može i ne može, granice, dokazi s Chiada |
 | **8** | [08-integracija-s-fazom-1.md](08-integracija-s-fazom-1.md) | **plan spajanja s fazom 1**: redoslijed (Chiado → Gnosis), registrar, relayer, web, dan prijelaza, izvor rezultata, `/g/<id>`, povratak, E2E, otvorena pitanja |
+| **9** | [09-v2-plan.md](09-v2-plan.md) | **plan V2 (P0–P7)**: Certilia ZK umjesto registrara, oznaka osobe kao OPRF u krugu, dvostruki glas V1↔V2; opći model se dalje razvija u [zajedno.domovina.ai](https://github.com/domovinatv/zajedno.domovina.ai) |
 | **7** | [07-verzioniranje.md](07-verzioniranje.md) | **V1, V2, V3…** bez proxyja, zamrznut izvor, selidba listića samo uz glasačev dokaz |
 | 1 | [01-arhitektura.md](01-arhitektura.md) | ugovor V1 funkciju po funkciju, poruke, zbroj, prijelaz s faze 1 |
 | 2 | [02-relayer-i-gas.md](02-relayer-i-gas.md) | zašto ne Safe/Gelato sponzorstvo, relayer, izmjereni gas, faucet |
@@ -65,15 +66,13 @@ vlasnik Safe 2/3 `0xfb1b…c576`, izvor Sourcify exact_match, tag `glasanje-v1-g
 
 ## Što preostaje
 
-1. **Odluke** (vidi niže).
-2. **Registrar u `domovina-api`**: edge funkcija koja nakon eOsobne potpisuje `Register` jednom po
-   osobi ([04](04-web-i-baza.md)).
-3. **Gnosis mainnet**: commit, deploy, verifikacija, git tag `glasanje-v1-gnosis`, Worker ([03](03-deploy-runbook.md)).
-4. **Web** (Vite + Worker): ključ, dokaz, relayer, rezultati s lanca ([04](04-web-i-baza.md), [08](08-integracija-s-fazom-1.md)).
-5. **Prijelaz s faze 1**: faza 1 se zamrzava uz završni OTS snapshot, listići se prenose uz
-   glasačev ključ, a glasanje se nastavlja na lancu ([08](08-integracija-s-fazom-1.md#dan-d-prijelaz)).
+Popis iz 26. 9. (registrar, Gnosis deploy, web, prijelaz s faze 1) je izvršen na dan D. Otvoreno je:
 
-## Otvorena pitanja za Matiju
+1. **Popravci nalaza neovisnih pregleda** (F-xx, E-xx): redoslijed u [`docs/review/`](../review/README.md#sljedeći-pregled).
+2. **F-05**: rezervni okidač satnog snapshota ako GitHub preskoči cron.
+3. **V2** prema [09](09-v2-plan.md), počevši od P0.1 (koja polja Certilia stvarno vraća).
+
+## Otvorena pitanja za Matiju (26. 9., prije dana D)
 
 - **Vlasnik**: novi Safe 2/3 s istim potpisnicima kao MPT Safe?
 - **Javnost listića tijekom glasanja**: u V1 je svaki listić javan pod nullifierom čim je predan.

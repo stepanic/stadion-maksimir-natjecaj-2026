@@ -59,8 +59,10 @@ prije popisa nalaza stoji jedna rečenica presude o cjelini.
 
 ## Sljedeći pregled
 
-Drugi pregled je napravljen u dva dijela: prvo nad commitanim dijelom wiringa (`ef4c5d8` / `6b6ad33`, tag
-`…-wiring`), zatim proširen nad dovršenim wiringom (`1ecab96` / `106f205`, tag `…-wiring-2`), oboje u istom
-dokumentu. Stanje: F-01, F-02, F-04 i F-06 nisu adresirani; tablica ispravaka dokumentacije iz prvog pregleda
-još je otvorena; CI na grani pada (F-22). Treći pregled ide nakon popravaka i prije Gnosis deploya: provjeriti
-F-13/F-14/F-15/F-20 i zeleni CI, pa Gnosis manifest i konfiguraciju (registrar, `RELAYER_CHAINS`, `maksimir_chains`).
+Stanje 20. 10. 2026.: napravljena su četiri pregleda (tablica gore). Predloženi redoslijed za F-23…F-37 je u
+[2026-10-09-neovisni-review-tjedan-glasaj.md](2026-10-09-neovisni-review-tjedan-glasaj.md#predloženi-redoslijed-popravaka)
+(prvo F-23, F-24…F-26 i F-27), a nalazi E-01…E-15 idu u plan V2 prije koda. Od 9. 10. kôd glasanja nije mijenjan.
+Sljedeći pregled ide nad commitom s popravcima, s istim postupkom i novim tagom `audit-<model>-<datum>`.
+
+Ranije: drugi pregled je napravljen u dva dijela, prvo nad commitanim dijelom wiringa (`ef4c5d8` / `6b6ad33`,
+tag `…-wiring`), zatim nad dovršenim wiringom (`1ecab96` / `106f205`, tag `…-wiring-2`), oboje u istom dokumentu.

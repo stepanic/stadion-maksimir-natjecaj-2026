@@ -1,8 +1,8 @@
 # Cross-check workflow
 
-Nezavisne provjere ključnih tvrdnji iz `research/01-05` putem **Claude Desktop Research feature**. Svrha: triangulacija na visokorizičnim brojkama / pozicijama, gdje nas pogreška može koštati boda ili ozbiljne strateške greške.
+Nezavisne provjere ključnih tvrdnji iz `research/01-05` (A–C, svibanj 2026.) i `research/10–11` (D, rujan 2026.) putem **Claude Desktop Research feature**. Svrha: triangulacija na visokorizičnim brojkama / pozicijama, gdje nas pogreška može koštati boda ili ozbiljne strateške greške.
 
-## Tri ciljane provjere
+## Četiri ciljane provjere
 
 | # | Tema | Prompt | Placeholder za output |
 |---|------|--------|----------------------|
@@ -28,4 +28,4 @@ Nezavisne provjere ključnih tvrdnji iz `research/01-05` putem **Claude Desktop 
 - Reference stadiona (`02`) — solidno pokriveno, dodatni izvještaj bi se 90% preklapao.
 - Medijski narativ (`05`) — paywall-ovi i forumi su iscrpljeni; više vrijednosti ima direktan kontakt s DAZ-om.
 
-Možeš pustiti **sva 3 prompta paralelno** u 3 nezavisne Desktop sesije — svaki ima drugačiji fokus, ne interferiraju.
+Možeš pustiti **sve prompte paralelno** u nezavisnim Desktop sesijama — svaki ima drugačiji fokus, ne interferiraju.

@@ -1,5 +1,8 @@
 # Roadmap — od SoT-a (26.5.2026.) do predaje (17.–28.7.2026.)
 
+> **Ažurirano 2026-10-20:** rezultati su objavljeni **24.9.2026.** (88 radova, 5 nagrada, 1. nagrada VG13 Architects, Milano), a svih 88 radova je javno.
+> Vidi [`research/08-rezultati-natjecaja.md`](research/08-rezultati-natjecaja.md) i [`research/09-svi-radovi.md`](research/09-svi-radovi.md). Status niže je stanje od 25.8.2026. i ostaje kao povijesni zapis.
+
 > ## 🔒 ARHIVIRANO — rokovi su prošli (status 2026-08-25)
 >
 > **Ovaj roadmap je izvršen do kraja svog horizonta. Rokovi predaje su prošli: EOJN 17.7.2026. u 18:00, maketa 28.7.2026. u 18:00.**

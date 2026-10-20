@@ -11,6 +11,9 @@
 
 ---
 
+> **Ažurirano 2026-10-20:** rezultati su objavljeni **24.9.2026.** (88 radova, 5 nagrada, 1. nagrada VG13 Architects, Milano), a svih 88 radova je javno.
+> Vidi [`research/08-rezultati-natjecaja.md`](research/08-rezultati-natjecaja.md) i [`research/09-svi-radovi.md`](research/09-svi-radovi.md). Status niže je stanje od 25.8.2026. i ostaje kao povijesni zapis.
+
 ## 🔒 STATUS 2026-08-25 — Faze 0–4 su izvan roka
 
 **Rokovi predaje su prošli** (EOJN 17.7.2026. 18:00, maketa 28.7.2026. 18:00). Checkliste Faza 0–4 ispod **više nisu aktivne** — ostaju kao arhiva i kao gotov predložak za sljedeći natječaj sličnog opsega (posebno kontrolna lista UEFA SIR 2025 i manifest sjevernog ruba, koji su vezani uz propise, ne uz ovaj rok).
