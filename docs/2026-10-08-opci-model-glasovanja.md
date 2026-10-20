@@ -3,6 +3,12 @@
 **Datum:** 8. 10. 2026.\
 **Stanje:** analiza i ciljna arhitektura. Ništa od ovoga još nije implementirano.
 
+> **Od 20. 10. 2026. opći model se dalje održava u repou
+> [zajedno.domovina.ai](https://github.com/domovinatv/zajedno.domovina.ai/blob/main/docs/10-glasovanje-opci-model.md)**
+> (dokumenti 10–13: opći model, Certilia, glasovanje na lancu, plan), uz ispravke iz
+> [neovisnog reviewa](review/2026-10-09-neovisni-review-opci-model-i-v2.md). Ovaj dokument ostaje
+> kao zapis stanja od 8. 10. 2026. Izvedba stadiona ostaje ovdje: [plan V2](blockchain/09-v2-plan.md).
+
 Ovaj dokument odgovara na pitanje može li sustav glasanja za stadion Maksimir (Certilia, Postgres,
 lanac hasheva, OpenTimestamps, Semaphore, Gnosis Chain) postati temelj za bilo koje glasovanje: od
 udruge i stranke do državnog eReferenduma.

@@ -314,6 +314,7 @@ zatvaranja, samo „glasao sam”. Detaljan plan nastaje nakon P6.
 ## Vezani dokumenti
 
 - [Opći model glasovanja](../2026-10-08-opci-model-glasovanja.md)
+- [Opći plan glasovanja u zajedno.domovina.ai](https://github.com/domovinatv/zajedno.domovina.ai/blob/main/docs/13-plan-glasovanja.md): faze od stadiona do glasovanja u organizaciji
 - [07 — verzioniranje](07-verzioniranje.md) i [08 — integracija s fazom 1](08-integracija-s-fazom-1.md)
 - [Neovisni reviewi](../review/README.md)
 - [Interni audit](audit/README.md)
