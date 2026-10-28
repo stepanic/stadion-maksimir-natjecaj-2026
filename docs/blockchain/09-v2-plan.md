@@ -2,6 +2,10 @@
 
 **Datum:** 8. 10. 2026.\
 **Stanje:** plan. Ništa od ovoga još nije implementirano.\
+**Izvedba (od 28. 10. 2026.):** opći dijelovi (P1–P3, P5 bez stadionskog weba) kodiraju se u zasebnom
+javnom repou [`stepanic/otvoreno-glasovanje`](https://github.com/stepanic/otvoreno-glasovanje), po
+linearnom [TODO-u](https://github.com/stepanic/otvoreno-glasovanje/blob/main/TODO.md). Ovdje ostaju P4,
+selidba i dan D2 (tamo faza F10).\
 **Polazište:** [opći model glasovanja](../2026-10-08-opci-model-glasovanja.md) i sustavna analiza
 postojeće implementacije (ugovor i klijent, server i relayer, stanje svih F-* nalaza), napravljena
 8. 10. 2026. samo čitanjem koda i git povijesti.
